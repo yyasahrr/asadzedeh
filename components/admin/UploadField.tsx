@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useRef, useState } from "react";
 import { ImagePlus, Loader2 } from "lucide-react";
 import { uploadMedia } from "@/app/admin/actions";
@@ -73,7 +74,7 @@ export function UploadField({
         />
       </div>
       {value && (
-        <img src={value} alt="پیش‌نمایش" className="mt-2 h-20 w-32 rounded-lg object-cover ring-1 ring-ink-900/10" />
+        <Image src={value} alt="پیش‌نمایش" width={128} height={80} className="mt-2 h-20 w-32 rounded-lg object-cover ring-1 ring-ink-900/10" />
       )}
       {error && <p className="mt-1.5 text-xs font-bold text-madder-700">{error}</p>}
     </div>

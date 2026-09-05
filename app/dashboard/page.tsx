@@ -25,7 +25,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Continue learning */}
-      <section className="grid gap-4 rounded-2xl bg-card p-5 shadow-card ring-1 ring-ink-900/5 sm:grid-cols-[200px_1fr] sm:p-6" aria-label="ادامه یادگیری">
+      <section className="bento-surface grid gap-4 p-5 sm:grid-cols-[200px_1fr] sm:p-6" aria-label="ادامه یادگیری">
         <div className="relative min-h-36 overflow-hidden rounded-xl">
           <Image src={s.continueLearning.image} alt={s.continueLearning.title} fill sizes="220px" className="object-cover" />
         </div>
@@ -45,7 +45,7 @@ export default function DashboardPage() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Next class */}
-        <section className="rounded-2xl bg-navy-900 p-6 text-white shadow-card" aria-label="کلاس بعدی">
+        <section className="persian-corner overflow-hidden rounded-3xl bg-navy-900 p-6 text-white shadow-card" aria-label="کلاس بعدی">
           <p className="flex items-center gap-2 text-sm font-bold text-ochre-200">
             <CalendarDays className="h-4 w-4" />
             کلاس بعدی شما
@@ -63,7 +63,7 @@ export default function DashboardPage() {
         </section>
 
         {/* Assignments */}
-        <section className="rounded-2xl bg-card p-6 shadow-card ring-1 ring-ink-900/5" aria-label="تمرین‌ها">
+        <section className="bento-surface p-6" aria-label="تمرین‌ها">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="font-extrabold text-navy-900">تمرین‌های باز</h2>
             <Link href="/dashboard/assignments" className="text-[13px] font-bold text-teal-600 hover:text-teal-700">

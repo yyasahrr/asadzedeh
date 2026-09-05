@@ -15,12 +15,14 @@ import {
 import { formatPrice, toFa } from "@/lib/format";
 
 export function CartView() {
-  const [items, setItems] = useState<CartItem[] | null>(null);
+  const [items, setItems] = useState<CartItem[] | null>(() => {
+    if (typeof window === "undefined") return null;
+    return getCart();
+  });
   const [coupon, setCoupon] = useState("");
   const [applied, setApplied] = useState("");
 
   useEffect(() => {
-    setItems(getCart());
     const onChange = () => setItems(getCart());
     window.addEventListener("az:cart", onChange);
     return () => window.removeEventListener("az:cart", onChange);

@@ -12,7 +12,7 @@ export function CourseCard({ course, className }: { course: OnlineCourse; classN
     <Link
       href={`/courses/${course.slug}`}
       className={cn(
-        "group flex flex-col overflow-hidden rounded-2xl bg-card shadow-card ring-1 ring-ink-900/5 transition-all duration-300 hover:-translate-y-1 hover:shadow-lift",
+        "group bento-surface flex flex-col overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-teal-600/20 hover:shadow-lift",
         className
       )}
     >

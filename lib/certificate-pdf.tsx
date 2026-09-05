@@ -141,7 +141,7 @@ function template(cert: Certificate) {
         {/* footer */}
         <div style={{ display: "flex", width: "100%", alignItems: "flex-end", justifyContent: "space-between" }}>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-            <div style={{ fontSize: 22, fontWeight: 900, color: NAVY }}>رضا اسدزاده</div>
+            <div style={{ fontSize: 22, fontWeight: 900, color: NAVY }}>ناصر اسد زاده</div>
             <div style={{ width: 200, height: 2, backgroundColor: "#999", margin: "6px 0" }} />
             <div style={{ fontSize: 14, color: "#777" }}>مدیر آموزشگاه و استاد دوره</div>
           </div>

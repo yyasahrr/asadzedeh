@@ -62,7 +62,7 @@ export default async function AdminPage() {
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {kpis.map((k) => (
-          <div key={k.label} className="rounded-2xl bg-card p-5 shadow-card ring-1 ring-ink-900/5">
+          <div key={k.label} className="bento-surface p-5">
             <p className="text-[13px] font-bold text-ink-500">{k.label}</p>
             <p className="mt-1.5 flex items-center gap-2 text-2xl font-black text-navy-900">
               <TrendingUp className="h-5 w-5 text-teal-600" />
@@ -79,7 +79,7 @@ export default async function AdminPage() {
             <Link
               key={href}
               href={href}
-              className="flex items-center gap-3 rounded-2xl bg-card p-4 shadow-card ring-1 ring-ink-900/5 transition-all hover:-translate-y-0.5 hover:shadow-lift"
+              className="bento-surface flex items-center gap-3 p-4 transition-all hover:-translate-y-0.5 hover:border-teal-600/20 hover:shadow-lift"
             >
               <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-navy-800 text-white">
                 <Icon className="h-5 w-5" />
@@ -92,7 +92,7 @@ export default async function AdminPage() {
           ))}
       </div>
 
-      <section className="rounded-2xl bg-card p-6 shadow-card ring-1 ring-ink-900/5" aria-label="فروش هفتگی">
+      <section className="bento-surface p-6" aria-label="فروش هفتگی">
         <h2 className="font-extrabold text-navy-900">فروش ۷ روز اخیر (میلیون تومان)</h2>
         <div className="mt-5 flex h-44 items-end gap-2 sm:gap-3" role="img" aria-label="نمودار فروش هفتگی">
           {adminOverview.weeklySales.map((v, i) => (

@@ -39,7 +39,8 @@ export async function getSessionUser(): Promise<SessionUser | null> {
   if (!session) return null;
   const user = getUserById(session.userId);
   if (!user) return null;
-  const { passwordHash: _omit, ...safe } = user;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { passwordHash, ...safe } = user;
   return safe;
 }
 

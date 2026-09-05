@@ -38,7 +38,7 @@ export default function AboutPage() {
 
       <div className="shell grid items-center gap-10 py-12 lg:grid-cols-2">
         <div>
-           <h2 className="font-display text-2xl font-black text-navy-900">از تبریز تا ارومیه؛ از دار تا دوربین</h2>
+          <h2 className="text-2xl font-black text-navy-900">از تبریز تا ارومیه؛ از دار تا دوربین</h2>
           <div className="mt-4 space-y-4 leading-9 text-ink-700">
             {intro.map((p, i) => (
               <p key={i}>{p}</p>
@@ -71,7 +71,7 @@ export default function AboutPage() {
       <div className="bg-sand-50">
         <div className="shell grid gap-10 py-12 lg:grid-cols-2">
           <div>
-             <h2 className="font-display text-2xl font-black text-navy-900">خط زمانی ما</h2>
+             <h2 className="text-2xl font-black text-navy-900">خط زمانی ما</h2>
             <ol className="mt-6 space-y-0">
               {timeline.map((t, i) => (
                 <li key={t.year} className="relative flex gap-4 pb-6 last:pb-0">
@@ -87,14 +87,14 @@ export default function AboutPage() {
             </ol>
           </div>
           <div>
-             <h2 className="font-display text-2xl font-black text-navy-900">ارزش‌های ما</h2>
+             <h2 className="text-2xl font-black text-navy-900">ارزش‌های ما</h2>
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
               {values.map(({ icon: Icon, title, text }) => (
                 <div key={title} className="rounded-2xl bg-card p-5 shadow-card ring-1 ring-ink-900/5">
                   <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-madder-700/10 text-madder-700">
                     <Icon className="h-5 w-5" />
                   </span>
-                   <h3 className="mt-3 font-display font-extrabold text-navy-900">{title}</h3>
+                   <h3 className="mt-3 font-extrabold text-navy-900">{title}</h3>
                   <p className="mt-1.5 text-sm leading-7 text-ink-600">{text}</p>
                 </div>
               ))}

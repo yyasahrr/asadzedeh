@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Plus } from "lucide-react";
 import { getUsers } from "@/lib/store";
-import { getSessionUser, can, roleLabels } from "@/lib/auth";
+import { getSessionUser, roleLabels } from "@/lib/auth";
 import type { Role } from "@/lib/types";
 import { TableShell, Td } from "@/components/admin/TableShell";
 import { Denied } from "@/components/admin/Denied";

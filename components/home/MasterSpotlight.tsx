@@ -27,7 +27,7 @@ export function MasterSpotlight() {
 
         <div className="order-1 lg:order-2">
           <p className="text-sm font-bold text-madder-700">— بنیان‌گذار و استاد اصلی</p>
-          <h2 id="master" className="mt-3 font-display text-3xl leading-snug font-black text-navy-900 lg:text-4xl lg:leading-snug">
+          <h2 id="master" className="mt-3 text-3xl leading-snug font-black text-navy-900 lg:text-4xl lg:leading-snug">
             {master.name}
           </h2>
           <p className="mt-2 font-bold text-ochre-700">{master.specialty}</p>

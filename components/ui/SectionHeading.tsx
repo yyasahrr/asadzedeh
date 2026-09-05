@@ -25,7 +25,7 @@ export function SectionHeading({
   return (
     <div
       className={cn(
-        "mb-10 flex flex-col gap-3 lg:mb-12",
+        "mb-7 flex flex-col gap-2.5 lg:mb-9",
         centered ? "items-center text-center" : "items-start text-start",
         className
       )}
@@ -46,7 +46,7 @@ export function SectionHeading({
       )}
       <h2
         className={cn(
-          "font-display max-w-2xl text-2xl font-black leading-snug text-balance sm:text-3xl lg:text-[34px] lg:leading-[1.6]",
+          "max-w-2xl text-2xl font-black leading-snug tracking-tight text-balance sm:text-3xl lg:text-[34px] lg:leading-[1.45]",
           dark ? "text-white" : "text-navy-900"
         )}
       >

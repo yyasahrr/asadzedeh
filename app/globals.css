@@ -6,8 +6,9 @@
    ============================================================ */
 
 @theme {
-  --font-sans: "Vazirmatn Variable", "Vazirmatn", "IRANSans", Tahoma,
+  --font-sans: var(--font-peyda), "Peyda", Tahoma,
     ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-neirizi), "Neirizi", serif;
 
   /* Primary Navy — #193B5C */
   --color-navy-50: #eef4f8;
@@ -59,6 +60,20 @@
 
   --color-card: #fffdf7;
 
+  /* Public design-system aliases */
+  --color-primary: #193b5c;
+  --color-primary-dark: #152f3d;
+  --color-turquoise: #2f8c87;
+  --color-turquoise-soft: #4d9690;
+  --color-green: #506b4e;
+  --color-green-dark: #386052;
+  --color-red: #9d382c;
+  --color-red-dark: #8b2925;
+  --color-cream: #e8d8b8;
+  --color-ivory: #f3e9d6;
+  --color-beige: #d6c2a1;
+  --color-charcoal: #191a19;
+
   /* Charcoal ink */
   --color-ink-950: #101211;
   --color-ink-900: #191a19;
@@ -105,7 +120,15 @@
 
   body {
     @apply bg-sand-100 text-ink-900 font-sans antialiased;
+    background-image:
+      radial-gradient(circle at 8% 2%, rgb(47 140 135 / 0.08), transparent 26rem),
+      radial-gradient(circle at 92% 18%, rgb(192 138 62 / 0.09), transparent 28rem);
+    background-attachment: fixed;
     text-rendering: optimizeLegibility;
+  }
+
+  .font-display {
+    font-family: var(--font-display);
   }
 
   ::selection {
@@ -136,6 +159,40 @@
     width: 100%;
     max-width: 76rem;
     padding-inline: 1rem;
+  }
+
+  .glass-surface {
+    background: rgb(255 253 247 / 0.72);
+    border: 1px solid rgb(255 255 255 / 0.72);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.8), 0 16px 46px -30px rgb(21 47 61 / 0.42);
+    backdrop-filter: blur(18px) saturate(1.18);
+  }
+
+  .bento-surface {
+    background: rgb(255 253 247 / 0.9);
+    border: 1px solid rgb(25 59 92 / 0.08);
+    border-radius: 1.5rem;
+    box-shadow: 0 20px 55px -42px rgb(21 47 61 / 0.42);
+  }
+
+  .dashboard-canvas {
+    border-radius: 1.75rem;
+    background: rgb(255 253 247 / 0.58);
+    border: 1px solid rgb(255 255 255 / 0.66);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.7);
+    backdrop-filter: blur(12px);
+  }
+
+  .persian-corner {
+    position: relative;
+  }
+  .persian-corner::after {
+    position: absolute;
+    inset: 0.75rem;
+    border: 1px solid rgb(232 216 184 / 0.24);
+    border-radius: inherit;
+    pointer-events: none;
+    content: "";
   }
   @media (min-width: 640px) {
     .shell {
@@ -204,6 +261,26 @@
   .thin-scroll::-webkit-scrollbar-thumb {
     background: var(--color-sand-300);
     border-radius: 999px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  @keyframes menu-in {
+    from {
+      opacity: 0;
+      transform: translateY(-0.4rem) scale(0.98);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
   }
 }
 

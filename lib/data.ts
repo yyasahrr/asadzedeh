@@ -13,7 +13,7 @@ export const stats = [
   { value: "+۱۲۰۰", label: "هنرجو", hint: "در دوره‌های آنلاین و حضوری" },
   { value: "+۳۵", label: "دوره آموزشی", hint: "آنلاین، حضوری و تخصصی" },
   { value: "+۱۵", label: "سال تجربه", hint: "آموزش نسل‌به‌نسل بافت" },
-  { value: "+۸۰", label: "کارگاه برگزار شده", hint: "در تهران و شهرستان‌ها" },
+  { value: "+۸۰", label: "کارگاه برگزار شده", hint: "در ارومیه و شهرهای دیگر" },
 ];
 
 /* ---------------- Online courses ---------------- */
@@ -24,7 +24,7 @@ export const onlineCourses: OnlineCourse[] = [
     title: "فرش‌بافی مقدماتی؛ از چله‌کشی تا اولین رج",
     shortTitle: "فرش‌بافی مقدماتی",
     category: "فرش‌بافی",
-    instructor: "استاد رضا اسدزاده",
+    instructor: "استاد ناصر اسد زاده",
     instructorRole: "بافنده و مدرس فرش",
     level: "مقدماتی",
     sessions: 24,
@@ -67,7 +67,7 @@ export const onlineCourses: OnlineCourse[] = [
     title: "گلیم‌بافی از صفر؛ هنر بافت بدون گره",
     shortTitle: "گلیم‌بافی مقدماتی",
     category: "گلیم‌بافی",
-    instructor: "استاد رضا اسدزاده",
+    instructor: "استاد ناصر اسد زاده",
     instructorRole: "بافنده و مدرس فرش",
     level: "مقدماتی",
     sessions: 18,
@@ -150,7 +150,7 @@ export const onlineCourses: OnlineCourse[] = [
     title: "مرمت فرش؛ احیای بافت‌های آسیب‌دیده",
     shortTitle: "مرمت فرش",
     category: "مرمت",
-    instructor: "استاد رضا اسدزاده",
+    instructor: "استاد ناصر اسد زاده",
     instructorRole: "بافنده و مدرس فرش",
     level: "پیشرفته",
     sessions: 20,
@@ -161,7 +161,7 @@ export const onlineCourses: OnlineCourse[] = [
     image: "/images/course-restore.jpg",
     badge: "ظرفیت محدود",
     excerpt:
-      "آسیب‌شناسی، رفوگری، شیرازه‌دوزی، مرمت ریشه و فرسودگی؛ مهارتی تخصصی با بازار کار جدی در تهران و شهرستان‌ها.",
+      "آسیب‌شناسی، رفوگری، شیرازه‌دوزی، مرمت ریشه و فرسودگی؛ مهارتی تخصصی با بازار کار جدی در ارومیه و شهرهای دیگر.",
     outcomes: [
       "شناسایی انواع آسیب و علت آن‌ها",
       "رفوی پرز و تاروپود",
@@ -274,14 +274,14 @@ export const inPersonClasses: InPersonClass[] = [
   {
     slug: "kilim-foundation-oct",
     title: "گلیم‌بافی مقدماتی (حضوری)",
-    instructor: "استاد رضا اسدزاده",
+    instructor: "استاد ناصر اسد زاده",
     startDate: "۲۵ مهر",
     days: "شنبه و دوشنبه",
     time: "۱۶:۰۰ تا ۱۹:۰۰",
     sessions: 12,
     capacity: 10,
     remaining: 3,
-    location: "کارگاه اسدزاده، تهران",
+    location: "کارگاه اسدزاده، ارومیه",
     price: 4800000,
     image: "/images/course-kilim.jpg",
     excerpt:
@@ -291,14 +291,14 @@ export const inPersonClasses: InPersonClass[] = [
   {
     slug: "carpet-intermediate-aban",
     title: "فرش‌بافی متوسط؛ نقشه‌خوانی و سرعت (حضوری)",
-    instructor: "استاد رضا اسدزاده",
+    instructor: "استاد ناصر اسد زاده",
     startDate: "۱۰ آبان",
     days: "یکشنبه و چهارشنبه",
     time: "۱۰:۰۰ تا ۱۳:۰۰",
     sessions: 16,
     capacity: 8,
     remaining: 5,
-    location: "کارگاه اسدزاده، تهران",
+    location: "کارگاه اسدزاده، ارومیه",
     price: 6500000,
     image: "/images/course-carpet.jpg",
     excerpt:
@@ -315,7 +315,7 @@ export const inPersonClasses: InPersonClass[] = [
     sessions: 2,
     capacity: 12,
     remaining: 7,
-    location: "کارگاه رنگرزی، تهران",
+    location: "کارگاه رنگرزی اسدزاده، ارومیه",
     price: 3900000,
     image: "/images/course-dye.jpg",
     excerpt:
@@ -332,7 +332,7 @@ export const inPersonClasses: InPersonClass[] = [
     sessions: 8,
     capacity: 12,
     remaining: 9,
-    location: "کارگاه اسدزاده، تهران",
+    location: "کارگاه اسدزاده، ارومیه",
     price: 2600000,
     image: "/images/workshop-threads.jpg",
     excerpt:
@@ -433,8 +433,8 @@ export const carpetRoadmap = [
 
 export const instructors: Instructor[] = [
   {
-    slug: "reza-asadzadeh",
-    name: "استاد رضا اسدزاده",
+    slug: "naser-asadzadeh",
+    name: "استاد ناصر اسد زاده",
     specialty: "فرش‌بافی و مرمت",
     experience: "۳۲ سال",
     students: 860,

@@ -18,7 +18,7 @@ export function PageHero({
   compact?: boolean;
 }) {
   return (
-    <div className="bg-lattice border-b border-ink-900/10">
+    <div className="bg-lattice border-b border-ink-900/8">
       <div className={compact ? "shell py-5 lg:py-7" : "shell py-10 lg:py-14"}>
         <nav aria-label="مسیر صفحه" className="flex flex-wrap items-center gap-1 text-[13px] text-ink-500">
           {crumbs.map((c, i) => (
@@ -34,7 +34,7 @@ export function PageHero({
             </span>
           ))}
         </nav>
-        <h1 className={`${compact ? "mt-2 text-2xl sm:text-3xl" : "mt-4 text-3xl sm:text-4xl"} max-w-3xl leading-snug font-black font-display text-balance text-navy-950`}>
+        <h1 className={`${compact ? "mt-2 text-2xl sm:text-3xl" : "mt-4 text-3xl sm:text-4xl"} max-w-3xl leading-snug font-black text-balance text-navy-950`}>
           {title}
         </h1>
         {description && (

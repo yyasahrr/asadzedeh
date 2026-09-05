@@ -8,7 +8,7 @@ export function WorkshopGallery() {
       <SectionHeading
         eyebrow="کارگاه اسدزاده"
         title="جایی که بوی پشم و رنگ می‌دهد"
-        description="کارگاه ما در قلب تهران؛ با دارهای چوبی قدیمی، پاتیل‌های رنگرزی و قفسه‌هایی پر از نخ‌های دست‌رنگ."
+        description="کارگاه ما در قلب ارومیه؛ با دارهای چوبی قدیمی، پاتیل‌های رنگرزی و قفسه‌هایی پر از نخ‌های دست‌رنگ."
       />
       <div className="grid gap-4 md:grid-cols-3">
         <figure className="relative overflow-hidden rounded-2xl shadow-card md:col-span-2 md:row-span-2">

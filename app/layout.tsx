@@ -1,10 +1,26 @@
 import type { Metadata } from "next";
-import "@fontsource-variable/vazirmatn";
+import localFont from "next/font/local";
 import "./globals.css";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://asadzedeh.ir";
+
+const peyda = localFont({
+  src: [
+    { path: "./fonts/PeydaFaNumWeb-Thin.woff", weight: "100", style: "normal" },
+    { path: "./fonts/PeydaFaNumWeb-Regular.woff", weight: "400", style: "normal" },
+    { path: "./fonts/PeydaFaNumWeb-Bold.woff2", weight: "700", style: "normal" },
+  ],
+  variable: "--font-peyda",
+  display: "swap",
+});
+
+const neirizi = localFont({
+  src: "./fonts/Neirizi.ttf",
+  variable: "--font-neirizi",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -31,7 +47,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fa" dir="rtl">
+    <html lang="fa" dir="rtl" className={`${peyda.variable} ${neirizi.variable}`}>
       <body className="flex min-h-screen flex-col">
         <Header />
         <main className="flex-1">{children}</main>

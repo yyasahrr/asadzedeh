@@ -50,10 +50,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   ].filter((i) => !i.perm || can(user, i.perm as Permission));
 
   return (
-    <div className="shell py-8 lg:py-10">
-      <div className="grid gap-6 lg:grid-cols-[264px_1fr]">
+    <div className="shell py-6 lg:py-8">
+      <div className="grid gap-5 lg:grid-cols-[254px_1fr]">
         <aside className="lg:sticky lg:top-24 lg:self-start">
-          <div className="rounded-2xl bg-navy-900 p-4 shadow-card">
+          <div className="persian-corner overflow-hidden rounded-3xl bg-navy-900 p-3.5 shadow-lift">
             <Link href="/admin" className="mb-3 flex items-center gap-2.5 rounded-xl bg-white/5 p-3">
               <LogoMark className="h-8 w-8" />
               <div className="min-w-0 flex-1">
@@ -76,7 +76,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             </form>
           </div>
         </aside>
-        <div className="min-w-0">{children}</div>
+        <div className="dashboard-canvas min-w-0 p-4 sm:p-6">{children}</div>
       </div>
     </div>
   );

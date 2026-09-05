@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { studentWorks } from "@/lib/data";
 import { StudentWorkCard } from "../cards/StudentWorkCard";
 import { SectionHeading } from "../ui/SectionHeading";
@@ -15,7 +16,7 @@ export function StudentWorks() {
           {studentWorks.map((w) => (
             <StudentWorkCard key={w.id} work={w} />
           ))}
-          <a
+          <Link
             href="/courses"
             className="flex w-64 shrink-0 snap-start flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-navy-800/25 bg-card/50 p-6 text-center transition-colors hover:border-madder-700 hover:bg-card sm:w-72"
           >
@@ -24,7 +25,7 @@ export function StudentWorks() {
             </span>
             <span className="font-extrabold text-navy-900">اثر شما این‌جا قرار می‌گیرد</span>
             <span className="text-sm leading-7 text-ink-600">همین امروز اولین دوره را شروع کنید</span>
-          </a>
+          </Link>
         </div>
       </div>
     </section>

@@ -48,7 +48,7 @@ export function ClassForm({
       </div>
       <div>
         <FieldLabel htmlFor="k-loc">محل برگزاری</FieldLabel>
-        <Input id="k-loc" name="location" defaultValue={c?.location ?? "کارگاه اسدزاده، تهران"} />
+        <Input id="k-loc" name="location" defaultValue={c?.location ?? "کارگاه اسدزاده، ارومیه"} />
       </div>
       <div>
         <FieldLabel htmlFor="k-sessions">تعداد جلسات</FieldLabel>

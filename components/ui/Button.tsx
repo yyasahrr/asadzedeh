@@ -6,11 +6,11 @@ type Variant = "primary" | "accent" | "highlight" | "outline" | "ghost" | "sand"
 type Size = "sm" | "md" | "lg";
 
 const variants: Record<Variant, string> = {
-  primary: "bg-navy-800 text-white hover:bg-navy-700 shadow-card",
+  primary: "bg-navy-800 text-white hover:-translate-y-0.5 hover:bg-navy-700 shadow-card",
   accent: "bg-teal-600 text-white hover:bg-teal-700 shadow-card",
   highlight: "bg-madder-700 text-white hover:bg-madder-600 shadow-card",
   outline:
-    "border border-navy-800/25 bg-transparent text-navy-800 hover:border-navy-800 hover:bg-navy-50",
+    "border border-navy-800/20 bg-card/50 text-navy-800 backdrop-blur-sm hover:border-navy-800/45 hover:bg-card",
   ghost: "text-navy-800 hover:bg-navy-50",
   sand: "bg-sand-200 text-ink-900 hover:bg-sand-300",
 };
@@ -38,7 +38,7 @@ export function Button({
   ...rest
 }: Props) {
   const cls = cn(
-    "inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl font-bold transition-all duration-200",
+    "inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl font-bold transition-all duration-200 focus-visible:ring-2 focus-visible:ring-teal-600/40",
     "active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50",
     variants[variant],
     sizes[size],

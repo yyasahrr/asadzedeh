@@ -77,7 +77,7 @@ export function Certificate({ cert }: { cert: CertificateData }) {
         <div className="flex w-full items-end justify-between gap-4">
           <div className="flex flex-col items-center gap-1">
             <p className="font-black text-navy-900 italic sm:text-lg" style={{ fontFamily: "serif" }}>
-              رضا اسدزاده
+              ناصر اسد زاده
             </p>
             <span className="h-px w-36 bg-ink-900/40 sm:w-44" aria-hidden />
             <p className="text-xs text-ink-500">مدیر آموزشگاه و استاد دوره</p>

@@ -22,9 +22,8 @@ export async function Header() {
           {site.announcement.text}
         </Link>
       )}
-      <header className="sticky top-0 z-40 print:hidden">
-        <div className="border-b border-ink-900/10 bg-sand-50/95 backdrop-blur">
-          <div className="shell flex h-[68px] items-center justify-between gap-3">
+      <header className="sticky top-2 z-40 px-2 print:hidden sm:top-3 sm:px-4">
+        <div className="shell glass-surface flex h-[66px] items-center justify-between gap-3 rounded-[22px] px-3 sm:px-5">
             <div className="flex items-center gap-6">
               <Logo name={site.siteName} tagline={site.tagline} />
               <nav className="hidden items-center gap-1 lg:flex" aria-label="ناوبری اصلی">
@@ -75,9 +74,7 @@ export async function Header() {
               </Button>
               <MobileMenu />
             </div>
-          </div>
         </div>
-        <div className="pattern-strip-thin" aria-hidden />
       </header>
     </>
   );

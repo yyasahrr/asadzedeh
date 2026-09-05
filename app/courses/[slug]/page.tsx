@@ -150,7 +150,7 @@ export default async function CourseDetailPage({
           </div>
 
           <section className="rounded-xl bg-card p-4 ring-1 ring-ink-900/5" aria-labelledby="outcomes">
-            <h2 id="outcomes" className="font-display text-lg font-black text-navy-900">در پایان این دوره می‌توانید:</h2>
+            <h2 id="outcomes" className="text-lg font-black text-navy-900">در پایان این دوره می‌توانید:</h2>
             <ul className="mt-4 grid gap-3 sm:grid-cols-2">
               {course.outcomes.map((o) => (
                 <li key={o} className="flex items-start gap-2 text-[15px] leading-7 text-ink-700">
@@ -162,7 +162,7 @@ export default async function CourseDetailPage({
           </section>
 
           <section aria-labelledby="syllabus">
-            <h2 id="syllabus" className="font-display text-lg font-black text-navy-900">سرفصل‌های دوره</h2>
+            <h2 id="syllabus" className="text-lg font-black text-navy-900">سرفصل‌های دوره</h2>
             <div className="mt-2 space-y-2">
               {course.syllabus.map((ch, i) => (
                 <details
@@ -203,11 +203,11 @@ export default async function CourseDetailPage({
           </section>
 
           <section className="flex flex-col gap-3 rounded-xl bg-card p-4 ring-1 ring-ink-900/5 sm:flex-row sm:items-center" aria-label="مدرس دوره">
-            <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-navy-800 text-lg font-black text-white font-display">
+            <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-navy-800 text-lg font-black text-white">
               {course.instructor.replace("استاد ", "").charAt(0)}
             </span>
             <div className="flex-1">
-              <p className="font-display text-base font-black text-navy-900">{course.instructor}</p>
+              <p className="text-base font-black text-navy-900">{course.instructor}</p>
               <p className="mt-0.5 text-sm text-ink-600">{course.instructorRole} • پاسخ‌گویی به سوالات در کمتر از ۲۴ ساعت</p>
             </div>
             <Link href="/instructors" className="text-sm font-bold text-teal-600 hover:text-teal-700">
@@ -216,7 +216,7 @@ export default async function CourseDetailPage({
           </section>
 
           <section aria-labelledby="faq">
-            <h2 id="faq" className="font-display text-lg font-black text-navy-900">سؤالات پرتکرار</h2>
+            <h2 id="faq" className="text-lg font-black text-navy-900">سؤالات پرتکرار</h2>
             <div className="mt-2 space-y-2">
               {faqs.map((f) => (
                 <details key={f.q} className="group rounded-xl bg-card px-5 py-3.5 ring-1 ring-ink-900/5">

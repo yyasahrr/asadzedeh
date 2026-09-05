@@ -33,7 +33,7 @@ export default function InstructorsPage() {
           </div>
           <div className="self-center">
             <p className="text-sm font-bold text-madder-700">بنیان‌گذار و استاد اصلی</p>
-             <h2 className="mt-2 font-display text-3xl font-black text-navy-900">{master.name}</h2>
+             <h2 className="mt-2 text-3xl font-black text-navy-900">{master.name}</h2>
             <p className="mt-1 font-bold text-ochre-700">{master.specialty} • {master.experience} تجربه</p>
             <p className="mt-4 leading-9 text-ink-700">{master.bio}</p>
             <p className="mt-3 leading-9 text-ink-700">
@@ -58,7 +58,7 @@ export default function InstructorsPage() {
           </div>
         </article>
 
-         <h2 className="mt-12 mb-6 font-display text-xl font-black text-navy-900">دیگر مدرسان</h2>
+         <h2 className="mt-12 mb-6 text-xl font-black text-navy-900">دیگر مدرسان</h2>
         <div className="grid gap-5 sm:grid-cols-2">
           {rest.map((i) => (
             <InstructorCard key={i.slug} instructor={i} />

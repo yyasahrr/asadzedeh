@@ -9,7 +9,7 @@ export function InPersonPreview() {
       <div className="section-pad shell">
         <SectionHeading
           dark
-          eyebrow="کارگاه حضوری تهران"
+          eyebrow="کارگاه حضوری ارومیه"
           title="کلاس‌های حضوری؛ بافت شانه‌به‌شانه استاد"
           description="ظرفیت محدود، دار اختصاصی و تجربه واقعی کارگاه؛ برای کسانی که می‌خواهند با دست یاد بگیرند."
           link={{ href: "/classes", label: "مشاهده همه کلاس‌ها" }}

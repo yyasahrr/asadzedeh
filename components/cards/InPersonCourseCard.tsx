@@ -14,7 +14,7 @@ export function InPersonCourseCard({ cls, className }: { cls: InPersonClass; cla
   return (
     <article
       className={cn(
-        "group flex flex-col overflow-hidden rounded-2xl bg-card shadow-card ring-1 ring-ink-900/5 transition-all duration-300 hover:-translate-y-1 hover:shadow-lift",
+        "group bento-surface flex flex-col overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-madder-700/20 hover:shadow-lift",
         className
       )}
     >
@@ -57,7 +57,7 @@ export function InPersonCourseCard({ cls, className }: { cls: InPersonClass; cla
           </div>
           <div className="flex items-center gap-2 rounded-lg bg-sand-100 px-3 py-2">
             <MapPin className="h-4 w-4 shrink-0 text-teal-600" />
-            <span className="truncate font-semibold text-ink-700">تهران</span>
+            <span className="truncate font-semibold text-ink-700">ارومیه</span>
           </div>
         </dl>
 

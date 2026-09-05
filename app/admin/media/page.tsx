@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { getSessionUser, can } from "@/lib/auth";
 import { Denied } from "@/components/admin/Denied";
 import { MediaUploader } from "@/components/admin/MediaUploader";
@@ -26,7 +27,7 @@ export default async function MediaPage() {
           {files.map((f) => (
             <figure key={f} className="group overflow-hidden rounded-2xl bg-card shadow-card ring-1 ring-ink-900/5">
               <div className="relative aspect-video bg-sand-100">
-                <img src={f} alt={f} className="h-full w-full object-cover" loading="lazy" />
+                <Image src={f} alt={f} fill sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw" className="object-cover" />
                 <span className="absolute top-2 left-2">
                   <DeleteButton action={deleteMedia} hidden={{ name: "path", value: f }} label={f} />
                 </span>

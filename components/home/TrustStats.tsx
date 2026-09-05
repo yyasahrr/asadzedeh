@@ -10,9 +10,9 @@ const honors = [
 
 export function TrustStats() {
   return (
-    <section aria-label="اعتمادسازی" className="shell -mt-2 pb-2">
-      <div className="rounded-3xl bg-card px-6 py-8 shadow-card ring-1 ring-ink-900/5 sm:px-10">
-        <dl className="grid grid-cols-2 gap-6 text-center lg:grid-cols-4">
+    <section aria-label="اعتمادسازی" className="shell pb-2">
+      <div className="grid gap-3 lg:grid-cols-[1fr_0.65fr]">
+        <dl className="bento-surface grid grid-cols-2 gap-5 p-6 text-center lg:grid-cols-4 lg:p-8">
           {stats.map((s, i) => (
             <div key={s.label} className={i > 0 ? "lg:border-r lg:border-ink-900/10" : ""}>
               <dt className="order-2 mt-1 block text-sm font-semibold text-ink-600">{s.label}</dt>
@@ -21,13 +21,13 @@ export function TrustStats() {
             </div>
           ))}
         </dl>
-        <ul className="mt-7 flex flex-wrap items-center justify-center gap-2 border-t border-dashed border-ink-900/10 pt-6">
+        <ul className="persian-corner flex flex-col justify-center gap-2 overflow-hidden rounded-3xl bg-moss-700 p-6 text-white">
           {honors.map((h) => (
             <li
               key={h}
-              className="inline-flex items-center gap-1.5 rounded-full bg-sand-100 px-3.5 py-1.5 text-xs font-semibold text-ink-700"
+              className="inline-flex items-center gap-2 rounded-xl bg-white/8 px-3.5 py-2 text-xs font-semibold text-white/85"
             >
-              <BadgeCheck className="h-4 w-4 text-teal-600" />
+              <BadgeCheck className="h-4 w-4 text-ochre-200" />
               {h}
             </li>
           ))}

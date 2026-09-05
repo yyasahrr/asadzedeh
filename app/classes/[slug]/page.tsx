@@ -112,11 +112,11 @@ export default async function ClassDetailPage({
             <p className="mt-2 text-[15px] leading-8 text-ink-700">{cls.excerpt}</p>
 
             <section className="flex flex-col gap-3 rounded-xl bg-card p-4 ring-1 ring-ink-900/5 sm:flex-row sm:items-center" aria-label="مدرس کلاس">
-              <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-navy-800 text-lg font-black text-white font-display">
+              <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-navy-800 text-lg font-black text-white">
                 {cls.instructor.replace("استاد ", "").charAt(0)}
               </span>
               <div className="flex-1">
-                <p className="font-display text-base font-black text-navy-900">{cls.instructor}</p>
+                <p className="text-base font-black text-navy-900">{cls.instructor}</p>
                 <p className="mt-0.5 text-sm text-ink-600">مدرس کارگاه اسدزاده در ارومیه</p>
               </div>
               <Link href="/instructors" className="text-sm font-bold text-teal-600 hover:text-teal-700">
@@ -126,7 +126,7 @@ export default async function ClassDetailPage({
           </div>
 
           <section className="rounded-xl bg-card p-4 ring-1 ring-ink-900/5" aria-label="برنامه کلاس">
-            <h2 className="font-display font-black text-navy-900">برنامه کلاس</h2>
+            <h2 className="font-black text-navy-900">برنامه کلاس</h2>
             <dl className="mt-4 grid gap-3 sm:grid-cols-2">
               {[
                 { icon: CalendarDays, k: "تاریخ شروع", v: cls.startDate },
@@ -144,14 +144,14 @@ export default async function ClassDetailPage({
               ))}
             </dl>
             <p className="mt-4 text-sm leading-7 text-ink-600">
-              مدرس: <strong className="font-display text-navy-900">{cls.instructor}</strong>
+              مدرس: <strong className="text-navy-900">{cls.instructor}</strong>
             </p>
           </section>
 
           <WorkshopLocation />
 
           <section className="rounded-xl bg-card p-4 ring-1 ring-ink-900/5" aria-label="امکانات">
-            <h2 className="font-display font-black text-navy-900">شهریه شامل چه چیزهایی است؟</h2>
+            <h2 className="font-black text-navy-900">شهریه شامل چه چیزهایی است؟</h2>
             <ul className="mt-4 grid gap-3 sm:grid-cols-2">
               {cls.includes.map((inc) => (
                 <li key={inc} className="flex items-center gap-2 text-[15px] text-ink-700">
@@ -163,7 +163,7 @@ export default async function ClassDetailPage({
           </section>
 
           <section aria-labelledby="faq">
-            <h2 id="faq" className="font-display text-lg font-black text-navy-900">سؤالات پرتکرار</h2>
+            <h2 id="faq" className="text-lg font-black text-navy-900">سؤالات پرتکرار</h2>
             <div className="mt-2 space-y-2">
               {faqs.map((f) => (
                 <details key={f.q} className="group rounded-xl bg-card px-5 py-3.5 ring-1 ring-ink-900/5">

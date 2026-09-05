@@ -7,10 +7,12 @@ import { cartCount } from "@/lib/cart";
 import { toFa } from "@/lib/format";
 
 export function CartBadge() {
-  const [count, setCount] = useState(0);
+  const [count, setCount] = useState(() => {
+    if (typeof window === "undefined") return 0;
+    return cartCount();
+  });
 
   useEffect(() => {
-    setCount(cartCount());
     const onChange = () => setCount(cartCount());
     window.addEventListener("az:cart", onChange);
     window.addEventListener("storage", onChange);

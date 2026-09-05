@@ -112,7 +112,7 @@ export const defaultSettings: Settings = {
     tagline: "آموزش فرش و گلیم ایرانی",
     phone: "۰۲۱-۱۲۳۴۵۶۷۸",
     email: "hello@asadzedeh.ir",
-    address: "تهران، خیابان انقلاب، کارگاه اسدزاده",
+    address: "ارومیه، خیابان امام، خیابان عطایی، کوی دی (نجارخانه)، آموزشگاه اسدزاده",
     siteUrl: "https://asadzedeh.ir",
     announcement: {
       enabled: true,

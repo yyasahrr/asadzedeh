@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { cartTotal, couponDiscount, getCart, type CartItem } from "@/lib/cart";
 import { formatPrice, toFa } from "@/lib/format";
@@ -8,12 +8,11 @@ import { FieldLabel, Input } from "../ui/Input";
 import { startCheckout } from "@/app/checkout/actions";
 
 export function CheckoutForm({ userName, userPhone }: { userName: string; userPhone: string }) {
-  const [items, setItems] = useState<CartItem[] | null>(null);
+  const [items] = useState<CartItem[] | null>(() => {
+    if (typeof window === "undefined") return null;
+    return getCart();
+  });
   const [coupon, setCoupon] = useState("");
-
-  useEffect(() => {
-    setItems(getCart());
-  }, []);
 
   if (items === null) {
     return <div className="rounded-2xl bg-card p-10 text-center shadow-card">در حال بارگذاری…</div>;

@@ -60,13 +60,13 @@ export function SideNav({ items, dark = false }: { items: NavItem[]; dark?: bool
             href={href}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-bold transition-colors",
+              "flex min-h-10 items-center gap-3 rounded-xl px-3.5 py-2 text-sm font-bold transition-all",
               dark
                 ? active
-                  ? "bg-white/10 text-white"
+                  ? "bg-white/12 text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.12)]"
                   : "text-white/60 hover:bg-white/5 hover:text-white"
                 : active
-                  ? "bg-navy-800 text-white shadow-card"
+                  ? "bg-navy-800 text-white shadow-[0_10px_24px_-16px_rgb(21_47_61/0.9)]"
                   : "text-ink-600 hover:bg-sand-100 hover:text-navy-900"
             )}
           >
