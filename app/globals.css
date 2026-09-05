@@ -1,0 +1,208 @@
+@import "tailwindcss";
+
+/* ============================================================
+   Asadzedeh — Design Tokens
+   Modern Educational UI + Persian Craft Identity
+   ============================================================ */
+
+@theme {
+  --font-sans: "Vazirmatn Variable", "Vazirmatn", "IRANSans", Tahoma,
+    ui-sans-serif, system-ui, sans-serif;
+
+  /* Primary Navy — #193B5C */
+  --color-navy-50: #eef4f8;
+  --color-navy-100: #d7e3ec;
+  --color-navy-200: #b3c9d9;
+  --color-navy-600: #2c5a85;
+  --color-navy-700: #22496f;
+  --color-navy-800: #193b5c;
+  --color-navy-900: #152f3d;
+  --color-navy-950: #0d2029;
+
+  /* Turquoise accent — #2F8C87 */
+  --color-teal-50: #eaf6f5;
+  --color-teal-100: #d2e9e7;
+  --color-teal-200: #a9d4d1;
+  --color-teal-500: #3aa39d;
+  --color-teal-600: #2f8c87;
+  --color-teal-700: #226b67;
+  --color-teal-800: #1a5451;
+
+  /* Madder red highlight — #9D382C */
+  --color-madder-50: #f9eeec;
+  --color-madder-100: #f0d7d3;
+  --color-madder-200: #dfaca4;
+  --color-madder-600: #b04436;
+  --color-madder-700: #9d382c;
+  --color-madder-800: #7c2b22;
+
+  /* Ochre — #C08A3E */
+  --color-ochre-100: #f0e2c8;
+  --color-ochre-200: #e3c892;
+  --color-ochre-500: #d3a056;
+  --color-ochre-600: #c08a3e;
+  --color-ochre-700: #9a6c2d;
+
+  /* Carpet green — #506B4E */
+  --color-moss-100: #dbe3da;
+  --color-moss-200: #bccbbb;
+  --color-moss-600: #617f5f;
+  --color-moss-700: #506b4e;
+  --color-moss-800: #3c523b;
+
+  /* Warm neutrals */
+  --color-sand-50: #faf6ec;
+  --color-sand-100: #f3e9d6;
+  --color-sand-200: #e8d8b8;
+  --color-sand-300: #dcc897;
+  --color-sand-400: #cbb27e;
+
+  --color-card: #fffdf7;
+
+  /* Charcoal ink */
+  --color-ink-950: #101211;
+  --color-ink-900: #191a19;
+  --color-ink-700: #333633;
+  --color-ink-600: #4a4d4a;
+  --color-ink-500: #6b6e6b;
+  --color-ink-400: #8a8d8a;
+  --color-ink-300: #b9bcb7;
+
+  /* Shadows — soft, minimal */
+  --shadow-card: 0 1px 2px rgb(21 47 61 / 0.05),
+    0 8px 24px -12px rgb(21 47 61 / 0.16);
+  --shadow-lift: 0 2px 4px rgb(21 47 61 / 0.06),
+    0 18px 44px -16px rgb(21 47 61 / 0.24);
+
+  /* Motion — restrained */
+  --animate-fade-up: fade-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-fade-in: fade-in 0.6s ease both;
+
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(18px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-sand-100 text-ink-900 font-sans antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: var(--color-navy-800);
+    color: #fff;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-teal-600);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  /* Native accordion for curriculum (no JS) */
+  details > summary {
+    list-style: none;
+    cursor: pointer;
+  }
+  details > summary::-webkit-details-marker {
+    display: none;
+  }
+}
+
+@layer components {
+  /* Page container */
+  .shell {
+    margin-inline: auto;
+    width: 100%;
+    max-width: 76rem;
+    padding-inline: 1rem;
+  }
+  @media (min-width: 640px) {
+    .shell {
+      padding-inline: 1.5rem;
+    }
+  }
+  @media (min-width: 1024px) {
+    .shell {
+      padding-inline: 2rem;
+    }
+  }
+
+  .section-pad {
+    padding-block: 3.5rem;
+  }
+  @media (min-width: 1024px) {
+    .section-pad {
+      padding-block: 5rem;
+    }
+  }
+
+  /* Thin kilim stripe divider (pure CSS) */
+  .pattern-strip {
+    height: 6px;
+    background: repeating-linear-gradient(
+      -45deg,
+      var(--color-madder-700) 0 10px,
+      var(--color-ochre-600) 10px 20px,
+      var(--color-navy-800) 20px 30px,
+      var(--color-teal-600) 30px 40px,
+      var(--color-sand-200) 40px 50px
+    );
+  }
+  .pattern-strip-thin {
+    height: 3px;
+    background: repeating-linear-gradient(
+      -45deg,
+      var(--color-madder-700) 0 8px,
+      var(--color-ochre-600) 8px 16px,
+      var(--color-navy-800) 16px 24px,
+      var(--color-teal-600) 24px 32px
+    );
+  }
+
+  /* Subtle diamond-lattice backdrop */
+  .bg-lattice {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='44' viewBox='0 0 44 44'%3E%3Cpath d='M22 6l8 8-8 8-8-8z' fill='none' stroke='%23193B5C' stroke-opacity='0.10'/%3E%3Ccircle cx='22' cy='22' r='1.6' fill='%239D382C' fill-opacity='0.14'/%3E%3C/svg%3E");
+  }
+  .bg-lattice-light {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='44' viewBox='0 0 44 44'%3E%3Cpath d='M22 6l8 8-8 8-8-8z' fill='none' stroke='%23FFFFFF' stroke-opacity='0.12'/%3E%3C/svg%3E");
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* Elegant thin scrollbar for sidebars/tables */
+  .thin-scroll::-webkit-scrollbar {
+    height: 6px;
+    width: 6px;
+  }
+  .thin-scroll::-webkit-scrollbar-thumb {
+    background: var(--color-sand-300);
+    border-radius: 999px;
+  }
+}
