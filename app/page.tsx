@@ -10,6 +10,7 @@ import { StudentWorks } from "@/components/home/StudentWorks";
 import { Testimonials } from "@/components/home/Testimonials";
 import { BlogPreview } from "@/components/home/BlogPreview";
 import { FinalCTA } from "@/components/home/FinalCTA";
+import { InstagramEmbed } from "@/components/home/InstagramEmbed";
 import { Reveal } from "@/components/Reveal";
 
 export default function HomePage() {
@@ -50,6 +51,9 @@ export default function HomePage() {
       </Reveal>
       <Reveal>
         <FinalCTA />
+      </Reveal>
+      <Reveal>
+        <InstagramEmbed />
       </Reveal>
     </>
   );

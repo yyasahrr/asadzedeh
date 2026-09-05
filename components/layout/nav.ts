@@ -4,6 +4,7 @@ export const navLinks = [
   { href: "/classes", label: "دوره‌های حضوری" },
   { href: "/paths", label: "مسیرهای آموزشی" },
   { href: "/instructors", label: "اساتید" },
+  { href: "/shop", label: "فروشگاه" },
   { href: "/blog", label: "دانشنامه" },
   { href: "/about", label: "درباره ما" },
 ];

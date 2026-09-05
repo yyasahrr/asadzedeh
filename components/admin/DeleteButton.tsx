@@ -10,9 +10,10 @@ export function DeleteButton({
   label,
 }: {
   action: (fd: FormData) => void;
-  hidden: { name: string; value: string };
+  hidden: { name: string; value: string } | { name: string; value: string }[];
   label: string;
 }) {
+  const fields = Array.isArray(hidden) ? hidden : [hidden];
   const [confirming, setConfirming] = useState(false);
 
   if (!confirming) {
@@ -31,7 +32,9 @@ export function DeleteButton({
 
   return (
     <form action={action} className="inline-flex items-center gap-1.5">
-      <input type="hidden" name={hidden.name} value={hidden.value} />
+      {fields.map((f) => (
+        <input key={f.name} type="hidden" name={f.name} value={f.value} />
+      ))}
       <button
         type="submit"
         className="h-8 cursor-pointer rounded-lg bg-madder-700 px-3 text-xs font-bold whitespace-nowrap text-white transition-colors hover:bg-madder-600"

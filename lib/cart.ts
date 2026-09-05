@@ -1,12 +1,21 @@
 /** Client-side cart (localStorage). Emits `az:cart` event on change. */
 
+export type CartKind = "course" | "class" | "product";
+
 export interface CartItem {
-  kind: "course" | "class";
+  kind: CartKind;
   slug: string;
   title: string;
   price: number;
   image: string;
   meta?: string;
+  /** Quantity (products only; courses/classes are always 1). */
+  qty?: number;
+  /** Max purchasable quantity (stock) for products. */
+  maxQty?: number;
+  /** Physical products need a shipping address. */
+  physical?: boolean;
+  weightGrams?: number;
 }
 
 const KEY = "az_cart";
@@ -33,9 +42,31 @@ export function getCart(): CartItem[] {
   return read();
 }
 
+export function itemQty(i: CartItem): number {
+  return i.kind === "product" ? Math.max(1, i.qty ?? 1) : 1;
+}
+
 export function addToCart(item: CartItem): CartItem[] {
   const items = read();
-  if (!items.some((i) => i.slug === item.slug)) items.push(item);
+  const existing = items.find((i) => i.slug === item.slug && i.kind === item.kind);
+  if (existing) {
+    if (item.kind === "product") {
+      const next = itemQty(existing) + itemQty(item);
+      existing.qty = existing.maxQty ? Math.min(next, existing.maxQty) : next;
+    }
+  } else {
+    items.push({ ...item, qty: item.kind === "product" ? itemQty(item) : undefined });
+  }
+  persist(items);
+  return items;
+}
+
+export function setQty(slug: string, qty: number): CartItem[] {
+  const items = read().map((i) => {
+    if (i.slug !== slug || i.kind !== "product") return i;
+    const capped = i.maxQty ? Math.min(qty, i.maxQty) : qty;
+    return { ...i, qty: Math.max(1, capped) };
+  });
   persist(items);
   return items;
 }
@@ -51,11 +82,15 @@ export function clearCart() {
 }
 
 export function cartCount(): number {
-  return read().length;
+  return read().reduce((s, i) => s + itemQty(i), 0);
 }
 
 export function cartTotal(items?: CartItem[]): number {
-  return (items ?? read()).reduce((s, i) => s + i.price, 0);
+  return (items ?? read()).reduce((s, i) => s + i.price * itemQty(i), 0);
+}
+
+export function hasPhysical(items?: CartItem[]): boolean {
+  return (items ?? read()).some((i) => i.kind === "product" && i.physical !== false);
 }
 
 export function couponDiscount(total: number, code: string): number {

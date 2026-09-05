@@ -2,14 +2,13 @@ import Link from "next/link";
 import { LogOut } from "lucide-react";
 import { SideNav } from "@/components/dashboard/SideNav";
 import { getSessionUser } from "@/lib/auth";
-import { dashboardStudent } from "@/lib/data";
 import { logout } from "@/app/auth/actions";
 
 const items = [
   { href: "/dashboard", label: "پیشخوان", icon: "dashboard" },
   { href: "/dashboard/courses", label: "دوره‌های من", icon: "courses" },
   { href: "/dashboard/classes", label: "کلاس‌های من", icon: "classes" },
-  { href: "/dashboard/assignments", label: "تمرین‌ها", icon: "assignments", badge: "۲" },
+  { href: "/dashboard/assignments", label: "تمرین‌ها", icon: "assignments" },
   { href: "/dashboard/certificates", label: "گواهی‌ها", icon: "certificates" },
   { href: "/dashboard/orders", label: "سفارش‌ها", icon: "orders" },
   { href: "/dashboard/profile", label: "پروفایل", icon: "profile" },
@@ -17,7 +16,7 @@ const items = [
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = await getSessionUser();
-  const name = user?.name ?? dashboardStudent.name;
+  const name = user?.name ?? "مهمان";
   return (
     <div className="shell py-6 lg:py-8">
       <div className="grid gap-5 lg:grid-cols-[248px_1fr]">
@@ -29,7 +28,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
               </span>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-extrabold text-navy-900">{name}</p>
-                <p className="text-xs text-ink-500">{user ? "هنرجو" : dashboardStudent.level}</p>
+                <p className="text-xs text-ink-500">{user ? "هنرجو" : "وارد نشده‌اید"}</p>
               </div>
             </div>
             <SideNav items={items} />

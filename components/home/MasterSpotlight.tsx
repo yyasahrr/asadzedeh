@@ -1,10 +1,11 @@
 import Image from "next/image";
 import { Quote } from "lucide-react";
-import { instructors } from "@/lib/data";
+import { getInstructors } from "@/lib/store";
 import { Button } from "../ui/Button";
 
 export function MasterSpotlight() {
-  const master = instructors[0];
+  const instructors = getInstructors();
+  const master = instructors.find((i) => i.featured && i.active !== false) ?? instructors[0];
   return (
     <section className="bg-sand-50" aria-labelledby="master">
       <div className="section-pad shell grid items-center gap-10 lg:grid-cols-2 lg:gap-16">

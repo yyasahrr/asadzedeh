@@ -10,7 +10,7 @@ import { addStaff, updateUserRole } from "../actions";
 
 export const metadata: Metadata = { title: "کاربران و دسترسی" };
 
-const staffRoles: Role[] = ["manager", "editor", "support"];
+const staffRoles: Role[] = ["manager", "editor", "support", "instructor"];
 
 export default async function UsersPage({
   searchParams,
@@ -81,7 +81,10 @@ export default async function UsersPage({
               {u.name} {u.id === user.id && <span className="text-xs text-ink-400">(شما)</span>}
             </Td>
             <Td><span dir="ltr" className="text-ink-600">{u.phone}</span></Td>
-            <Td><span className="rounded-full bg-sand-100 px-3 py-1 text-xs font-bold text-ink-700">{roleLabels[u.role]}</span></Td>
+            <Td>
+              <span className="rounded-full bg-sand-100 px-3 py-1 text-xs font-bold text-ink-700">{roleLabels[u.role]}</span>
+              {u.totp?.enabled && <span className="ms-1 rounded-full bg-teal-50 px-2 py-1 text-[10px] font-bold text-teal-700">2FA</span>}
+            </Td>
             <Td className="whitespace-nowrap text-ink-600">{u.createdAt}</Td>
             <Td>
               {u.id === user.id ? (
@@ -96,7 +99,7 @@ export default async function UsersPage({
                     defaultValue={u.role}
                     className="h-9 cursor-pointer rounded-lg border border-ink-900/10 bg-white px-2 text-[13px] font-bold focus:border-teal-600 focus:outline-none"
                   >
-                    {(["manager", "editor", "support", "student"] as Role[]).map((r) => (
+                    {(["manager", "editor", "support", "instructor", "student"] as Role[]).map((r) => (
                       <option key={r} value={r}>{roleLabels[r]}</option>
                     ))}
                   </select>

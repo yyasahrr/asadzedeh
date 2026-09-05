@@ -2,25 +2,38 @@ import fs from "node:fs";
 import path from "node:path";
 import type {
   Article,
+  AuditEntry,
   Certificate,
   Comment,
+  Enrollment,
   InPersonClass,
+  Instructor,
   NotifyLog,
   OnlineCourse,
   Order,
+  Preorder,
+  Product,
   Session,
   Settings,
   Student,
   Subscriber,
   Submission,
   User,
+  VideoAsset,
 } from "./types";
-import { articles as seedArticles, inPersonClasses as seedClasses, onlineCourses as seedCourses } from "./data";
+import {
+  articles as seedArticles,
+  inPersonClasses as seedClasses,
+  instructors as seedInstructors,
+  onlineCourses as seedCourses,
+} from "./data";
 import {
   certificates as seedCertificates,
   comments as seedComments,
   defaultSettings,
+  enrollments as seedEnrollments,
   orders as seedOrders,
+  products as seedProducts,
   students as seedStudents,
   users as seedUsers,
 } from "./seed";
@@ -47,11 +60,43 @@ export interface Db {
   subscribers: Subscriber[];
   notifyLog: NotifyLog[];
   settings: Settings;
+  /* --- new collections --- */
+  instructors: Instructor[];
+  videos: VideoAsset[];
+  enrollments: Enrollment[];
+  products: Product[];
+  preorders: Preorder[];
+  audit: AuditEntry[];
+}
+
+/**
+ * Seed courses ship with a textual syllabus only. Derive a lesson skeleton from it
+ * (first lesson of each course is a free preview) so the player, progress tracking
+ * and admin lesson manager have real rows to work with. Videos are attached later
+ * from /admin/courses/[slug]/lessons.
+ */
+function withSeedLessons(course: OnlineCourse): OnlineCourse {
+  if (course.lessons && course.lessons.length > 0) return course;
+  let order = 0;
+  const lessons = course.syllabus.flatMap((chapter) =>
+    chapter.lessons.map((title) => {
+      order += 1;
+      return {
+        id: `ls-${course.slug}-${order}`,
+        title,
+        chapter: chapter.title,
+        order,
+        durationMin: 18 + ((order * 7) % 25),
+        free: order === 1,
+      };
+    })
+  );
+  return { ...course, lessons };
 }
 
 function seed(): Db {
   return {
-    courses: seedCourses,
+    courses: seedCourses.map(withSeedLessons),
     classes: seedClasses,
     students: seedStudents,
     orders: seedOrders,
@@ -64,7 +109,36 @@ function seed(): Db {
     subscribers: [],
     notifyLog: [],
     settings: defaultSettings,
+    instructors: seedInstructors,
+    videos: [],
+    enrollments: seedEnrollments,
+    products: seedProducts,
+    preorders: [],
+    audit: [],
   };
+}
+
+/** Deep-merge settings so newly added setting groups get defaults on old DB files. */
+function mergeSettings(base: Settings, parsed: Partial<Settings> | undefined): Settings {
+  if (!parsed) return base;
+  const out = { ...base } as Record<string, unknown>;
+  for (const key of Object.keys(base) as (keyof Settings)[]) {
+    const b = base[key] as unknown;
+    const p = parsed[key] as unknown;
+    if (p && typeof p === "object" && !Array.isArray(p) && b && typeof b === "object" && !Array.isArray(b)) {
+      out[key] = { ...(b as object), ...(p as object) };
+    } else if (p !== undefined) {
+      out[key] = p;
+    }
+  }
+  return out as unknown as Settings;
+}
+
+/** Make sure seed users that were added later (e.g. instructor demo) exist. */
+function ensureSeedUsers(users: User[]): User[] {
+  const known = new Set(users.map((u) => u.id));
+  const missing = seedUsers.filter((u) => !known.has(u.id) && !users.some((x) => x.phone === u.phone));
+  return missing.length > 0 ? [...users, ...missing] : users;
 }
 
 function readDb(): Db {
@@ -75,7 +149,8 @@ function readDb(): Db {
     return {
       ...base,
       ...parsed,
-      settings: { ...base.settings, ...(parsed.settings ?? {}) },
+      users: ensureSeedUsers(parsed.users ?? base.users),
+      settings: mergeSettings(base.settings, parsed.settings),
     };
   } catch {
     const db = seed();
@@ -92,7 +167,9 @@ function readDb(): Db {
 export function writeDb(patch: Partial<Db>): Db {
   const db: Db = { ...readDb(), ...patch };
   fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
-  fs.writeFileSync(DB_PATH, JSON.stringify(db, null, 2), "utf-8");
+  const tmp = `${DB_PATH}.${process.pid}.tmp`;
+  fs.writeFileSync(tmp, JSON.stringify(db, null, 2), "utf-8");
+  fs.renameSync(tmp, DB_PATH);
   return db;
 }
 
@@ -112,6 +189,13 @@ export const getCourse = (slug: string): OnlineCourse | undefined =>
 export const getClasses = (): InPersonClass[] => readDb().classes;
 export const getClass = (slug: string): InPersonClass | undefined =>
   readDb().classes.find((c) => c.slug === slug);
+
+/* ---------- Instructors ---------- */
+export const getInstructors = (): Instructor[] => readDb().instructors;
+export const getInstructor = (slug: string): Instructor | undefined =>
+  readDb().instructors.find((i) => i.slug === slug);
+export const getInstructorByUser = (userId: string): Instructor | undefined =>
+  readDb().instructors.find((i) => i.userId === userId);
 
 /* ---------- Students / Orders ---------- */
 export const getStudents = (): Student[] => readDb().students;
@@ -146,6 +230,28 @@ export const getComments = (): Comment[] => readDb().comments;
 export const getApprovedComments = (scope: "course" | "class", slug: string): Comment[] =>
   readDb().comments.filter((c) => c.scope === scope && c.slug === slug && c.status === "approved");
 export const getSubmissions = (): Submission[] => readDb().submissions;
+
+/* ---------- Videos / Enrollments ---------- */
+export const getVideos = (): VideoAsset[] => readDb().videos;
+export const getVideo = (id: string): VideoAsset | undefined =>
+  readDb().videos.find((v) => v.id === id);
+export const getEnrollments = (): Enrollment[] => readDb().enrollments;
+export const getEnrollmentsByUser = (userId: string): Enrollment[] =>
+  readDb().enrollments.filter((e) => e.userId === userId);
+export const getEnrollment = (userId: string, courseSlug: string): Enrollment | undefined =>
+  readDb().enrollments.find((e) => e.userId === userId && e.courseSlug === courseSlug);
+
+/* ---------- Shop ---------- */
+export const getProducts = (): Product[] => readDb().products;
+export const getActiveProducts = (): Product[] => readDb().products.filter((p) => p.active);
+export const getProduct = (slug: string): Product | undefined =>
+  readDb().products.find((p) => p.slug === slug);
+export const getPreorders = (): Preorder[] => readDb().preorders;
+export const getPreorder = (id: string): Preorder | undefined =>
+  readDb().preorders.find((p) => p.id === id);
+
+/* ---------- Audit ---------- */
+export const getAudit = (): AuditEntry[] => readDb().audit;
 
 /* ---------- Misc ---------- */
 export const getSubscribers = (): Subscriber[] => readDb().subscribers;

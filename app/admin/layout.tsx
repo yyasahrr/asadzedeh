@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { LogOut, ShieldAlert } from "lucide-react";
+import { redirect } from "next/navigation";
+import { LogOut, ShieldAlert, ShieldCheck } from "lucide-react";
 import { SideNav } from "@/components/dashboard/SideNav";
 import { LogoMark } from "@/components/Logo";
-import { getSessionUser, can, isStaff, roleLabels, type Permission } from "@/lib/auth";
-import { getComments, getOrders, getSubmissions } from "@/lib/store";
+import { getSessionUser, can, isStaff, needsMfa, roleLabels, type Permission } from "@/lib/auth";
+import { getComments, getOrders, getPreorders, getSubmissions, getVideos } from "@/lib/store";
 import { toFa } from "@/lib/format";
 import { logout } from "@/app/auth/actions";
 
@@ -19,7 +20,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <p className="text-sm leading-7 text-ink-600">
             این بخش مخصوص همکاران است. لطفاً با حساب کاربری مجاز وارد شوید.
           </p>
-          <Link href="/auth" className="mt-2 inline-flex h-11 items-center rounded-xl bg-navy-800 px-8 font-bold text-white">
+          <Link href="/auth?next=/admin" className="mt-2 inline-flex h-11 items-center rounded-xl bg-navy-800 px-8 font-bold text-white">
             ورود به حساب
           </Link>
         </div>
@@ -27,14 +28,28 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     );
   }
 
+  // Instructors have their own panel.
+  if (user!.role === "instructor") redirect("/instructor");
+
+  // Second-factor gate for the admin area.
+  const mfa = needsMfa(user);
+  if (mfa === "verify") redirect("/auth/verify?mode=session");
+  if (mfa === "enrol") redirect("/account/security?required=1");
+
   const pendingComments = getComments().filter((c) => c.status === "pending").length;
   const pendingSubs = getSubmissions().filter((s) => s.status === "در حال بررسی").length;
   const pendingOrders = getOrders().filter((o) => o.status === "در انتظار پرداخت").length;
+  const processingVideos = getVideos().filter((v) => v.status === "processing").length;
+  const openPreorders = getPreorders().filter((p) => p.status === "ثبت شده" || p.status === "در انتظار بیعانه").length;
 
   const items = [
     { href: "/admin", label: "نمای کلی", icon: "dashboard" },
     { href: "/admin/courses", label: "دوره‌ها", icon: "courses", perm: "courses" },
     { href: "/admin/classes", label: "کلاس‌های حضوری", icon: "classes", perm: "classes" },
+    { href: "/admin/videos", label: "ویدیوها و امنیت پخش", icon: "videos", perm: "videos", badge: processingVideos ? toFa(processingVideos) : undefined },
+    { href: "/admin/instructors", label: "اساتید", icon: "instructors", perm: "instructors" },
+    { href: "/admin/shop", label: "فروشگاه", icon: "shop", perm: "shop" },
+    { href: "/admin/preorders", label: "پیش‌سفارش‌ها", icon: "preorders", perm: "preorders", badge: openPreorders ? toFa(openPreorders) : undefined },
     { href: "/admin/blog", label: "مقالات", icon: "blog", perm: "blog" },
     { href: "/admin/media", label: "رسانه", icon: "media", perm: "media" },
     { href: "/admin/content", label: "محتوای سایت", icon: "content", perm: "content" },
@@ -45,7 +60,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     { href: "/admin/certificates", label: "گواهی‌ها", icon: "certificates", perm: "certificates" },
     { href: "/admin/notify", label: "پیامک و ایمیل", icon: "notify", perm: "notify" },
     { href: "/admin/payments", label: "پرداخت", icon: "payments", perm: "payments" },
+    { href: "/admin/audit", label: "لاگ سیستم", icon: "audit", perm: "audit" },
     { href: "/admin/users", label: "کاربران و دسترسی", icon: "profile", perm: "users" },
+    { href: "/admin/security", label: "امنیت پنل", icon: "security", perm: "security" },
     { href: "/admin/settings", label: "تنظیمات", icon: "settings", perm: "settings" },
   ].filter((i) => !i.perm || can(user, i.perm as Permission));
 
@@ -60,20 +77,34 @@ export default async function AdminLayout({ children }: { children: React.ReactN
                 <p className="truncate text-sm font-black text-white">{user!.name}</p>
                 <p className="text-[11px] text-ochre-200">{roleLabels[user!.role]}</p>
               </div>
+              {user!.totpEnabled && <ShieldCheck className="h-4 w-4 text-teal-200" aria-label="ورود دومرحله‌ای فعال" />}
             </Link>
-            <SideNav
-              items={items.map((i) => ({ href: i.href, label: i.label, icon: i.icon, badge: i.badge }))}
-              dark
-            />
-            <form action={logout} className="mt-3 border-t border-white/10 pt-3">
-              <button
-                type="submit"
-                className="flex w-full cursor-pointer items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold text-white/60 transition-colors hover:bg-white/5 hover:text-white"
-              >
-                <LogOut className="h-[18px] w-[18px]" />
-                خروج از حساب
-              </button>
-            </form>
+            {!user!.totpEnabled && (
+              <Link href="/account/security" className="mb-3 block rounded-xl bg-ochre-200/15 px-3 py-2 text-[11px] font-bold leading-5 text-ochre-200 ring-1 ring-ochre-200/30 hover:bg-ochre-200/25">
+                ⚠️ ورود دومرحله‌ای فعال نیست — فعال‌سازی
+              </Link>
+            )}
+            <div className="thin-scroll max-h-[calc(100vh-15rem)] overflow-y-auto pe-1">
+              <SideNav
+                items={items.map((i) => ({ href: i.href, label: i.label, icon: i.icon, badge: i.badge }))}
+                dark
+              />
+            </div>
+            <div className="mt-3 flex items-center gap-1 border-t border-white/10 pt-3">
+              <Link href="/account/security" className="flex flex-1 items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-bold text-white/60 transition-colors hover:bg-white/5 hover:text-white">
+                <ShieldCheck className="h-[18px] w-[18px]" />
+                حساب من
+              </Link>
+              <form action={logout}>
+                <button
+                  type="submit"
+                  className="flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-bold text-white/60 transition-colors hover:bg-white/5 hover:text-white"
+                >
+                  <LogOut className="h-[18px] w-[18px]" />
+                  خروج
+                </button>
+              </form>
+            </div>
           </div>
         </aside>
         <div className="dashboard-canvas min-w-0 p-4 sm:p-6">{children}</div>

@@ -48,6 +48,8 @@ export async function Footer() {
       links: [
         { href: "/paths", label: "مسیرهای آموزشی" },
         { href: "/instructors", label: "اساتید" },
+        { href: "/shop", label: "فروشگاه ابزار و دار" },
+        { href: "/shop/preorder", label: "پیگیری پیش‌سفارش" },
         { href: "/blog", label: "دانشنامه" },
         { href: "/about", label: "درباره ما" },
         { href: "/dashboard", label: "پنل هنرجو" },

@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
@@ -12,6 +11,7 @@ import { Comments } from "@/components/comments/Comments";
 import { ShareButton } from "@/components/ShareButton";
 import { AddToCartButton } from "@/components/cart/AddToCartButton";
 import { WorkshopLocation } from "@/components/workshop/WorkshopLocation";
+import { TrailerBlock } from "@/components/video/TrailerBlock";
 
 export function generateStaticParams() {
   return getClasses().map((c) => ({ slug: c.slug }));
@@ -103,9 +103,7 @@ export default async function ClassDetailPage({
       <div className="shell grid gap-4 py-3 lg:grid-cols-[1fr_340px] lg:py-5">
         <div className="min-w-0 space-y-3">
           <div>
-            <div className="overflow-hidden rounded-2xl shadow-card">
-              <Image src={cls.image} alt={cls.title} width={1000} height={560} className="aspect-video w-full object-cover" priority />
-            </div>
+            <TrailerBlock trailer={cls.trailer} image={cls.image} title={cls.title} />
             <div className="mt-3 flex justify-end">
               <ShareButton title={cls.title} />
             </div>

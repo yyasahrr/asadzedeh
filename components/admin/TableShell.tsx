@@ -17,6 +17,10 @@ export function TableShell({ head, children }: { head: string[]; children: React
   );
 }
 
-export function Td({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <td className={`px-5 py-4 ${className}`}>{children}</td>;
+export function Td({ children, className = "", dir, colSpan }: { children: ReactNode; className?: string; dir?: "ltr" | "rtl"; colSpan?: number }) {
+  return (
+    <td className={`px-5 py-4 ${className}`} dir={dir} colSpan={colSpan}>
+      {children}
+    </td>
+  );
 }

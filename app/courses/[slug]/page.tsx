@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
@@ -8,6 +7,7 @@ import {
   Clock3,
   Infinity as InfinityIcon,
   LayoutGrid,
+  Lock,
   Minus,
   PlayCircle,
   Plus,
@@ -23,10 +23,12 @@ import { CourseCard } from "@/components/cards/CourseCard";
 import { Comments } from "@/components/comments/Comments";
 import { ShareButton } from "@/components/ShareButton";
 import { AddToCartButton } from "@/components/cart/AddToCartButton";
+import { TrailerBlock } from "@/components/video/TrailerBlock";
+import { getSessionUser } from "@/lib/auth";
+import { isEnrolled } from "@/lib/access";
+import { getVideos } from "@/lib/store";
 
-export function generateStaticParams() {
-  return getCourses().map((c) => ({ slug: c.slug }));
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -69,6 +71,13 @@ export default async function CourseDetailPage({
   const { comment } = await searchParams;
   const course = getCourse(slug);
   if (!course) notFound();
+
+  const user = await getSessionUser();
+  const enrolled = isEnrolled(user, course.slug);
+  const lessons = [...(course.lessons ?? [])].sort((a, b) => a.order - b.order);
+  const chapters = Array.from(new Set(lessons.map((l) => l.chapter)));
+  const freeCount = lessons.filter((l) => l.free).length;
+  const videoIds = new Set(getVideos().filter((v) => v.status !== "failed").map((v) => v.id));
 
   const related = getCourses().filter((c) => c.slug !== course.slug).slice(0, 3);
   const siteUrl = getSettings().site.siteUrl.replace(/\/$/, "");
@@ -115,21 +124,7 @@ export default async function CourseDetailPage({
       <div className="shell grid gap-4 py-3 lg:grid-cols-[1fr_340px] lg:py-5">
         <div className="min-w-0 space-y-3">
           <div>
-            <div className="relative overflow-hidden rounded-xl shadow-card">
-              <Image
-                src={course.image}
-                alt={course.title}
-                width={1000}
-                height={560}
-                className="aspect-video w-full object-cover"
-                priority
-              />
-              {(course.badge || course.students === 0) && (
-                <span className="absolute top-4 right-4 rounded-full bg-madder-700 px-4 py-1.5 text-sm font-bold text-white shadow-card">
-                  {course.badge ?? "جدید"}
-                </span>
-              )}
-            </div>
+            <TrailerBlock trailer={course.trailer} image={course.image} title={course.title} badge={course.badge ?? (course.students === 0 ? "جدید" : undefined)} />
 
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <Badge tone="navy">{course.category}</Badge>
@@ -162,9 +157,64 @@ export default async function CourseDetailPage({
           </section>
 
           <section aria-labelledby="syllabus">
-            <h2 id="syllabus" className="text-lg font-black text-navy-900">سرفصل‌های دوره</h2>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h2 id="syllabus" className="text-lg font-black text-navy-900">سرفصل‌های دوره</h2>
+              {lessons.length > 0 && (
+                <span className="text-xs text-ink-500">
+                  {toFa(lessons.length)} جلسه ویدیویی • {toFa(lessons.reduce((t, l) => t + l.durationMin, 0))} دقیقه
+                  {freeCount > 0 && ` • ${toFa(freeCount)} پیش‌نمایش رایگان`}
+                </span>
+              )}
+            </div>
             <div className="mt-2 space-y-2">
-              {course.syllabus.map((ch, i) => (
+              {lessons.length > 0
+                ? chapters.map((ch, i) => {
+                    const items = lessons.filter((l) => l.chapter === ch);
+                    return (
+                      <details key={ch} open={i === 0} className="group overflow-hidden rounded-xl bg-card ring-1 ring-ink-900/5 open:ring-teal-600/30">
+                        <summary className="flex items-center justify-between gap-3 p-4 font-extrabold text-navy-900">
+                          <span className="flex items-center gap-3">
+                            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-sand-100 text-sm font-black text-navy-800">{toFa(i + 1)}</span>
+                            {ch}
+                            <span className="text-xs font-normal text-ink-400">({toFa(items.length)} جلسه)</span>
+                          </span>
+                          <span className="text-ink-400">
+                            <Plus className="h-5 w-5 group-open:hidden" />
+                            <Minus className="hidden h-5 w-5 group-open:block" />
+                          </span>
+                        </summary>
+                        <ul className="space-y-1 border-t border-dashed border-ink-900/10 px-5 py-4">
+                          {items.map((l) => {
+                            const watchable = enrolled || l.free;
+                            const hasVideo = !!l.videoId && videoIds.has(l.videoId);
+                            const row = (
+                              <>
+                                <span className="flex items-center gap-2.5">
+                                  {watchable ? <PlayCircle className="h-4 w-4 shrink-0 text-ochre-600" /> : <Lock className="h-4 w-4 shrink-0 text-ink-300" />}
+                                  <span>{toFa(l.order)}. {l.title}</span>
+                                </span>
+                                <span className="flex items-center gap-2">
+                                  {l.free && !enrolled && <span className="rounded-full bg-teal-50 px-3 py-1 text-xs font-bold text-teal-700">پیش‌نمایش رایگان</span>}
+                                  {!hasVideo && <span className="rounded-full bg-sand-100 px-2 py-0.5 text-[10px] font-bold text-ink-500">به‌زودی</span>}
+                                  <span className="text-xs text-ink-400">{toFa(l.durationMin)} دقیقه</span>
+                                </span>
+                              </>
+                            );
+                            return (
+                              <li key={l.id} className="text-[15px] text-ink-700">
+                                {watchable && hasVideo ? (
+                                  <Link href={`/dashboard/courses/${course.slug}?lesson=${l.id}`} className="flex items-center justify-between gap-3 rounded-lg py-2 transition-colors hover:text-teal-700">{row}</Link>
+                                ) : (
+                                  <div className="flex items-center justify-between gap-3 py-2">{row}</div>
+                                )}
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </details>
+                    );
+                  })
+                : course.syllabus.map((ch, i) => (
                 <details
                   key={ch.title}
                   open={i === 0}
@@ -200,6 +250,11 @@ export default async function CourseDetailPage({
                 </details>
               ))}
             </div>
+            {enrolled && lessons.length > 0 && (
+              <Link href={`/dashboard/courses/${course.slug}`} className="mt-3 inline-flex h-11 items-center gap-2 rounded-xl bg-teal-600 px-6 text-sm font-bold text-white hover:bg-teal-700">
+                <PlayCircle className="h-4 w-4" /> شما در این دوره ثبت‌نام کرده‌اید — ورود به کلاس
+              </Link>
+            )}
           </section>
 
           <section className="flex flex-col gap-3 rounded-xl bg-card p-4 ring-1 ring-ink-900/5 sm:flex-row sm:items-center" aria-label="مدرس دوره">

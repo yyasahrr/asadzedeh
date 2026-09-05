@@ -18,7 +18,7 @@ export default async function ContentPage({
   const user = await getSessionUser();
   if (!can(user, "content")) return <Denied />;
   const { saved } = await searchParams;
-  const site = getSettings().site;
+  const { site, instagram } = getSettings();
 
   return (
     <div className="space-y-5">
@@ -140,6 +140,39 @@ export default async function ContentPage({
           <div className="mt-4">
             <FieldLabel htmlFor="aboutIntro">متن معرفی (هر پاراگراف با یک خط خالی)</FieldLabel>
             <Textarea id="aboutIntro" name="aboutIntro" defaultValue={site.aboutIntro.join("\n\n")} className="min-h-40" />
+          </div>
+        </section>
+
+        {/* Instagram */}
+        <section className="rounded-2xl bg-card p-6 shadow-card ring-1 ring-ink-900/5">
+          <h2 className="font-extrabold text-navy-900">بخش «یک نما از اینستاگرام» (قبل از فوتر صفحه اصلی)</h2>
+          <p className="mt-1 text-xs leading-6 text-ink-500">
+            بدون نیاز به کلید API؛ از embed رسمی اینستاگرام استفاده می‌شود. اگر لینک پست وارد کنید، شبکه‌ای از پست‌ها نمایش داده می‌شود؛ در غیر این صورت پروفایل.
+          </p>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <label className="flex cursor-pointer items-center gap-2 text-sm font-bold text-ink-700 sm:col-span-2">
+              <input type="checkbox" name="igEnabled" value="1" defaultChecked={instagram.enabled} className="h-4 w-4 accent-teal-700" /> نمایش این بخش در صفحه اصلی
+            </label>
+            <div>
+              <FieldLabel htmlFor="igUsername">نام کاربری اینستاگرام (بدون @)</FieldLabel>
+              <Input id="igUsername" name="igUsername" defaultValue={instagram.username} dir="ltr" className="text-left" placeholder="asadzedeh.carpet" />
+            </div>
+            <div>
+              <FieldLabel htmlFor="igTitle">عنوان بخش</FieldLabel>
+              <Input id="igTitle" name="igTitle" defaultValue={instagram.title} />
+            </div>
+            <div className="sm:col-span-2">
+              <FieldLabel htmlFor="igDesc">توضیح کوتاه</FieldLabel>
+              <Input id="igDesc" name="igDesc" defaultValue={instagram.description} />
+            </div>
+            <div className="sm:col-span-2">
+              <FieldLabel htmlFor="igPosts">لینک پست‌ها / ریلز (هر خط یک لینک، حداکثر ۶)</FieldLabel>
+              <Textarea id="igPosts" name="igPosts" defaultValue={instagram.posts.join("\n")} dir="ltr" className="min-h-24 text-left" placeholder={"https://www.instagram.com/p/XXXXXXXX/\nhttps://www.instagram.com/reel/YYYYYYYY/"} />
+            </div>
+            <div className="sm:col-span-2">
+              <FieldLabel htmlFor="igEmbed">آدرس embed سفارشی (اختیاری — جایگزین پروفایل)</FieldLabel>
+              <Input id="igEmbed" name="igEmbed" defaultValue={instagram.embedUrl} dir="ltr" className="text-left" placeholder="https://www.instagram.com/asadzedeh.carpet/embed/" />
+            </div>
           </div>
         </section>
 

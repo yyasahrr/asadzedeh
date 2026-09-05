@@ -1,14 +1,25 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Award, FileBadge, Lock } from "lucide-react";
-import { getCertificatesByStudent } from "@/lib/store";
-import { dashboardStudent } from "@/lib/data";
+import { getCertificatesByStudent, getCourses, getEnrollmentsByUser } from "@/lib/store";
+import { getSessionUser } from "@/lib/auth";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 
 export const metadata: Metadata = { title: "گواهی‌ها" };
+export const dynamic = "force-dynamic";
 
-export default function CertificatesPage() {
-  const mine = getCertificatesByStudent(dashboardStudent.name);
+export default async function CertificatesPage() {
+  const user = await getSessionUser();
+  const mine = user ? getCertificatesByStudent(user.name) : [];
+  const courses = getCourses();
+  const inProgress = (user ? getEnrollmentsByUser(user.id) : [])
+    .map((e) => {
+      const course = courses.find((c) => c.slug === e.courseSlug);
+      const total = course?.lessons?.length ?? 0;
+      const pct = total ? Math.round((e.completed.length / total) * 100) : 0;
+      return course ? { course, pct } : null;
+    })
+    .filter((x): x is NonNullable<typeof x> => x !== null && x.pct < 100 && !mine.some((c) => c.course === x.course.shortTitle || c.course === x.course.title));
 
   return (
     <div className="space-y-5">
@@ -35,14 +46,25 @@ export default function CertificatesPage() {
         ))}
 
         {/* In progress */}
-        <article className="relative overflow-hidden rounded-2xl bg-card p-6 shadow-card ring-1 ring-ink-900/5">
-          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-sand-200 text-ink-500">
-            <Lock className="h-6 w-6" />
-          </span>
-          <h2 className="mt-3 font-extrabold text-navy-900">فرش‌بافی مقدماتی</h2>
-          <p className="mt-1 text-sm text-ink-500">با تکمیل دوره و قبولی در ارزیابی، گواهی صادر می‌شود.</p>
-          <ProgressBar value={34} showLabel className="mt-4" />
-        </article>
+        {inProgress.map(({ course, pct }) => (
+          <article key={course.slug} className="relative overflow-hidden rounded-2xl bg-card p-6 shadow-card ring-1 ring-ink-900/5">
+            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-sand-200 text-ink-500">
+              <Lock className="h-6 w-6" />
+            </span>
+            <h2 className="mt-3 font-extrabold text-navy-900">{course.shortTitle}</h2>
+            <p className="mt-1 text-sm text-ink-500">با تکمیل دوره و قبولی در ارزیابی، گواهی صادر می‌شود.</p>
+            <ProgressBar value={pct} showLabel className="mt-4" />
+            <Link href={`/dashboard/courses/${course.slug}`} className="mt-3 inline-block text-[13px] font-bold text-teal-600 hover:underline">ادامه دوره ←</Link>
+          </article>
+        ))}
+        {mine.length === 0 && inProgress.length === 0 && (
+          <div className="rounded-2xl bg-card p-10 text-center shadow-card md:col-span-2">
+            <p className="font-extrabold text-navy-900">{user ? "هنوز گواهی‌ای صادر نشده است." : "برای مشاهده گواهی‌ها وارد حساب شوید."}</p>
+            <Link href={user ? "/courses" : "/auth?next=/dashboard/certificates"} className="mt-3 inline-block text-sm font-bold text-teal-600 hover:underline">
+              {user ? "مشاهده دوره‌ها ←" : "ورود / ثبت‌نام ←"}
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   );

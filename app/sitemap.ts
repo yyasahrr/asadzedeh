@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { getArticles, getClasses, getCourses, getSettings } from "@/lib/store";
+import { getActiveProducts, getArticles, getClasses, getCourses, getSettings } from "@/lib/store";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = getSettings().site.siteUrl.replace(/\/$/, "") || "https://asadzedeh.ir";
@@ -10,6 +10,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/classes",
     "/paths",
     "/instructors",
+    "/shop",
+    "/shop/preorder",
     "/blog",
     "/about",
     "/auth",
@@ -34,5 +36,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
     changeFrequency: "monthly" as const,
     priority: 0.6,
   }));
-  return [...staticPages, ...courses, ...classes, ...articles];
+  const products = getActiveProducts().map((p) => ({
+    url: `${base}/shop/${p.slug}`,
+    lastModified: now,
+    changeFrequency: "weekly" as const,
+    priority: 0.7,
+  }));
+  return [...staticPages, ...courses, ...classes, ...articles, ...products];
 }

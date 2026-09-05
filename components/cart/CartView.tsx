@@ -3,13 +3,16 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, BadgePercent, ShieldCheck, ShoppingBag, Trash2 } from "lucide-react";
+import { ArrowRight, BadgePercent, Minus, Plus, ShieldCheck, ShoppingBag, Trash2 } from "lucide-react";
 import {
   COUPON_CODE,
   cartTotal,
   couponDiscount,
   getCart,
+  hasPhysical,
+  itemQty,
   removeFromCart,
+  setQty,
   type CartItem,
 } from "@/lib/cart";
 import { formatPrice, toFa } from "@/lib/format";
@@ -37,10 +40,15 @@ export function CartView() {
       <div className="flex flex-col items-center gap-3 rounded-2xl bg-card px-6 py-16 text-center shadow-card ring-1 ring-ink-900/5">
         <ShoppingBag className="h-12 w-12 text-ink-300" />
         <h2 className="text-xl font-black text-navy-900">سبد خرید خالی است</h2>
-        <p className="text-sm text-ink-500">هنوز دوره‌ای انتخاب نکرده‌اید.</p>
-        <Link href="/courses" className="mt-2 inline-flex h-11 items-center rounded-xl bg-navy-800 px-8 font-bold text-white">
-          مشاهده دوره‌ها
-        </Link>
+        <p className="text-sm text-ink-500">هنوز دوره یا کالایی انتخاب نکرده‌اید.</p>
+        <div className="mt-2 flex flex-wrap justify-center gap-2">
+          <Link href="/courses" className="inline-flex h-11 items-center rounded-xl bg-navy-800 px-8 font-bold text-white">
+            مشاهده دوره‌ها
+          </Link>
+          <Link href="/shop" className="inline-flex h-11 items-center rounded-xl bg-sand-200 px-6 text-sm font-bold text-ink-800">
+            فروشگاه لوازم
+          </Link>
+        </div>
       </div>
     );
   }
@@ -58,11 +66,21 @@ export function CartView() {
               <Image src={c.image} alt={c.title} fill sizes="220px" className="object-cover" />
             </div>
             <div className="flex flex-1 flex-col">
-              <p className="text-xs font-bold text-teal-600">{c.kind === "course" ? "دوره آنلاین" : "کلاس حضوری"}</p>
+              <p className="text-xs font-bold text-teal-600">{c.kind === "course" ? "دوره آنلاین" : c.kind === "class" ? "کلاس حضوری" : c.physical === false ? "پیش‌سفارش" : "کالای فروشگاه"}</p>
               <h2 className="mt-1 leading-8 font-extrabold text-navy-900">{c.title}</h2>
               {c.meta && <p className="mt-1 text-sm text-ink-500">{c.meta}</p>}
-              <div className="mt-auto flex items-center justify-between pt-3">
-                <span className="text-lg font-black text-navy-900">{formatPrice(c.price)}</span>
+              <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-3">
+                <span className="text-lg font-black text-navy-900">
+                  {formatPrice(c.price * itemQty(c))}
+                  {itemQty(c) > 1 && <span className="ms-1 text-xs font-normal text-ink-500">({formatPrice(c.price)} × {toFa(itemQty(c))})</span>}
+                </span>
+                {c.kind === "product" && (
+                  <span className="inline-flex items-center rounded-xl bg-sand-100 p-1" dir="ltr">
+                    <button type="button" aria-label="کاهش تعداد" onClick={() => setItems(setQty(c.slug, itemQty(c) - 1))} disabled={itemQty(c) <= 1} className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg hover:bg-white disabled:opacity-40"><Minus className="h-3.5 w-3.5" /></button>
+                    <span className="w-8 text-center text-sm font-black">{toFa(itemQty(c))}</span>
+                    <button type="button" aria-label="افزایش تعداد" onClick={() => setItems(setQty(c.slug, itemQty(c) + 1))} disabled={!!c.maxQty && itemQty(c) >= c.maxQty} className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg hover:bg-white disabled:opacity-40"><Plus className="h-3.5 w-3.5" /></button>
+                  </span>
+                )}
                 <button
                   type="button"
                   onClick={() => setItems(removeFromCart(c.slug))}
@@ -86,6 +104,9 @@ export function CartView() {
           <h2 className="font-black text-navy-900">خلاصه سفارش</h2>
           <dl className="mt-4 space-y-2.5 text-sm">
             <div className="flex justify-between"><dt className="text-ink-600">جمع ({toFa(items.length)} مورد)</dt><dd className="font-bold">{formatPrice(total)}</dd></div>
+            {hasPhysical(items) && (
+              <div className="flex justify-between text-xs text-ink-500"><dt>هزینه ارسال</dt><dd>در مرحله بعد محاسبه می‌شود</dd></div>
+            )}
             {discount > 0 && (
               <div className="flex justify-between text-teal-700"><dt>تخفیف ({COUPON_CODE})</dt><dd className="font-bold">− {formatPrice(discount)}</dd></div>
             )}

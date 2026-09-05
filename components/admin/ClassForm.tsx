@@ -1,9 +1,10 @@
 import Link from "next/link";
 import type { InPersonClass } from "@/lib/types";
-import { instructors } from "@/lib/data";
 import { galleryImages } from "@/lib/seed";
+import { getInstructors, getVideos } from "@/lib/store";
 import { FieldLabel, Input, Select, Textarea } from "../ui/Input";
 import { UploadField } from "./UploadField";
+import { TrailerFields } from "./TrailerFields";
 
 export function ClassForm({
   action,
@@ -15,6 +16,9 @@ export function ClassForm({
   submitLabel: string;
 }) {
   const c = initial ?? null;
+  const instructors = getInstructors().filter((i) => i.active !== false || i.slug === c?.instructorSlug);
+  const videos = getVideos().map((v) => ({ id: v.id, title: v.title, durationSec: v.durationSec, status: v.status }));
+  const defaultInstructor = c?.instructorSlug ?? instructors.find((i) => i.name === c?.instructor)?.slug ?? instructors[0]?.slug ?? "";
   return (
     <form action={action} className="grid gap-4 rounded-2xl bg-card p-6 shadow-card ring-1 ring-ink-900/5 sm:grid-cols-2">
       {c && <input type="hidden" name="slug" value={c.slug} />}
@@ -25,9 +29,9 @@ export function ClassForm({
       </div>
       <div>
         <FieldLabel htmlFor="k-inst">مدرس</FieldLabel>
-        <Select id="k-inst" name="instructor" defaultValue={c?.instructor ?? instructors[0].name}>
+        <Select id="k-inst" name="instructorSlug" defaultValue={defaultInstructor}>
           {instructors.map((i) => (
-            <option key={i.slug} value={i.name}>{i.name}</option>
+            <option key={i.slug} value={i.slug}>{i.name} — {i.specialty}</option>
           ))}
         </Select>
       </div>
@@ -76,6 +80,8 @@ export function ClassForm({
         <FieldLabel htmlFor="k-inc">شهریه شامل (هر خط یک مورد)</FieldLabel>
         <Textarea id="k-inc" name="includes" defaultValue={c?.includes.join("\n")} placeholder={"دار و ابزار در کارگاه\nگواهی پایان دوره"} />
       </div>
+
+      <TrailerFields initial={c?.trailer} videos={videos} gallery={galleryImages} />
 
       <div className="flex flex-wrap items-center gap-3 sm:col-span-2">
         <button type="submit" className="inline-flex h-11 cursor-pointer items-center rounded-xl bg-navy-800 px-8 text-[15px] font-bold text-white transition-colors hover:bg-navy-700">

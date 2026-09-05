@@ -11,10 +11,12 @@ import { cn } from "@/lib/utils";
 const errors: Record<string, string> = {
   invalid: "شماره موبایل یا رمز عبور اشتباه است.",
   dup: "این شماره قبلاً ثبت شده؛ وارد شوید.",
-  validation: "اطلاعات را کامل وارد کنید (رمز حداقل ۶ رقم).",
+  validation: "اطلاعات را کامل وارد کنید (شماره معتبر و رمز حداقل ۶ رقم).",
+  locked: "به‌دلیل تلاش‌های ناموفق زیاد، حساب موقتاً قفل شده است. چند دقیقه بعد دوباره تلاش کنید.",
+  expired: "زمان تأیید دومرحله‌ای تمام شد؛ دوباره وارد شوید.",
 };
 
-export function AuthTabs({ initialTab, error }: { initialTab: "login" | "register"; error?: string }) {
+export function AuthTabs({ initialTab, error, next }: { initialTab: "login" | "register"; error?: string; next?: string }) {
   const [tab, setTab] = useState<"login" | "register">(initialTab);
 
   return (
@@ -50,6 +52,7 @@ export function AuthTabs({ initialTab, error }: { initialTab: "login" | "registe
 
       {tab === "login" ? (
         <form action={login} className="mt-6 space-y-4">
+          {next && <input type="hidden" name="next" value={next} />}
           <div>
             <FieldLabel htmlFor="auth-phone">شماره موبایل</FieldLabel>
             <Input id="auth-phone" name="phone" required inputMode="tel" placeholder="۰۹۱۲۳۴۵۶۷۸۹" dir="ltr" className="text-left" />
@@ -88,6 +91,7 @@ export function AuthTabs({ initialTab, error }: { initialTab: "login" | "registe
           <li>مدیر کل: <span dir="ltr" className="font-bold">09120000001 / admin123</span></li>
           <li>ویراستار: <span dir="ltr" className="font-bold">09120000002 / editor123</span></li>
           <li>پشتیبانی: <span dir="ltr" className="font-bold">09120000003 / support123</span></li>
+          <li>استاد (پنل اساتید): <span dir="ltr" className="font-bold">09120000004 / dyer1234</span></li>
           <li>هنرجو: <span dir="ltr" className="font-bold">09123456789 / sara1234</span></li>
         </ul>
       </details>

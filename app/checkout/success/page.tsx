@@ -10,10 +10,12 @@ export const metadata: Metadata = { title: "پرداخت موفق" };
 export default async function SuccessPage({
   searchParams,
 }: {
-  searchParams: Promise<{ order?: string }>;
+  searchParams: Promise<{ order?: string; account?: string }>;
 }) {
-  const { order: orderId } = await searchParams;
+  const { order: orderId, account } = await searchParams;
   const order = orderId ? getOrder(orderId) : undefined;
+  const hasCourse = order?.lines?.some((l) => l.kind === "course") ?? true;
+  const hasPhysical = order?.lines?.some((l) => l.kind === "product") ?? false;
 
   return (
     <div className="shell py-14">
@@ -32,10 +34,17 @@ export default async function SuccessPage({
           </dl>
         )}
         <p className="text-sm leading-7 text-ink-600">
-          دسترسی به دوره‌ها در پنل هنرجو فعال شد. پیامک تأیید هم برایتان ارسال می‌شود.
+          {hasCourse && "دسترسی به دوره‌ها در پنل هنرجو فعال شد. "}
+          {hasPhysical && `کالاها با ${order?.shipping?.method ?? "روش انتخابی"} ارسال می‌شود؛ کد رهگیری در بخش سفارش‌ها ثبت خواهد شد. `}
+          پیامک تأیید هم برایتان ارسال می‌شود.
         </p>
+        {account === "new" && (
+          <p className="rounded-xl bg-ochre-50 px-4 py-3 text-sm leading-7 text-ochre-800 ring-1 ring-ochre-700/15">
+            برای شما یک حساب هنرجویی با همین شماره موبایل ساخته شد؛ رمز ورود پیامک شده است. پس از ورود می‌توانید رمز را در پروفایل تغییر دهید.
+          </p>
+        )}
         <div className="mt-2 flex flex-wrap justify-center gap-3">
-          <Link href="/dashboard" className="inline-flex h-11 items-center rounded-xl bg-navy-800 px-8 font-bold text-white">
+          <Link href={account === "new" ? "/auth?next=/dashboard/courses" : "/dashboard"} className="inline-flex h-11 items-center rounded-xl bg-navy-800 px-8 font-bold text-white">
             ورود به پنل هنرجو
           </Link>
           <Link href="/courses" className="inline-flex h-11 items-center rounded-xl bg-sand-200 px-6 text-sm font-bold text-ink-800">

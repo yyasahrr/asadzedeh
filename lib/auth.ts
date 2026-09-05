@@ -1,9 +1,11 @@
 import crypto from "node:crypto";
 import { cookies } from "next/headers";
-import type { Role, User } from "./types";
-import { getSession, getUserById } from "./store";
+import type { Role, Session, User } from "./types";
+import { getSession, getSettings, getUserById } from "./store";
 
 export const SESSION_COOKIE = "az_session";
+/** Short-lived cookie used between password step and TOTP step. */
+export const MFA_COOKIE = "az_mfa";
 
 /* ---------- password hashing (scrypt, no deps) ---------- */
 
@@ -29,7 +31,24 @@ export function newToken(): string {
 
 /* ---------- session ---------- */
 
-export type SessionUser = Omit<User, "passwordHash">;
+export type SessionUser = Omit<User, "passwordHash" | "totp"> & {
+  /** true when the user has TOTP enabled */
+  totpEnabled: boolean;
+  /** true when this session has passed the second factor */
+  mfaVerified: boolean;
+  sessionToken: string;
+};
+
+export function toSafeUser(user: User, session?: Session | null): SessionUser {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { passwordHash, totp, ...safe } = user;
+  return {
+    ...safe,
+    totpEnabled: !!totp?.enabled,
+    mfaVerified: !!session?.mfaVerified,
+    sessionToken: session?.token ?? "",
+  };
+}
 
 export async function getSessionUser(): Promise<SessionUser | null> {
   const jar = await cookies();
@@ -39,13 +58,27 @@ export async function getSessionUser(): Promise<SessionUser | null> {
   if (!session) return null;
   const user = getUserById(session.userId);
   if (!user) return null;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { passwordHash, ...safe } = user;
-  return safe;
+  return toSafeUser(user, session);
 }
 
 export function isStaff(user: SessionUser | null): boolean {
   return !!user && user.role !== "student";
+}
+
+export function isInstructor(user: SessionUser | null): boolean {
+  return !!user && user.role === "instructor";
+}
+
+/**
+ * Staff need a verified second factor when:
+ *  - they have TOTP enabled on their account, or
+ *  - the site policy requires 2FA for all staff (then they must enrol).
+ */
+export function needsMfa(user: SessionUser | null): "none" | "verify" | "enrol" {
+  if (!user || !isStaff(user)) return "none";
+  if (user.totpEnabled) return user.mfaVerified ? "none" : "verify";
+  const policy = getSettings().security.requireStaff2fa;
+  return policy && user.role !== "instructor" ? "enrol" : "none";
 }
 
 /* ---------- permissions ---------- */
@@ -64,20 +97,30 @@ export type Permission =
   | "users"
   | "notify"
   | "payments"
-  | "settings";
+  | "settings"
+  | "videos"
+  | "instructors"
+  | "shop"
+  | "preorders"
+  | "audit"
+  | "security";
 
 const ROLE_PERMS: Record<Role, Permission[]> = {
   admin: [
     "courses", "classes", "blog", "content", "media", "comments",
     "students", "orders", "submissions", "certificates",
     "users", "notify", "payments", "settings",
+    "videos", "instructors", "shop", "preorders", "audit", "security",
   ],
   manager: [
     "courses", "classes", "blog", "content", "media", "comments",
     "students", "orders", "submissions", "certificates", "notify", "payments",
+    "videos", "instructors", "shop", "preorders", "audit",
   ],
-  editor: ["blog", "content", "media", "comments", "courses", "classes"],
-  support: ["students", "orders", "submissions", "certificates", "comments"],
+  editor: ["blog", "content", "media", "comments", "courses", "classes", "videos", "shop"],
+  support: ["students", "orders", "submissions", "certificates", "comments", "preorders"],
+  /** Instructors use their own panel (/instructor); no admin permissions. */
+  instructor: [],
   student: [],
 };
 
@@ -91,5 +134,31 @@ export const roleLabels: Record<Role, string> = {
   manager: "مدیر",
   editor: "ویراستار",
   support: "پشتیبانی",
+  instructor: "استاد",
   student: "هنرجو",
 };
+
+/* ---------- signed URLs for protected video delivery ---------- */
+
+const SIGN_SECRET = () =>
+  process.env.APP_SECRET || process.env.VIDEO_SIGNING_SECRET || "asadzedeh-dev-signing-secret-change-me";
+
+export function signPayload(payload: Record<string, string | number>): string {
+  const body = Buffer.from(JSON.stringify(payload)).toString("base64url");
+  const sig = crypto.createHmac("sha256", SIGN_SECRET()).update(body).digest("base64url");
+  return `${body}.${sig}`;
+}
+
+export function verifySigned<T extends Record<string, unknown>>(token: string): T | null {
+  const [body, sig] = token.split(".");
+  if (!body || !sig) return null;
+  const expected = crypto.createHmac("sha256", SIGN_SECRET()).update(body).digest("base64url");
+  if (expected.length !== sig.length || !crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(sig))) return null;
+  try {
+    const parsed = JSON.parse(Buffer.from(body, "base64url").toString("utf8")) as T & { exp?: number };
+    if (parsed.exp && Date.now() > parsed.exp) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}

@@ -23,6 +23,23 @@ npm run build    # بررسی تولید
 - **گواهی پایان دوره**: طرح A4 افقی با مهر آموزشگاه، امضا و کد یکتا؛
   هنرجو از پنل خودش PDF می‌گیرد و اصالت هر گواهی در `/verify/[code]` قابل استعلام است.
 
+## ماژول‌های جدید (ویدیو، امنیت، فروشگاه)
+
+| بخش | مسیر | توضیح |
+|---|---|---|
+| تیزر دوره/کلاس | فرم دوره و کلاس در ادمین | آپلود اختصاصی یا embed؛ نمایش با `components/video/TrailerBlock.tsx` |
+| جلسات دوره | `/admin/courses/[slug]/lessons` | آپلود تکه‌تکه (`/api/video/upload`)، فصل‌بندی، پیش‌نمایش رایگان |
+| پلیر امن | `components/video/SecurePlayer.tsx` | توکن امضاشده کوتاه‌عمر، واترمارک متحرک با شماره موبایل بیننده، Range streaming از `data/videos/` |
+| اسپات‌پلیر | `lib/spotplayer.ts` | صدور لایسنس با واترمارک شماره پس از پرداخت (API Key از ادمین) |
+| پنل هنرجو | `/dashboard/courses/[slug]` | پخش جلسات، پیشرفت، تکمیل خودکار، گواهی |
+| ۲FA | `/account/security`, `/auth/verify` | TOTP سازگار با Google Authenticator + کد بازیابی؛ سیاست اجباری کارکنان از `/admin/security` |
+| لاگ سیستم | `/admin/audit` | ممیزی ساخت‌یافته با زنجیره هش، فیلتر و خروجی CSV |
+| مدرسان | `/admin/instructors`, `/instructor` | چند مدرس، هرکدام با پنل استاد مستقل |
+| فروشگاه | `/shop`, `/admin/shop` | محصول، قیمت، موجودی، روش ارسال؛ پیش‌سفارش ساخت با بیعانه و خط زمانی (`/shop/preorder`) |
+| اینستاگرام | `components/home/InstagramEmbed.tsx` | embed رسمی قبل از فوتر؛ تنظیم از `/admin/content` |
+
+متغیرهای محیطی مهم در `.env.example`: `APP_SECRET` (الزامی در production)، `FFMPEG_PATH` و `SPOTPLAYER_API_KEY` (اختیاری).
+
 ## ساختار
 
 ```
@@ -33,9 +50,14 @@ app/
   paths/                # مسیرهای آموزشی
   instructors/          # اساتید
   blog/                 # دانشنامه + صفحه مقاله
-  about/ cart/ auth/    # درباره ما، سبد خرید، ورود
-  dashboard/            # پنل هنرجو (۷ صفحه)
-  admin/                # پنل مدیریت (۵ صفحه)
+  about/ cart/ auth/    # درباره ما، سبد خرید، ورود (+ تأیید دومرحله‌ای)
+  shop/                 # فروشگاه لوازم + پیش‌سفارش
+  checkout/             # تسویه‌حساب یکپارچه دوره/کالا
+  dashboard/            # پنل هنرجو (+ پخش‌کننده امن دوره)
+  instructor/           # پنل استاد
+  account/security      # ورود دومرحله‌ای و نشست‌ها
+  admin/                # پنل مدیریت (دوره، ویدیو، فروشگاه، پیش‌سفارش، لاگ، امنیت، …)
+  api/video/            # آپلود تکه‌تکه، توکن پخش، استریم/HLS امن
 components/
   ui/                   # Button, Badge, Input, Stars, ProgressBar, SectionHeading
   layout/               # Header, Footer, MobileMenu
@@ -44,6 +66,12 @@ components/
   dashboard/ admin/     # اجزای پنل‌ها
 lib/
   data.ts               # داده نمایشی فارسی
+  store.ts              # لایه داده (data/db.json)
+  auth.ts / totp.ts     # نشست، نقش‌ها، امضای توکن، TOTP
+  access.ts             # چه کسی چه ویدیویی را می‌بیند
+  video.ts              # مخزن ویدیو، ffmpeg (اختیاری)، واترمارک
+  spotplayer.ts         # API اسپات‌پلیر
+  audit.ts              # لاگ ممیزی با زنجیره هش
   format.ts             # اعداد و قیمت فارسی
   types.ts              # تایپ‌های دامنه
 ```

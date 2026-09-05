@@ -1,8 +1,12 @@
 import type {
   Certificate,
   Comment,
+  CourseProtection,
+  Enrollment,
   Order,
+  Product,
   Settings,
+  ShippingMethod,
   Student,
   User,
 } from "./types";
@@ -27,6 +31,12 @@ export const orders: Order[] = [
   { id: "AZ-9037", student: "امیر حسینی", item: "طراحی نقشه (آنلاین)", amount: 3650000, status: "لغو شده", date: "۲۸ مرداد ۱۴۰۵" },
 ];
 
+/** Demo enrollments so the student dashboard/course player is demonstrable out of the box. */
+export const enrollments: Enrollment[] = [
+  { id: "en-seed-1", userId: "u-sara", courseSlug: "gabbeh-weaving", orderId: "AZ-9041", createdAt: "۲ شهریور ۱۴۰۵", completed: [] },
+  { id: "en-seed-2", userId: "u-sara", courseSlug: "kilim-weaving-start", createdAt: "۱۵ تیر ۱۴۰۵", completed: [] },
+];
+
 export const certificates: Certificate[] = [
   { code: "AZ-C-1182", student: "سارا محمدی", course: "گلیم‌بافی مقدماتی", date: "تیر ۱۴۰۵", hours: 12 },
   { code: "AZ-C-1204", student: "سارا محمدی", course: "رنگرزی سنتی", date: "مرداد ۱۴۰۵", hours: 14 },
@@ -42,6 +52,14 @@ export const galleryImages = [
   { value: "/images/workshop-loom.jpg", label: "دار قالی کارگاه" },
   { value: "/images/workshop-threads.jpg", label: "نخ‌های رنگی" },
   { value: "/images/hero-weaver.jpg", label: "دست‌های بافنده" },
+];
+
+/** Portrait images for instructor profiles (plus anything uploaded from the media library). */
+export const instructorImages = [
+  { value: "/images/instructor-dyer.jpg", label: "پرتره مدرس (کارگاه رنگرزی)" },
+  { value: "/images/master-portrait.jpg", label: "پرتره استاد" },
+  { value: "/images/hero-weaver.jpg", label: "دست‌های بافنده" },
+  { value: "/images/workshop-loom.jpg", label: "دار قالی کارگاه" },
 ];
 
 /* ---------------- Seed: users (demo passwords in README) ---------------- */
@@ -75,6 +93,16 @@ export const users: User[] = [
     createdAt: "۱ شهریور ۱۴۰۵",
   },
   {
+    // password: dyer1234
+    id: "u-maryam",
+    name: "استاد مریم نادری",
+    phone: "09120000004",
+    passwordHash:
+      "32aef96e8becaf973891ce257068bc6c:0398dbd61c9c4e6ac33d4b1243b70e6a774522b6d99a118923f019119d080dcb165110823cd4b6ae458c082d5d4619a34a8dc4ad0352f8054eea811f5194d379",
+    role: "instructor",
+    createdAt: "۱ شهریور ۱۴۰۵",
+  },
+  {
     id: "u-sara",
     name: "سارا محمدی",
     phone: "09123456789",
@@ -103,6 +131,157 @@ export const comments: Comment[] = [
     text: "رفع‌اشکال تصویری عالی است؛ ایراد دفتین من را از روی عکس تشخیص دادند و درست شد.",
     date: "۳ شهریور ۱۴۰۵",
     status: "approved",
+  },
+];
+
+export const defaultProtection: CourseProtection = {
+  securePlayer: true,
+  burnWatermark: false,
+  overlayWatermark: true,
+  spotPlayer: false,
+  spotPlayerCourseIds: [],
+  maxDevices: 2,
+  blockDownload: true,
+};
+
+export const defaultShippingMethods: ShippingMethod[] = [
+  { id: "post", label: "پست پیشتاز", description: "ارسال به سراسر کشور با کد رهگیری", cost: 120000, freeOver: 0, etaDays: "۳ تا ۵ روز کاری", active: true },
+  { id: "tipax", label: "تیپاکس", description: "مناسب اقلام حجیم مثل دار قالی", cost: 250000, freeOver: 0, etaDays: "۲ تا ۴ روز کاری", active: true },
+  { id: "freight", label: "باربری (پس‌کرایه)", description: "برای دارهای بزرگ؛ هزینه در مقصد دریافت می‌شود", cost: 0, freeOver: 0, etaDays: "۴ تا ۷ روز کاری", active: true },
+  { id: "pickup", label: "تحویل حضوری در کارگاه", description: "ارومیه، خیابان امام، کوی دی (نجارخانه)", cost: 0, freeOver: 0, etaDays: "همان روز", active: true },
+];
+
+export const products: Product[] = [
+  {
+    slug: "loom-tabletop-60",
+    title: "دار قالی رومیزی ۶۰×۸۰ (چوب راش)",
+    category: "دار قالی",
+    kind: "physical",
+    price: 3900000,
+    oldPrice: 4400000,
+    stock: 6,
+    allowBackorder: false,
+    image: "/images/workshop-loom.jpg",
+    gallery: ["/images/workshop-loom.jpg", "/images/hero-weaver.jpg"],
+    excerpt: "دار سبک و قابل تنظیم برای شروع فرش‌بافی در خانه؛ همان مدلی که در دوره مقدماتی استفاده می‌شود.",
+    description: [
+      "این دار از چوب راش خشک‌شده ساخته می‌شود و با پیچ‌های تنظیم کشش، چله‌کشی را برای مبتدی‌ها ساده می‌کند.",
+      "ابعاد مفید بافت ۶۰×۸۰ سانتی‌متر است و برای بافت قالیچه، تابلوفرش و پروژه‌های دوره مقدماتی کافی است.",
+    ],
+    specs: [
+      { label: "جنس", value: "چوب راش" },
+      { label: "ابعاد مفید", value: "۶۰×۸۰ سانتی‌متر" },
+      { label: "وزن", value: "۶٫۵ کیلوگرم" },
+      { label: "متعلقات", value: "شانه، دفتین، قلاب و راهنمای چله‌کشی" },
+    ],
+    shippingMethods: ["tipax", "freight", "pickup"],
+    weightGrams: 6500,
+    badge: "پرفروش",
+    featured: true,
+    active: true,
+    sku: "AZ-LOOM-60",
+    createdAt: "۱ شهریور ۱۴۰۵",
+    sold: 41,
+  },
+  {
+    slug: "loom-custom",
+    title: "دار قالی سفارشی (ساخت در کارگاه)",
+    category: "دار قالی",
+    kind: "preorder",
+    price: 7500000,
+    stock: 0,
+    allowBackorder: true,
+    preorder: { depositPercent: 40, leadTimeDays: 21, note: "قیمت نهایی بر اساس ابعاد و جنس چوب پس از بررسی اعلام می‌شود." },
+    image: "/images/workshop-loom.jpg",
+    gallery: ["/images/workshop-loom.jpg"],
+    excerpt: "دار فلزی یا چوبی با ابعاد دلخواه شما؛ از دار ۱ متری تا دار ۳ متری کارگاهی. ساخت در نجارخانه اسدزاده.",
+    description: [
+      "ابعاد، جنس (چوب راش، چوب نراد یا پروفیل فلزی) و نوع سیستم کشش (پیچی یا گوه‌ای) را انتخاب کنید.",
+      "زمان ساخت معمولاً سه هفته است. پس از ثبت پیش‌سفارش، کارشناس ما برای تأیید مشخصات تماس می‌گیرد و قیمت قطعی اعلام می‌شود.",
+    ],
+    specs: [
+      { label: "عرض", value: "۱۰۰ تا ۳۰۰ سانتی‌متر" },
+      { label: "جنس", value: "راش / نراد / فلزی" },
+      { label: "سیستم کشش", value: "پیچی یا گوه‌ای" },
+    ],
+    shippingMethods: ["freight", "pickup"],
+    weightGrams: 30000,
+    badge: "پیش‌سفارش",
+    featured: true,
+    active: true,
+    sku: "AZ-LOOM-CUSTOM",
+    createdAt: "۱ شهریور ۱۴۰۵",
+    sold: 12,
+  },
+  {
+    slug: "tool-kit-starter",
+    title: "ست ابزار بافت مبتدی (قلاب، دفتین، شانه، قیچی)",
+    category: "ابزار",
+    kind: "physical",
+    price: 890000,
+    stock: 24,
+    allowBackorder: false,
+    image: "/images/workshop-threads.jpg",
+    gallery: ["/images/workshop-threads.jpg"],
+    excerpt: "چهار ابزار اصلی که برای شروع بافت لازم دارید؛ انتخاب‌شده توسط استاد اسدزاده.",
+    description: ["همه ابزارها دست‌ساز و از نوعی هستند که بافندگان حرفه‌ای تبریز استفاده می‌کنند."],
+    specs: [
+      { label: "قلاب", value: "فولادی، دسته چوبی" },
+      { label: "دفتین", value: "فلزی ۱۲ دندانه" },
+      { label: "قیچی", value: "قیچی پرداخت کج" },
+    ],
+    shippingMethods: ["post", "tipax", "pickup"],
+    weightGrams: 900,
+    featured: true,
+    active: true,
+    sku: "AZ-KIT-01",
+    createdAt: "۱ شهریور ۱۴۰۵",
+    sold: 118,
+  },
+  {
+    slug: "wool-yarn-pack-12",
+    title: "بسته نخ پشمی ۱۲ رنگ (رنگرزی طبیعی)",
+    category: "نخ و مواد",
+    kind: "physical",
+    price: 1450000,
+    stock: 15,
+    allowBackorder: true,
+    image: "/images/workshop-threads.jpg",
+    gallery: ["/images/workshop-threads.jpg", "/images/course-dye.jpg"],
+    excerpt: "دوازده کلاف پشم دست‌ریس رنگ‌شده با روناس، اسپرک، نیل و پوست گردو؛ کافی برای یک قالیچه ۴۰×۶۰.",
+    description: ["نخ‌ها در کارگاه رنگرزی اسدزاده و با همان فرمول‌های دوره رنگرزی سنتی رنگ شده‌اند."],
+    specs: [
+      { label: "وزن هر کلاف", value: "۱۰۰ گرم" },
+      { label: "ضخامت", value: "۴ لا" },
+    ],
+    shippingMethods: ["post", "tipax", "pickup"],
+    weightGrams: 1300,
+    featured: false,
+    active: true,
+    sku: "AZ-YARN-12",
+    createdAt: "۱ شهریور ۱۴۰۵",
+    sold: 63,
+  },
+  {
+    slug: "map-lachak-toranj-40-60",
+    title: "نقشه فرش لچک‌ترنج ۴۰×۶۰ (چاپی + فایل)",
+    category: "نقشه",
+    kind: "physical",
+    price: 350000,
+    stock: 50,
+    allowBackorder: true,
+    image: "/images/course-design.jpg",
+    gallery: ["/images/course-design.jpg"],
+    excerpt: "نقشه نقطه‌چین با راهنمای رنگ؛ همان پروژه نهایی دوره فرش‌بافی مقدماتی.",
+    description: ["نقشه به‌صورت چاپ رنگی روی کاغذ شطرنجی به همراه فایل PDF ارسال می‌شود."],
+    specs: [{ label: "رج‌شمار", value: "۴۰ رج" }],
+    shippingMethods: ["post", "pickup"],
+    weightGrams: 200,
+    featured: false,
+    active: true,
+    sku: "AZ-MAP-01",
+    createdAt: "۱ شهریور ۱۴۰۵",
+    sold: 210,
   },
 ];
 
@@ -142,4 +321,39 @@ export const defaultSettings: Settings = {
   sms: { provider: "demo", apiKey: "", sender: "" },
   email: { host: "", port: 587, user: "", pass: "", from: "" },
   payment: { provider: "demo", merchantId: "", sandbox: true },
+  security: { requireStaff2fa: false, adminSessionMinutes: 120, maxFailedLogins: 5, lockMinutes: 15 },
+  video: {
+    defaults: defaultProtection,
+    signedUrlSeconds: 900,
+    transcode: true,
+    ffmpegPath: "auto",
+    watermarkExtra: "asadzedeh.ir",
+    watermarkIntervalSec: 12,
+    playerColor: "#2f8c87",
+  },
+  spotplayer: {
+    enabled: false,
+    apiKey: "",
+    test: true,
+    devices: { all: 2, windows: 1, mac: 0, android: 1, ios: 0, web: 1 },
+    defaultCourseId: "",
+  },
+  instagram: {
+    enabled: true,
+    username: "asadzedeh.carpet",
+    posts: [],
+    embedUrl: "",
+    title: "اینستاگرام اسدزاده",
+    description: "پشت‌صحنه کارگاه، آثار هنرجویان و نکات کوتاه بافت را در اینستاگرام دنبال کنید.",
+  },
+  shop: {
+    enabled: true,
+    title: "فروشگاه ملزومات بافت",
+    description: "دار قالی، ابزار، نخ و مواد رنگرزی؛ همان چیزهایی که در کارگاه استفاده می‌کنیم.",
+    shippingMethods: defaultShippingMethods,
+    freeShippingOver: 5000000,
+    preorderDepositPercent: 40,
+    preorderIntro:
+      "دارهای قالی و گلیم در کارگاه نجاری اسدزاده به سفارش شما ساخته می‌شوند. ابعاد و جنس چوب را انتخاب کنید؛ پس از تأیید قیمت، با پرداخت بیعانه ساخت شروع می‌شود.",
+  },
 };

@@ -6,24 +6,28 @@ import {
   CalendarDays,
   CreditCard,
   FileText,
+  Film,
+  GraduationCap,
+  Hammer,
   Images,
   LayoutTemplate,
   Mail,
   MessageSquareText,
   ReceiptText,
+  ScrollText,
+  ShieldCheck,
+  Store,
   TrendingUp,
   UsersRound,
 } from "lucide-react";
-import { adminOverview } from "@/lib/data";
-import { getOrders, getStudents, getSubscribers } from "@/lib/store";
+import { getAudit, getEnrollments, getOrders, getPreorders, getProducts, getStudents, getSubscribers, getUsers, getVideos } from "@/lib/store";
 import { getSessionUser, can, type Permission } from "@/lib/auth";
+import type { AuditEntry, Order } from "@/lib/types";
 import { formatPrice, formatPriceCompact, toFa } from "@/lib/format";
 import { TableShell, Td } from "@/components/admin/TableShell";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
 
 export const metadata: Metadata = { title: "مدیریت" };
-
-const days = ["شنبه", "۱شنبه", "۲شنبه", "۳شنبه", "۴شنبه", "۵شنبه", "جمعه"];
 
 const quickLinks: { href: string; label: string; desc: string; icon: typeof UsersRound; perm?: Permission }[] = [
   { href: "/admin/courses", label: "دوره‌ها", desc: "افزودن و ویرایش", icon: BookOpenCheck, perm: "courses" },
@@ -33,24 +37,68 @@ const quickLinks: { href: string; label: string; desc: string; icon: typeof User
   { href: "/admin/content", label: "محتوا", desc: "هیرو، هدر و فوتر", icon: LayoutTemplate, perm: "content" },
   { href: "/admin/comments", label: "نظرات", desc: "تأیید و پاسخ", icon: MessageSquareText, perm: "comments" },
   { href: "/admin/students", label: "هنرجویان", desc: "مدیریت", icon: UsersRound, perm: "students" },
-  { href: "/admin/orders", label: "سفارش‌ها", desc: "وضعیت پرداخت", icon: ReceiptText, perm: "orders" },
+  { href: "/admin/orders", label: "سفارش‌ها", desc: "پرداخت و ارسال", icon: ReceiptText, perm: "orders" },
+  { href: "/admin/shop", label: "فروشگاه", desc: "محصول، قیمت، موجودی", icon: Store, perm: "shop" },
+  { href: "/admin/preorders", label: "پیش‌سفارش‌ها", desc: "ساخت دار و سفارشی", icon: Hammer, perm: "preorders" },
+  { href: "/admin/videos", label: "ویدیوها", desc: "آپلود و حفاظت", icon: Film, perm: "videos" },
+  { href: "/admin/instructors", label: "مدرسان", desc: "پروفایل و پنل استاد", icon: GraduationCap, perm: "instructors" },
+  { href: "/admin/audit", label: "لاگ سیستم", desc: "رخدادها و امنیت", icon: ScrollText, perm: "audit" },
+  { href: "/admin/security", label: "امنیت", desc: "۲FA و نشست‌ها", icon: ShieldCheck, perm: "security" },
   { href: "/admin/certificates", label: "گواهی‌ها", desc: "صدور مدرک", icon: Award, perm: "certificates" },
   { href: "/admin/notify", label: "پیامک و ایمیل", desc: "ارسال همگانی", icon: Mail, perm: "notify" },
   { href: "/admin/payments", label: "پرداخت", desc: "درگاه و تراکنش", icon: CreditCard, perm: "payments" },
 ];
 
+function countRecent(entries: AuditEntry[], ms: number, pred: (e: AuditEntry) => boolean) {
+  const threshold = Date.now() - ms;
+  return entries.filter((e) => pred(e) && Date.parse(e.ts) > threshold).length;
+}
+
+/** Last 7 days of paid revenue keyed by ISO day (order.create audit rows carry the timestamp). */
+function buildWeeklySales(audit: AuditEntry[], paid: Order[]) {
+  const series = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - (6 - i));
+    return { key: d.toISOString().slice(0, 10), label: d.toLocaleDateString("fa-IR", { weekday: "short" }), value: 0 };
+  });
+  for (const e of audit) {
+    if (e.action !== "order.create") continue;
+    const day = series.find((d) => d.key === e.ts.slice(0, 10));
+    if (!day) continue;
+    const orderId = e.target?.replace(/^order:/, "");
+    const order = orderId ? paid.find((o) => o.id === orderId) : undefined;
+    if (order) day.value += order.amount;
+  }
+  return series;
+}
+
 export default async function AdminPage() {
   const user = await getSessionUser();
-  const max = Math.max(...adminOverview.weeklySales);
   const orders = getOrders();
-  const revenue = orders.filter((o) => o.status === "پرداخت شده").reduce((s, o) => s + o.amount, 0);
+  const paid = orders.filter((o) => o.status === "پرداخت شده" || o.status === "ارسال شده" || o.status === "تحویل شده");
+  const revenue = paid.reduce((s, o) => s + o.amount, 0);
   const pending = orders.filter((o) => o.status === "در انتظار پرداخت").length;
+  const toShip = orders.filter((o) => o.status === "پرداخت شده" && o.shipping && o.shipping.methodId !== "pickup" && !o.shipping.method.includes("حضوری")).length;
+  const openPreorders = getPreorders().filter((p) => !["تحویل شده", "لغو شده"].includes(p.status)).length;
+  const lowStock = getProducts().filter((p) => p.kind === "physical" && p.active && p.stock <= 2).length;
+  const students = new Set([...getStudents().map((s) => s.phone), ...getUsers().filter((u) => u.role === "student").map((u) => u.phone)]).size;
+  const enrollments = getEnrollments().length;
+  const readyVideos = getVideos().filter((v) => v.status === "ready").length;
+  const audit = getAudit();
+  const securityToday = countRecent(audit, 864e5, (e) => e.level === "security");
+  const daySeries = buildWeeklySales(audit, paid);
+  const max = Math.max(1, ...daySeries.map((d) => d.value));
 
   const kpis = [
-    { label: "درآمد کل (ثبت‌شده)", value: formatPriceCompact(revenue) },
-    { label: "هنرجویان", value: `${toFa(getStudents().length)} نفر` },
-    { label: "سفارش در انتظار پرداخت", value: `${toFa(pending)} سفارش` },
+    { label: "درآمد کل (پرداخت‌شده)", value: formatPriceCompact(revenue) },
+    { label: "هنرجویان / ثبت‌نام دوره", value: `${toFa(students)} نفر / ${toFa(enrollments)}` },
+    { label: "در انتظار پرداخت / آماده ارسال", value: `${toFa(pending)} / ${toFa(toShip)} سفارش` },
+    { label: "پیش‌سفارش باز / کالای کم‌موجودی", value: `${toFa(openPreorders)} / ${toFa(lowStock)}` },
+    { label: "ویدیوهای آماده پخش", value: `${toFa(readyVideos)} ویدیو` },
+    { label: "رخداد امنیتی ۲۴ ساعت اخیر", value: `${toFa(securityToday)} مورد` },
     { label: "عضو خبرنامه", value: `${toFa(getSubscribers().length)} نفر` },
+    { label: "کل سفارش‌ها", value: `${toFa(orders.length)} سفارش` },
   ];
 
   return (
@@ -93,15 +141,18 @@ export default async function AdminPage() {
       </div>
 
       <section className="bento-surface p-6" aria-label="فروش هفتگی">
-        <h2 className="font-extrabold text-navy-900">فروش ۷ روز اخیر (میلیون تومان)</h2>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="font-extrabold text-navy-900">فروش ۷ روز اخیر (پرداخت‌شده)</h2>
+          <span className="text-xs text-ink-500">جمع: {formatPriceCompact(daySeries.reduce((s, d) => s + d.value, 0))}</span>
+        </div>
         <div className="mt-5 flex h-44 items-end gap-2 sm:gap-3" role="img" aria-label="نمودار فروش هفتگی">
-          {adminOverview.weeklySales.map((v, i) => (
-            <div key={i} className="flex flex-1 flex-col items-center gap-2">
-              <span className="text-[11px] font-bold text-ink-500">{toFa(v)}</span>
+          {daySeries.map((d) => (
+            <div key={d.key} className="flex flex-1 flex-col items-center gap-2">
+              <span className="text-[11px] font-bold text-ink-500">{d.value ? formatPriceCompact(d.value) : "—"}</span>
               <div className="flex w-full flex-1 items-end rounded-lg bg-sand-100">
-                <div className="w-full rounded-lg bg-navy-800 transition-all" style={{ height: `${Math.round((v / max) * 100)}%` }} />
+                <div className="w-full rounded-lg bg-navy-800 transition-all" style={{ height: `${Math.max(d.value ? 4 : 0, Math.round((d.value / max) * 100))}%` }} />
               </div>
-              <span className="text-[11px] text-ink-500">{days[i]}</span>
+              <span className="text-[11px] text-ink-500">{d.label}</span>
             </div>
           ))}
         </div>

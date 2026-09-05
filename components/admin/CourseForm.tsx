@@ -1,9 +1,13 @@
 import Link from "next/link";
 import type { OnlineCourse } from "@/lib/types";
-import { instructors } from "@/lib/data";
 import { galleryImages } from "@/lib/seed";
+import { getInstructors, getSettings, getVideos } from "@/lib/store";
+import { findFfmpeg } from "@/lib/video";
+import { spotPlayerConfigured } from "@/lib/spotplayer";
 import { FieldLabel, Input, Select, Textarea } from "../ui/Input";
 import { UploadField } from "./UploadField";
+import { TrailerFields } from "./TrailerFields";
+import { ProtectionFields } from "./ProtectionFields";
 
 const categories = ["فرش‌بافی", "گلیم‌بافی", "گبه‌بافی", "رنگرزی", "مرمت", "طراحی"];
 const levels = ["مقدماتی", "متوسط", "پیشرفته"];
@@ -18,6 +22,10 @@ export function CourseForm({
   submitLabel: string;
 }) {
   const c = initial ?? null;
+  const instructors = getInstructors().filter((i) => i.active !== false || i.slug === c?.instructorSlug);
+  const videos = getVideos().map((v) => ({ id: v.id, title: v.title, durationSec: v.durationSec, status: v.status }));
+  const protection = c?.protection ?? getSettings().video.defaults;
+  const defaultInstructor = c?.instructorSlug ?? instructors.find((i) => i.name === c?.instructor)?.slug ?? instructors[0]?.slug ?? "";
   return (
     <form action={action} className="grid gap-4 rounded-2xl bg-card p-6 shadow-card ring-1 ring-ink-900/5 sm:grid-cols-2">
       {c && <input type="hidden" name="slug" value={c.slug} />}
@@ -52,11 +60,14 @@ export function CourseForm({
       </div>
       <div>
         <FieldLabel htmlFor="f-inst">مدرس</FieldLabel>
-        <Select id="f-inst" name="instructor" defaultValue={c?.instructor ?? instructors[0].name}>
+        <Select id="f-inst" name="instructorSlug" defaultValue={defaultInstructor}>
           {instructors.map((i) => (
-            <option key={i.slug} value={i.name}>{i.name} — {i.specialty}</option>
+            <option key={i.slug} value={i.slug}>{i.name} — {i.specialty}</option>
           ))}
         </Select>
+        <p className="mt-1 text-xs text-ink-500">
+          مدرس جدید را از <Link href="/admin/instructors" className="font-bold text-teal-700">بخش مدرسان</Link> اضافه کنید.
+        </p>
       </div>
       <div className="sm:col-span-2">
         <UploadField name="image" label="تصویر دوره" gallery={galleryImages} initial={c?.image} />
@@ -95,6 +106,20 @@ export function CourseForm({
           placeholder={"شروع بافت: چله‌کشی ساده؛ پودگذاری و دفتین\nتکنیک‌های پایه: پودنمای ساده؛ راه‌راه و جناقی"}
         />
       </div>
+
+      <TrailerFields initial={c?.trailer} videos={videos} gallery={galleryImages} />
+      <ProtectionFields value={protection} spotConfigured={spotPlayerConfigured()} ffmpegAvailable={!!findFfmpeg()} />
+
+      {c && (
+        <div className="flex items-center justify-between gap-3 rounded-2xl bg-teal-50 px-4 py-3 text-sm sm:col-span-2">
+          <span className="text-teal-900">
+            جلسات ویدیویی این دوره ({c.lessons?.length ?? 0} جلسه) را جداگانه مدیریت کنید.
+          </span>
+          <Link href={`/admin/courses/${c.slug}/lessons`} className="rounded-lg bg-teal-700 px-3 py-1.5 text-xs font-bold text-white hover:bg-teal-800">
+            مدیریت جلسات
+          </Link>
+        </div>
+      )}
 
       <div className="flex flex-wrap items-center gap-3 sm:col-span-2">
         <button type="submit" className="inline-flex h-11 cursor-pointer items-center rounded-xl bg-navy-800 px-8 text-[15px] font-bold text-white transition-colors hover:bg-navy-700">

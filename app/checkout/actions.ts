@@ -2,21 +2,71 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { faToday } from "@/lib/format";
+import { audit } from "@/lib/audit";
+import { faToday, normalizeDigits } from "@/lib/format";
 import type { CartItem } from "@/lib/cart";
-import { getSessionUser } from "@/lib/auth";
+import { getSessionUser, hashPassword } from "@/lib/auth";
+import { sendSms } from "@/lib/notify";
 import { requestPayment } from "@/lib/payment";
-import { getClasses, getOrders, getSettings, writeDb } from "@/lib/store";
+import { getClasses, getCourses, getOrders, getProducts, getSettings, getUserByPhone, getUsers, writeDb } from "@/lib/store";
+import type { OrderLine, ShippingInfo, User } from "@/lib/types";
+import { grantAccessForOrder } from "@/app/admin/actions";
 
 function nextOrderId(): string {
   const nums = getOrders().map((o) => Number(o.id.replace(/[^0-9]/g, "")) || 0);
   return `AZ-${Math.max(9041, ...nums) + 1}`;
 }
 
+/** Compute shipping cost for a set of product lines with a chosen method (server-side truth). */
+export async function quoteShipping(methodId: string, subtotal: number): Promise<{ cost: number; label: string } | null> {
+  const shop = getSettings().shop;
+  const m = shop.shippingMethods.find((x) => x.id === methodId && x.active);
+  if (!m) return null;
+  const freeOver = m.freeOver || shop.freeShippingOver;
+  const cost = freeOver > 0 && subtotal >= freeOver ? 0 : m.cost;
+  return { cost, label: m.label };
+}
+
+/**
+ * Turn the client cart into verified server-side order lines.
+ * Prices are re-read from the store so a tampered cart can't set its own price.
+ */
+function buildLines(items: CartItem[]): { lines: OrderLine[]; problems: string[] } {
+  const courses = getCourses();
+  const classes = getClasses();
+  const products = getProducts();
+  const lines: OrderLine[] = [];
+  const problems: string[] = [];
+  for (const i of items) {
+    if (i.kind === "course") {
+      const c = courses.find((x) => x.slug === i.slug);
+      if (c) lines.push({ kind: "course", slug: c.slug, title: c.title, price: c.price, qty: 1 });
+    } else if (i.kind === "class") {
+      const k = classes.find((x) => x.slug === i.slug);
+      if (!k) continue;
+      if (k.remaining <= 0) problems.push(`ظرفیت «${k.title}» تکمیل شده است`);
+      else lines.push({ kind: "class", slug: k.slug, title: k.title, price: k.price, qty: 1 });
+    } else if (i.kind === "product") {
+      const p = products.find((x) => x.slug === i.slug && x.active);
+      if (!p) {
+        problems.push(`«${i.title}» دیگر موجود نیست`);
+        continue;
+      }
+      const qty = Math.max(1, Math.min(Number(i.qty) || 1, 99));
+      if (p.kind === "physical" && !p.allowBackorder && p.stock < qty) {
+        problems.push(p.stock > 0 ? `از «${p.title}» فقط ${p.stock} عدد موجود است` : `«${p.title}» ناموجود است`);
+        continue;
+      }
+      lines.push({ kind: p.kind === "preorder" ? "preorder" : "product", slug: p.slug, title: p.title, price: p.price, qty });
+    }
+  }
+  return { lines, problems };
+}
+
 export async function startCheckout(fd: FormData) {
   const user = await getSessionUser();
   const name = String(fd.get("name") ?? "").trim() || user?.name || "مهمان";
-  const phone = String(fd.get("phone") ?? "").trim();
+  const phone = normalizeDigits(String(fd.get("phone") ?? "").trim());
   let items: CartItem[] = [];
   try {
     items = JSON.parse(String(fd.get("items") ?? "[]")) as CartItem[];
@@ -25,19 +75,79 @@ export async function startCheckout(fd: FormData) {
   }
   if (items.length === 0) redirect("/cart");
 
-  const total = items.reduce((s, i) => s + (Number(i.price) || 0), 0);
+  const { lines, problems } = buildLines(items);
+  if (problems.length > 0 || lines.length === 0) {
+    redirect(`/checkout?error=${encodeURIComponent(problems[0] ?? "سبد خرید معتبر نیست")}`);
+  }
+
+  const subtotal = lines.reduce((s, l) => s + l.price * l.qty, 0);
   const coupon = String(fd.get("coupon") ?? "").trim().toUpperCase();
-  const discount = coupon === "ASAD10" ? Math.round((total * 10) / 100) : 0;
-  const final = total - discount;
+  const discount = coupon === "ASAD10" ? Math.round((subtotal * 10) / 100) : 0;
 
+  // Shipping (only when the order contains physical products)
+  const needsShipping = lines.some((l) => l.kind === "product");
+  let shipping: ShippingInfo | undefined;
+  if (needsShipping) {
+    const methodId = String(fd.get("shippingMethod") ?? "");
+    const quote = await quoteShipping(methodId, subtotal - discount);
+    const address = String(fd.get("address") ?? "").trim();
+    const city = String(fd.get("city") ?? "").trim();
+    const province = String(fd.get("province") ?? "").trim();
+    const postalCode = normalizeDigits(String(fd.get("postalCode") ?? "").trim());
+    if (!quote) redirect(`/checkout?error=${encodeURIComponent("روش ارسال را انتخاب کنید")}`);
+    if (methodId !== "pickup" && (!address || !city)) redirect(`/checkout?error=${encodeURIComponent("آدرس و شهر برای ارسال الزامی است")}`);
+    shipping = {
+      method: quote.label,
+      methodId,
+      cost: quote.cost,
+      address,
+      city,
+      province,
+      postalCode,
+      recipient: String(fd.get("recipient") ?? "").trim() || name,
+      phone,
+    };
+  }
+
+  // Course access is tied to an account. Guests buying a course get (or are matched to)
+  // a student account by phone number so the enrolment has somewhere to live.
+  let ownerId = user?.id;
+  let provisionedPassword: string | undefined;
+  if (!user && lines.some((l) => l.kind === "course")) {
+    if (!/^09\d{9}$/.test(phone)) redirect(`/checkout?error=${encodeURIComponent("برای خرید دوره آنلاین شماره موبایل معتبر لازم است")}`);
+    const existing = getUserByPhone(phone);
+    if (existing) {
+      ownerId = existing.id;
+    } else {
+      provisionedPassword = Math.random().toString(36).slice(2, 8) + Math.floor(Math.random() * 90 + 10);
+      const created: User = {
+        id: `u-${Date.now().toString(36)}`,
+        name,
+        phone,
+        passwordHash: hashPassword(provisionedPassword),
+        role: "student",
+        createdAt: faToday(),
+      };
+      writeDb({ users: [...getUsers(), created] });
+      ownerId = created.id;
+      await audit({ action: "auth.register", actor: { id: created.id, name: created.name, role: "student" }, detail: { via: "checkout" } });
+    }
+  }
+
+  const final = Math.max(0, subtotal - discount + (shipping?.cost ?? 0));
   const id = nextOrderId();
-  const itemLabel = items.map((i) => `${i.title} (${i.kind === "course" ? "آنلاین" : "حضوری"})`).join(" + ");
+  const itemLabel = lines
+    .map((l) => `${l.title}${l.qty > 1 ? ` ×${l.qty}` : ""} (${l.kind === "course" ? "آنلاین" : l.kind === "class" ? "حضوری" : l.kind === "preorder" ? "پیش‌سفارش" : "کالا"})`)
+    .join(" + ");
 
-  // decrement class capacity
+  // Reserve capacity / stock now; released again if the payment fails or is cancelled.
   const classes = getClasses().map((c) => {
-    const hit = items.find((i) => i.kind === "class" && i.slug === c.slug);
-    if (hit && c.remaining > 0) return { ...c, remaining: c.remaining - 1 };
-    return c;
+    const hit = lines.find((l) => l.kind === "class" && l.slug === c.slug);
+    return hit && c.remaining > 0 ? { ...c, remaining: c.remaining - 1 } : c;
+  });
+  const products = getProducts().map((p) => {
+    const hit = lines.find((l) => l.kind === "product" && l.slug === p.slug);
+    return hit ? { ...p, stock: Math.max(0, p.stock - hit.qty), sold: p.sold + hit.qty } : p;
   });
 
   const { payment } = getSettings();
@@ -50,20 +160,72 @@ export async function startCheckout(fd: FormData) {
     amount: final,
     status: demo ? "پرداخت شده" : "در انتظار پرداخت",
     date: faToday(),
+    lines,
+    userId: ownerId,
+    phone: phone || user?.phone,
+    shipping,
+    discount: discount || undefined,
+    note: String(fd.get("note") ?? "").trim() || undefined,
   });
-  writeDb({ orders, classes });
+  writeDb({ orders, classes, products });
+  await audit({
+    action: "order.create",
+    actor: user ? { id: user.id, name: user.name, role: user.role } : null,
+    target: `order:${id}`,
+    detail: { amount: final, lines: lines.map((l) => `${l.kind}:${l.slug}x${l.qty}`), shipping: shipping?.method, demo },
+  });
   revalidatePath("/admin/orders");
+  revalidatePath("/admin/shop");
+  revalidatePath("/shop");
+
+  if (provisionedPassword && phone) {
+    await sendSms([phone], `اسدزاده: حساب هنرجویی شما ساخته شد. ورود با شماره موبایل و رمز ${provisionedPassword} — لطفاً پس از ورود رمز را تغییر دهید.`);
+  }
 
   if (demo) {
-    redirect(`/checkout/success?order=${id}`);
+    await finalizePaidOrder(id);
+    redirect(`/checkout/success?order=${id}${provisionedPassword ? "&account=new" : ""}`);
   }
 
   const order = orders[0];
   const base = getSettings().site.siteUrl.replace(/\/$/, "") || "http://localhost:3000";
   const r = await requestPayment(order, `${base}/api/payment/callback`);
   if (!r.ok || !r.payUrl || !r.authority) {
+    await releaseOrder(id);
     redirect(`/checkout/failed?order=${id}&reason=${encodeURIComponent(r.error ?? "خطای درگاه")}`);
   }
   writeDb({ orders: getOrders().map((o) => (o.id === id ? { ...o, authority: r.authority } : o)) });
   redirect(r.payUrl);
+}
+
+/** Post-payment side effects: enrollments, SpotPlayer licenses, SMS. Idempotent. */
+export async function finalizePaidOrder(orderId: string) {
+  const order = getOrders().find((o) => o.id === orderId);
+  if (!order) return;
+  await grantAccessForOrder(orderId);
+  const phone = order.phone;
+  if (phone) {
+    const hasCourse = order.lines?.some((l) => l.kind === "course");
+    const hasProduct = order.lines?.some((l) => l.kind === "product" || l.kind === "preorder");
+    const parts = [`اسدزاده: سفارش ${orderId} ثبت شد.`];
+    if (hasCourse) parts.push("دوره‌ها در پنل هنرجو فعال است.");
+    if (hasProduct) parts.push(`کالاها با ${order.shipping?.method ?? "روش انتخابی"} ارسال می‌شود.`);
+    await sendSms([phone], parts.join(" "));
+  }
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/courses");
+  revalidatePath("/dashboard/orders");
+}
+
+/** Give reserved stock/seats back when a payment fails or is cancelled. */
+export async function releaseOrder(orderId: string) {
+  const order = getOrders().find((o) => o.id === orderId);
+  if (!order?.lines || order.status === "پرداخت شده") return;
+  writeDb({
+    classes: getClasses().map((c) => (order.lines!.some((l) => l.kind === "class" && l.slug === c.slug) ? { ...c, remaining: c.remaining + 1 } : c)),
+    products: getProducts().map((p) => {
+      const hit = order.lines!.find((l) => l.kind === "product" && l.slug === p.slug);
+      return hit ? { ...p, stock: p.stock + hit.qty, sold: Math.max(0, p.sold - hit.qty) } : p;
+    }),
+  });
 }
