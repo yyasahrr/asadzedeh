@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, FileDown } from "lucide-react";
 import { getCertificate } from "@/lib/store";
 import { Certificate } from "@/components/certificate/Certificate";
 import { PrintButton } from "@/components/certificate/PrintButton";
@@ -20,7 +20,17 @@ export default async function CertificatePage({ params }: { params: Promise<{ co
           <ArrowRight className="h-4 w-4" />
           بازگشت به گواهی‌ها
         </Link>
-        <PrintButton />
+        <span className="flex flex-wrap gap-2">
+          <a
+            href={`/api/certificates/${encodeURIComponent(cert.code)}/pdf`}
+            download
+            className="inline-flex h-11 items-center gap-2 rounded-xl bg-madder-700 px-6 text-[15px] font-bold text-white transition-colors hover:bg-madder-600"
+          >
+            <FileDown className="h-5 w-5" />
+            دانلود PDF
+          </a>
+          <PrintButton label="چاپ" />
+        </span>
       </div>
 
       <Certificate cert={cert} />

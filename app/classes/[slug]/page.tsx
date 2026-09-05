@@ -1,12 +1,15 @@
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { CalendarDays, CheckCircle2, Clock3, MapPin, UsersRound } from "lucide-react";
-import { getClass, getClasses } from "@/lib/store";
+import { CalendarDays, CheckCircle2, Clock3, MapPin, Minus, Plus, UsersRound } from "lucide-react";
+import { getClass, getClasses, getSettings } from "@/lib/store";
 import { formatPriceCompact, toFa } from "@/lib/format";
 import { PageHero } from "@/components/PageHero";
 import { Button } from "@/components/ui/Button";
 import { InPersonCourseCard } from "@/components/cards/InPersonCourseCard";
+import { Comments } from "@/components/comments/Comments";
+import { ShareButton } from "@/components/ShareButton";
+import { AddToCartButton } from "@/components/cart/AddToCartButton";
 
 export function generateStaticParams() {
   return getClasses().map((c) => ({ slug: c.slug }));
@@ -15,19 +18,76 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const cls = getClass(slug);
-  return { title: cls ? cls.title : "کلاس حضوری" };
+  if (!cls) return { title: "کلاس حضوری" };
+  return {
+    title: cls.title,
+    description: cls.excerpt,
+    openGraph: { title: cls.title, description: cls.excerpt, type: "website" },
+  };
 }
 
-export default async function ClassDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+const faqs = [
+  {
+    q: "آیا ابزار و مواد اولیه با خودم بیاورم؟",
+    a: "خیر. دار، ابزار و مواد جلسات اول در کارگاه موجود است؛ لیست وسایل شخصی (مثل دفتر یادداشت) بعد از ثبت‌نام پیامک می‌شود.",
+  },
+  {
+    q: "اگر یک جلسه غیبت کنم چه می‌شود؟",
+    a: "تا دو جلسه غیبت موجه با هماهنگی، در کلاس موازی جبران می‌شود. خلاصه هر جلسه هم در گروه هنرجویان منتشر می‌شود.",
+  },
+  {
+    q: "آیا امکان پرداخت اقساطی هست؟",
+    a: "بله. شهریه کلاس‌های حضوری در دو قسط (ثبت‌نام و میانه دوره) قابل پرداخت است.",
+  },
+  {
+    q: "کارگاه کجاست و جای پارک دارد؟",
+    a: "کارگاه در مرکز تهران (خیابان انقلاب) است؛ هم به مترو نزدیک است و هم پارکینگ عمومی در ۵ دقیقه‌ای کارگاه قرار دارد.",
+  },
+];
+
+export default async function ClassDetailPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ comment?: string }>;
+}) {
   const { slug } = await params;
+  const { comment } = await searchParams;
   const cls = getClass(slug);
   if (!cls) notFound();
 
   const related = getClasses().filter((c) => c.slug !== cls.slug).slice(0, 2);
+  const siteUrl = getSettings().site.siteUrl.replace(/\/$/, "");
   const urgent = cls.remaining <= 3;
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Course",
+    name: cls.title,
+    description: cls.excerpt,
+    provider: { "@type": "Organization", name: "اسدزاده", url: siteUrl },
+    hasCourseInstance: {
+      "@type": "CourseInstance",
+      courseMode: "onsite",
+      instructor: { "@type": "Person", name: cls.instructor },
+      location: { "@type": "Place", name: cls.location },
+    },
+  };
+  const faqLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((f) => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: { "@type": "Answer", text: f.a },
+    })),
+  };
 
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
       <PageHero
         title={cls.title}
         crumbs={[
@@ -38,13 +98,18 @@ export default async function ClassDetailPage({ params }: { params: Promise<{ sl
       />
 
       <div className="shell grid gap-8 py-10 lg:grid-cols-[1fr_360px] lg:py-12">
-        <div className="min-w-0">
-          <div className="overflow-hidden rounded-2xl shadow-card">
-            <Image src={cls.image} alt={cls.title} width={1000} height={560} className="aspect-video w-full object-cover" priority />
+        <div className="min-w-0 space-y-8">
+          <div>
+            <div className="overflow-hidden rounded-2xl shadow-card">
+              <Image src={cls.image} alt={cls.title} width={1000} height={560} className="aspect-video w-full object-cover" priority />
+            </div>
+            <div className="mt-4 flex justify-end">
+              <ShareButton title={cls.title} />
+            </div>
+            <p className="mt-3 text-[16px] leading-9 text-ink-700">{cls.excerpt}</p>
           </div>
-          <p className="mt-5 text-[16px] leading-9 text-ink-700">{cls.excerpt}</p>
 
-          <section className="mt-6 rounded-2xl bg-card p-6 shadow-card ring-1 ring-ink-900/5" aria-label="برنامه کلاس">
+          <section className="rounded-2xl bg-card p-6 shadow-card ring-1 ring-ink-900/5" aria-label="برنامه کلاس">
             <h2 className="font-black text-navy-900">برنامه کلاس</h2>
             <dl className="mt-4 grid gap-3 sm:grid-cols-2">
               {[
@@ -67,7 +132,7 @@ export default async function ClassDetailPage({ params }: { params: Promise<{ sl
             </p>
           </section>
 
-          <section className="mt-6 rounded-2xl bg-card p-6 shadow-card ring-1 ring-ink-900/5" aria-label="امکانات">
+          <section className="rounded-2xl bg-card p-6 shadow-card ring-1 ring-ink-900/5" aria-label="امکانات">
             <h2 className="font-black text-navy-900">شهریه شامل چه چیزهایی است؟</h2>
             <ul className="mt-4 grid gap-3 sm:grid-cols-2">
               {cls.includes.map((inc) => (
@@ -78,6 +143,24 @@ export default async function ClassDetailPage({ params }: { params: Promise<{ sl
               ))}
             </ul>
           </section>
+
+          <section aria-labelledby="faq">
+            <h2 id="faq" className="text-lg font-black text-navy-900">سؤالات پرتکرار</h2>
+            <div className="mt-4 space-y-3">
+              {faqs.map((f) => (
+                <details key={f.q} className="group rounded-2xl bg-card px-5 py-4 shadow-card ring-1 ring-ink-900/5">
+                  <summary className="flex items-center justify-between gap-3 font-extrabold text-navy-900">
+                    {f.q}
+                    <Plus className="h-5 w-5 shrink-0 text-ink-400 group-open:hidden" />
+                    <Minus className="hidden h-5 w-5 shrink-0 text-ink-400 group-open:block" />
+                  </summary>
+                  <p className="mt-2 text-[15px] leading-8 text-ink-600">{f.a}</p>
+                </details>
+              ))}
+            </div>
+          </section>
+
+          <Comments scope="class" slug={cls.slug} sent={comment === "sent"} />
         </div>
 
         <aside className="lg:sticky lg:top-28 lg:self-start">
@@ -85,12 +168,31 @@ export default async function ClassDetailPage({ params }: { params: Promise<{ sl
             <div className="pattern-strip" aria-hidden />
             <div className="p-6">
               <p className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${urgent ? "bg-madder-700" : "bg-teal-600"}`}>
-                {urgent ? `تنها ${toFa(cls.remaining)} ظرفیت باقی مانده` : `${toFa(cls.remaining)} ظرفیت باقی مانده از ${toFa(cls.capacity)}`}
+                {cls.remaining <= 0
+                  ? "ظرفیت تکمیل شد"
+                  : urgent
+                    ? `تنها ${toFa(cls.remaining)} ظرفیت باقی مانده`
+                    : `${toFa(cls.remaining)} ظرفیت باقی مانده از ${toFa(cls.capacity)}`}
               </p>
               <div className="mt-3 text-2xl font-black">{formatPriceCompact(cls.price)}</div>
               <p className="mt-1 text-xs text-white/60">امکان پرداخت در دو قسط</p>
               <div className="mt-5">
-                <Button href="/cart" variant="highlight" size="lg" className="w-full">ثبت‌نام در کلاس</Button>
+                {cls.remaining <= 0 ? (
+                  <Button href="/classes" variant="sand" size="lg" className="w-full">مشاهده کلاس‌های دیگر</Button>
+                ) : (
+                  <AddToCartButton
+                    label="ثبت‌نام در کلاس"
+                    className="bg-madder-700 hover:bg-madder-600"
+                    item={{
+                      kind: "class",
+                      slug: cls.slug,
+                      title: cls.title,
+                      price: cls.price,
+                      image: cls.image,
+                      meta: `${cls.days} • ${cls.time}`,
+                    }}
+                  />
+                )}
               </div>
               <p className="mt-4 text-[13px] leading-6 text-white/60">
                 بعد از ثبت‌نام، هماهنگی‌های کارگاه (آدرس دقیق، وسایل لازم و گروه هنرجویان) پیامک می‌شود.

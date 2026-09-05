@@ -6,7 +6,12 @@ import { Logo } from "@/components/Logo";
 
 export const metadata: Metadata = { title: "ورود | ثبت‌نام" };
 
-export default function AuthPage() {
+export default async function AuthPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string; error?: string }>;
+}) {
+  const { tab, error } = await searchParams;
   return (
     <>
       <PageHero
@@ -25,7 +30,7 @@ export default function AuthPage() {
           </div>
           <div className="p-6 sm:p-10">
             <Logo className="mb-6" />
-            <AuthTabs />
+            <AuthTabs initialTab={tab === "register" ? "register" : "login"} error={error} />
           </div>
         </div>
       </div>

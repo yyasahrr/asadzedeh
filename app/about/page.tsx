@@ -4,6 +4,7 @@ import { GraduationCap, HandHeart, Leaf, Medal } from "lucide-react";
 import { PageHero } from "@/components/PageHero";
 import { Button } from "@/components/ui/Button";
 import { stats } from "@/lib/data";
+import { getSettings } from "@/lib/store";
 
 export const metadata: Metadata = {
   title: "درباره ما",
@@ -26,6 +27,7 @@ const values = [
 ];
 
 export default function AboutPage() {
+  const intro = getSettings().site.aboutIntro;
   return (
     <>
       <PageHero
@@ -38,15 +40,9 @@ export default function AboutPage() {
         <div>
           <h2 className="text-2xl font-black text-navy-900">از تبریز تا تهران؛ از دار تا دوربین</h2>
           <div className="mt-4 space-y-4 leading-9 text-ink-700">
-            <p>
-              همه‌چیز با یک دار چوبی در خانه پدربزرگ شروع شد. ما بچه‌هایی بودیم که به‌جای بازی،
-              نخ‌های رنگی را جدا می‌کردیم و رج می‌شمردیم. فرش برای ما فقط یک هنر نبود؛ زبان خانه بود.
-            </p>
-            <p>
-              سال ۱۳۹۰ وقتی اولین کلاس را برگزار کردیم، فکر نمی‌کردیم روزی هنرجویانی از سراسر ایران
-              داشته باشیم. امروز با افتخار می‌گوییم: بیش از ۱۲۰۰ نفر با ما اولین گره زندگی‌شان را زده‌اند
-              و ده‌ها نفرشان حالا خودشان مدرس و کارگاه‌دارند.
-            </p>
+            {intro.map((p, i) => (
+              <p key={i}>{p}</p>
+            ))}
           </div>
           <dl className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
             {stats.map((s) => (

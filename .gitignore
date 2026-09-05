@@ -42,3 +42,6 @@ next-env.d.ts
 
 # Local demo database (seeded from lib/data.ts on first run)
 data/db.json
+
+# User uploads (runtime)
+public/uploads/

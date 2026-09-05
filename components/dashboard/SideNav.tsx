@@ -4,11 +4,18 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Award,
+  Bell,
   BookOpenCheck,
   CalendarDays,
   ClipboardList,
+  CreditCard,
+  FileText,
+  Images,
   LayoutDashboard,
+  LayoutTemplate,
+  MessageSquareText,
   ReceiptText,
+  Settings,
   UserRound,
   UsersRound,
   type LucideIcon,
@@ -24,6 +31,13 @@ const iconMap: Record<string, LucideIcon> = {
   orders: ReceiptText,
   profile: UserRound,
   students: UsersRound,
+  blog: FileText,
+  media: Images,
+  content: LayoutTemplate,
+  comments: MessageSquareText,
+  notify: Bell,
+  payments: CreditCard,
+  settings: Settings,
 };
 
 export interface NavItem {

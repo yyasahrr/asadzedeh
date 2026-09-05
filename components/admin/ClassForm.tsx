@@ -3,6 +3,7 @@ import type { InPersonClass } from "@/lib/types";
 import { instructors } from "@/lib/data";
 import { galleryImages } from "@/lib/seed";
 import { FieldLabel, Input, Select, Textarea } from "../ui/Input";
+import { UploadField } from "./UploadField";
 
 export function ClassForm({
   action,
@@ -30,13 +31,8 @@ export function ClassForm({
           ))}
         </Select>
       </div>
-      <div>
-        <FieldLabel htmlFor="k-image">تصویر کلاس</FieldLabel>
-        <Select id="k-image" name="image" defaultValue={c?.image ?? galleryImages[5].value}>
-          {galleryImages.map((g) => (
-            <option key={g.value} value={g.value}>{g.label}</option>
-          ))}
-        </Select>
+      <div className="sm:col-span-2">
+        <UploadField name="image" label="تصویر کلاس" gallery={galleryImages} initial={c?.image} />
       </div>
       <div>
         <FieldLabel htmlFor="k-start">تاریخ شروع</FieldLabel>

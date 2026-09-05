@@ -5,7 +5,7 @@ import { Clock3 } from "lucide-react";
 import { PageHero } from "@/components/PageHero";
 import { ArticleCard } from "@/components/cards/ArticleCard";
 import { Badge } from "@/components/ui/Badge";
-import { articles } from "@/lib/data";
+import { getArticles } from "@/lib/store";
 import { toFa } from "@/lib/format";
 
 export const metadata: Metadata = {
@@ -14,7 +14,16 @@ export const metadata: Metadata = {
 };
 
 export default function BlogPage() {
+  const articles = getArticles();
   const [featured, ...rest] = articles;
+  if (!featured) {
+    return (
+      <>
+        <PageHero title="دانشنامه فرش و گلیم" crumbs={[{ href: "/", label: "خانه" }, { label: "دانشنامه" }]} />
+        <div className="shell py-16 text-center text-ink-500">هنوز مقاله‌ای منتشر نشده است.</div>
+      </>
+    );
+  }
   return (
     <>
       <PageHero
@@ -23,7 +32,6 @@ export default function BlogPage() {
         crumbs={[{ href: "/", label: "خانه" }, { label: "دانشنامه" }]}
       />
       <div className="shell py-10 lg:py-12">
-        {/* Featured */}
         <Link
           href={`/blog/${featured.slug}`}
           className="group grid overflow-hidden rounded-3xl bg-card shadow-card ring-1 ring-ink-900/5 transition-shadow hover:shadow-lift lg:grid-cols-2"

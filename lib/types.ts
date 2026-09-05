@@ -95,6 +95,9 @@ export interface Order {
   item: string;
   amount: number;
   status: string;
+  authority?: string;
+  refId?: string;
+  date?: string;
 }
 
 export interface Certificate {
@@ -103,4 +106,109 @@ export interface Certificate {
   course: string;
   date: string;
   hours: number;
+}
+
+/* ---------- Backend ---------- */
+
+export type Role = "admin" | "manager" | "editor" | "support" | "student";
+
+export interface User {
+  id: string;
+  name: string;
+  phone: string;
+  passwordHash: string;
+  role: Role;
+  createdAt: string;
+}
+
+export interface Session {
+  token: string;
+  userId: string;
+  createdAt: string;
+}
+
+export interface Comment {
+  id: string;
+  scope: "course" | "class";
+  slug: string;
+  name: string;
+  text: string;
+  date: string;
+  status: "pending" | "approved";
+}
+
+export interface Submission {
+  id: string;
+  assignment: string;
+  course: string;
+  student: string;
+  file: string;
+  date: string;
+  status: "در حال بررسی" | "تأیید شده" | "نیاز به اصلاح";
+  note?: string;
+}
+
+export interface Subscriber {
+  email: string;
+  date: string;
+}
+
+export interface NotifyLog {
+  id: string;
+  date: string;
+  channel: "sms" | "email";
+  to: string;
+  message: string;
+  status: string;
+}
+
+export interface SiteSettings {
+  siteName: string;
+  tagline: string;
+  phone: string;
+  email: string;
+  address: string;
+  siteUrl: string;
+  announcement: { enabled: boolean; text: string; link: string };
+  hero: {
+    badge: string;
+    titleA: string;
+    titleHighlight: string;
+    titleB: string;
+    subtitle: string;
+    primaryCta: string;
+    secondaryCta: string;
+    image: string;
+    note: string;
+  };
+  footerAbout: string;
+  socials: { instagram: string; telegram: string };
+  aboutIntro: string[];
+}
+
+export interface SmsSettings {
+  provider: "demo" | "kavenegar" | "ghasedak";
+  apiKey: string;
+  sender: string;
+}
+
+export interface EmailSettings {
+  host: string;
+  port: number;
+  user: string;
+  pass: string;
+  from: string;
+}
+
+export interface PaymentSettings {
+  provider: "demo" | "zarinpal";
+  merchantId: string;
+  sandbox: boolean;
+}
+
+export interface Settings {
+  site: SiteSettings;
+  sms: SmsSettings;
+  email: EmailSettings;
+  payment: PaymentSettings;
 }

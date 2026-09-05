@@ -52,7 +52,7 @@ export function Certificate({ cert }: { cert: CertificateData }) {
             <LogoMark className="h-9 w-9" />
             <p className="text-base font-black text-navy-900 sm:text-lg">آموزشگاه هنری اسدزاده</p>
           </div>
-          <h2 className="mt-2 text-2xl font-black text-navy-900 sm:text-4xl">گواهی پایان دوره</h2>
+          <h2 className="mt-2 text-[clamp(1.35rem,5vw,2.25rem)] font-black text-navy-900">گواهی پایان دوره</h2>
           <p className="mt-1 text-[10px] font-bold tracking-[0.3em] text-ink-400 uppercase" dir="ltr">
             Certificate of Completion
           </p>
@@ -60,7 +60,7 @@ export function Certificate({ cert }: { cert: CertificateData }) {
 
         <div className="flex flex-col items-center">
           <p className="text-sm text-ink-600 sm:text-base">گواهی می‌شود</p>
-          <p className="mt-1 border-b-2 border-ochre-600/60 px-8 pb-2 text-2xl font-black text-madder-700 sm:text-4xl">
+          <p className="mt-1 max-w-full truncate border-b-2 border-ochre-600/60 px-4 pb-2 text-[clamp(1.3rem,6vw,2.25rem)] font-black text-madder-700 sm:px-8">
             {cert.student}
           </p>
           <p className="mt-3 max-w-2xl text-sm leading-8 text-ink-700 sm:text-base sm:leading-9">

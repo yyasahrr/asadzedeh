@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Mail, MapPin, Phone } from "lucide-react";
 import { Logo } from "../Logo";
 import { NewsletterForm } from "../NewsletterForm";
+import { getCourses, getClasses, getSettings } from "@/lib/store";
 
 function InstagramIcon({ className }: { className?: string }) {
   return (
@@ -22,73 +23,71 @@ function TelegramIcon({ className }: { className?: string }) {
   );
 }
 
-const columns = [
-  {
-    title: "دوره‌های آنلاین",
-    links: [
-      { href: "/courses/carpet-weaving-foundations", label: "فرش‌بافی مقدماتی" },
-      { href: "/courses/kilim-weaving-start", label: "گلیم‌بافی مقدماتی" },
-      { href: "/courses/natural-dyeing", label: "رنگرزی سنتی" },
-      { href: "/courses/carpet-restoration", label: "مرمت فرش" },
-      { href: "/courses", label: "همه دوره‌ها" },
-    ],
-  },
-  {
-    title: "کلاس‌های حضوری",
-    links: [
-      { href: "/classes/kilim-foundation-oct", label: "گلیم‌بافی مقدماتی" },
-      { href: "/classes/carpet-intermediate-aban", label: "فرش‌بافی متوسط" },
-      { href: "/classes/dyeing-weekend", label: "کارگاه رنگرزی" },
-      { href: "/classes", label: "همه کلاس‌ها" },
-    ],
-  },
-  {
-    title: "دسترسی سریع",
-    links: [
-      { href: "/paths", label: "مسیرهای آموزشی" },
-      { href: "/instructors", label: "اساتید" },
-      { href: "/blog", label: "دانشنامه" },
-      { href: "/about", label: "درباره ما" },
-      { href: "/dashboard", label: "پنل هنرجو" },
-    ],
-  },
-];
+export async function Footer() {
+  const site = getSettings().site;
+  const courses = getCourses().slice(0, 4);
+  const classes = getClasses().slice(0, 3);
 
-export function Footer() {
+  const columns = [
+    {
+      title: "دوره‌های آنلاین",
+      links: [
+        ...courses.map((c) => ({ href: `/courses/${c.slug}`, label: c.shortTitle })),
+        { href: "/courses", label: "همه دوره‌ها" },
+      ],
+    },
+    {
+      title: "کلاس‌های حضوری",
+      links: [
+        ...classes.map((c) => ({ href: `/classes/${c.slug}`, label: c.title.replace(" (حضوری)", "") })),
+        { href: "/classes", label: "همه کلاس‌ها" },
+      ],
+    },
+    {
+      title: "دسترسی سریع",
+      links: [
+        { href: "/paths", label: "مسیرهای آموزشی" },
+        { href: "/instructors", label: "اساتید" },
+        { href: "/blog", label: "دانشنامه" },
+        { href: "/about", label: "درباره ما" },
+        { href: "/dashboard", label: "پنل هنرجو" },
+      ],
+    },
+  ];
+
   return (
     <footer className="bg-navy-900 text-white print:hidden">
       <div className="pattern-strip" aria-hidden />
       <div className="shell py-12 lg:py-16">
         <div className="grid gap-10 lg:grid-cols-[1.3fr_2fr]">
           <div>
-            <Logo dark />
-            <p className="mt-4 max-w-sm text-sm leading-7 text-white/70">
-              اسدزاده؛ آموزش تخصصی فرش، گلیم و هنرهای بافت ایرانی به‌صورت آنلاین و حضوری.
-              سه نسل تجربه بافت، حالا در قالب دوره‌های مدرن و کاربردی.
-            </p>
+            <Logo dark name={site.siteName} tagline={site.tagline} />
+            <p className="mt-4 max-w-sm text-sm leading-7 text-white/70">{site.footerAbout}</p>
             <div className="mt-5 space-y-2.5 text-sm text-white/70">
               <p className="flex items-center gap-2">
                 <MapPin className="h-4 w-4 shrink-0 text-ochre-200" />
-                تهران، خیابان انقلاب، کارگاه اسدزاده
+                {site.address}
               </p>
-              <p className="flex items-center gap-2" dir="ltr">
+              <p className="flex items-center gap-2">
                 <Phone className="h-4 w-4 shrink-0 text-ochre-200" />
-                <span dir="rtl">۰۲۱-۱۲۳۴۵۶۷۸</span>
+                <span dir="ltr">{site.phone}</span>
               </p>
               <p className="flex items-center gap-2">
                 <Mail className="h-4 w-4 shrink-0 text-ochre-200" />
-                <span dir="ltr">hello@asadzedeh.ir</span>
+                <span dir="ltr">{site.email}</span>
               </p>
             </div>
             <div className="mt-5 flex items-center gap-2">
               {[
-                { icon: InstagramIcon, label: "اینستاگرام" },
-                { icon: TelegramIcon, label: "تلگرام" },
-              ].map(({ icon: Icon, label }) => (
+                { icon: InstagramIcon, label: "اینستاگرام", href: site.socials.instagram },
+                { icon: TelegramIcon, label: "تلگرام", href: site.socials.telegram },
+              ].map(({ icon: Icon, label, href }) => (
                 <a
                   key={label}
-                  href="#"
+                  href={href}
                   aria-label={label}
+                  target={href.startsWith("http") ? "_blank" : undefined}
+                  rel="noreferrer"
                   className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 transition-colors hover:bg-white/20"
                 >
                   <Icon className="h-5 w-5" />
@@ -104,10 +103,7 @@ export function Footer() {
                 <ul className="space-y-2.5">
                   {col.links.map((l) => (
                     <li key={l.label}>
-                      <Link
-                        href={l.href}
-                        className="text-sm text-white/70 transition-colors hover:text-white"
-                      >
+                      <Link href={l.href} className="text-sm text-white/70 transition-colors hover:text-white">
                         {l.label}
                       </Link>
                     </li>
@@ -122,9 +118,7 @@ export function Footer() {
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <h3 className="font-black">خبرنامه بافت و رنگ</h3>
-              <p className="mt-1 text-sm text-white/60">
-                هر هفته یک نکته بافت، یک فرمول رنگ و خبر دوره‌های جدید.
-              </p>
+              <p className="mt-1 text-sm text-white/60">هر هفته یک نکته بافت، یک فرمول رنگ و خبر دوره‌های جدید.</p>
             </div>
             <div className="w-full lg:max-w-md">
               <NewsletterForm dark />
@@ -133,7 +127,7 @@ export function Footer() {
         </div>
 
         <div className="mt-8 flex flex-col items-center justify-between gap-3 border-t border-white/10 pt-6 text-xs text-white/50 sm:flex-row">
-          <p>© ۱۴۰۵ اسدزاده — تمام حقوق محفوظ است.</p>
+          <p>© ۱۴۰۵ {site.siteName} — تمام حقوق محفوظ است.</p>
           <div className="flex items-center gap-4">
             <Link href="#" className="transition-colors hover:text-white">قوانین و مقررات</Link>
             <Link href="#" className="transition-colors hover:text-white">حریم خصوصی</Link>

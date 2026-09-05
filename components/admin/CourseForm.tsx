@@ -3,6 +3,7 @@ import type { OnlineCourse } from "@/lib/types";
 import { instructors } from "@/lib/data";
 import { galleryImages } from "@/lib/seed";
 import { FieldLabel, Input, Select, Textarea } from "../ui/Input";
+import { UploadField } from "./UploadField";
 
 const categories = ["فرش‌بافی", "گلیم‌بافی", "گبه‌بافی", "رنگرزی", "مرمت", "طراحی"];
 const levels = ["مقدماتی", "متوسط", "پیشرفته"];
@@ -57,13 +58,8 @@ export function CourseForm({
           ))}
         </Select>
       </div>
-      <div>
-        <FieldLabel htmlFor="f-image">تصویر دوره</FieldLabel>
-        <Select id="f-image" name="image" defaultValue={c?.image ?? galleryImages[0].value}>
-          {galleryImages.map((g) => (
-            <option key={g.value} value={g.value}>{g.label}</option>
-          ))}
-        </Select>
+      <div className="sm:col-span-2">
+        <UploadField name="image" label="تصویر دوره" gallery={galleryImages} initial={c?.image} />
       </div>
       <div>
         <FieldLabel htmlFor="f-sessions">تعداد جلسات</FieldLabel>

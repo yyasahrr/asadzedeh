@@ -13,17 +13,13 @@ export function LogoMark({ className }: { className?: string }) {
   );
 }
 
-export function Logo({ dark = false, className }: { dark?: boolean; className?: string }) {
+export function Logo({ dark = false, className, name = "اسدزاده", tagline = "آموزش فرش و گلیم ایرانی" }: { dark?: boolean; className?: string; name?: string; tagline?: string }) {
   return (
     <Link href="/" className={cn("group flex items-center gap-2.5", className)} aria-label="اسدزاده — صفحه اصلی">
       <LogoMark className="transition-transform duration-300 group-hover:rotate-90" />
       <span className="flex flex-col leading-none">
-        <span className={cn("text-xl font-black tracking-tight", dark ? "text-white" : "text-navy-900")}>
-          اسدزاده
-        </span>
-        <span className={cn("mt-1 text-[11px] font-semibold", dark ? "text-white/60" : "text-ink-500")}>
-          آموزش فرش و گلیم ایرانی
-        </span>
+        <span className={cn("text-xl font-black tracking-tight", dark ? "text-white" : "text-navy-900")}>{name}</span>
+        <span className={cn("mt-1 text-[11px] font-semibold", dark ? "text-white/60" : "text-ink-500")}>{tagline}</span>
       </span>
     </Link>
   );

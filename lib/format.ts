@@ -42,3 +42,12 @@ export function parsePrice(input: string): number {
   const n = Number(normalizeDigits(input).replace(/[^0-9]/g, ""));
   return Number.isFinite(n) ? n : 0;
 }
+
+/** Today's date in Persian, e.g. «۱۴ شهریور ۱۴۰۵». */
+export function faToday(): string {
+  return new Date().toLocaleDateString("fa-IR", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}

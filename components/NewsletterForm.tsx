@@ -1,32 +1,27 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useActionState } from "react";
 import { CheckCircle2, Send } from "lucide-react";
+import { subscribeNewsletter } from "@/app/actions";
 
 export function NewsletterForm({ dark = false }: { dark?: boolean }) {
-  const [done, setDone] = useState(false);
+  const [state, action, pending] = useActionState(subscribeNewsletter, null);
 
-  function onSubmit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setDone(true);
-  }
-
-  if (done) {
+  if (state?.ok) {
     return (
-      <p className="flex items-center gap-2 rounded-xl bg-teal-600/15 px-4 py-3 text-sm font-bold text-teal-700">
+      <p className={`flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-bold ${dark ? "bg-teal-600/20 text-teal-100" : "bg-teal-50 text-teal-700 ring-1 ring-teal-600/20 ring-inset"}`}>
         <CheckCircle2 className="h-5 w-5 shrink-0" />
-        عضویت شما در خبرنامه ثبت شد. به‌زودی از ما می‌شنوید.
+        {state.message}
       </p>
     );
   }
 
   return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-2 sm:flex-row">
-      <label htmlFor="newsletter-email" className="sr-only">
-        ایمیل
-      </label>
+    <form action={action} className="flex flex-col gap-2 sm:flex-row">
+      <label htmlFor="newsletter-email" className="sr-only">ایمیل</label>
       <input
         id="newsletter-email"
+        name="email"
         type="email"
         required
         placeholder="ایمیل شما"
@@ -38,11 +33,13 @@ export function NewsletterForm({ dark = false }: { dark?: boolean }) {
       />
       <button
         type="submit"
-        className="inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-xl bg-madder-700 px-6 text-[15px] font-bold text-white transition-colors hover:bg-madder-600"
+        disabled={pending}
+        className="inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-xl bg-madder-700 px-6 text-[15px] font-bold text-white transition-colors hover:bg-madder-600 disabled:opacity-60"
       >
         <Send className="h-4 w-4 -scale-x-100" />
-        عضویت
+        {pending ? "…" : "عضویت"}
       </button>
+      {state && !state.ok && <p className="text-xs font-bold text-madder-700">{state.message}</p>}
     </form>
   );
 }
