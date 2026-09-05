@@ -50,7 +50,7 @@ export default function BlogPage() {
               <Badge tone="madder">منتخب سردبیر</Badge>
               <Badge tone="moss">{featured.category}</Badge>
             </div>
-            <h2 className="text-2xl leading-snug font-black text-navy-900 transition-colors group-hover:text-navy-700">
+            <h2 className="font-display text-2xl leading-snug font-black text-navy-900 transition-colors group-hover:text-navy-700">
               {featured.title}
             </h2>
             <p className="leading-8 text-ink-600">{featured.excerpt}</p>

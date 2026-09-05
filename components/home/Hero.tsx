@@ -17,7 +17,7 @@ export function Hero() {
             <span className="h-2 w-2 rounded-full bg-teal-600" aria-hidden />
             {hero.badge}
           </span>
-          <h1 className="mt-5 text-4xl leading-[1.5] font-black text-balance text-navy-950 sm:text-5xl sm:leading-[1.45]">
+          <h1 className="mt-5 font-display text-4xl leading-[1.5] font-black text-balance text-navy-950 sm:text-5xl sm:leading-[1.45]">
             {hero.titleA}
             <span className="text-madder-700"> {hero.titleHighlight} </span>
             {hero.titleB}

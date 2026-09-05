@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { CalendarDays, CheckCircle2, Clock3, MapPin, Minus, Plus, UsersRound } from "lucide-react";
@@ -10,6 +11,7 @@ import { InPersonCourseCard } from "@/components/cards/InPersonCourseCard";
 import { Comments } from "@/components/comments/Comments";
 import { ShareButton } from "@/components/ShareButton";
 import { AddToCartButton } from "@/components/cart/AddToCartButton";
+import { WorkshopLocation } from "@/components/workshop/WorkshopLocation";
 
 export function generateStaticParams() {
   return getClasses().map((c) => ({ slug: c.slug }));
@@ -41,7 +43,7 @@ const faqs = [
   },
   {
     q: "کارگاه کجاست و جای پارک دارد؟",
-    a: "کارگاه در مرکز تهران (خیابان انقلاب) است؛ هم به مترو نزدیک است و هم پارکینگ عمومی در ۵ دقیقه‌ای کارگاه قرار دارد.",
+    a: "کارگاه در ارومیه، خیابان امام، خیابان عطایی و کوی دی (نجارخانه) قرار دارد. کروکی و نشانه‌های مسیر در همین صفحه آمده است؛ برای هماهنگی جای پارک پیش از مراجعه تماس بگیرید.",
   },
 ];
 
@@ -89,6 +91,7 @@ export default async function ClassDetailPage({
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
       <PageHero
+        compact
         title={cls.title}
         crumbs={[
           { href: "/", label: "خانه" },
@@ -97,20 +100,33 @@ export default async function ClassDetailPage({
         ]}
       />
 
-      <div className="shell grid gap-8 py-10 lg:grid-cols-[1fr_360px] lg:py-12">
-        <div className="min-w-0 space-y-8">
+      <div className="shell grid gap-4 py-3 lg:grid-cols-[1fr_340px] lg:py-5">
+        <div className="min-w-0 space-y-3">
           <div>
             <div className="overflow-hidden rounded-2xl shadow-card">
               <Image src={cls.image} alt={cls.title} width={1000} height={560} className="aspect-video w-full object-cover" priority />
             </div>
-            <div className="mt-4 flex justify-end">
+            <div className="mt-3 flex justify-end">
               <ShareButton title={cls.title} />
             </div>
-            <p className="mt-3 text-[16px] leading-9 text-ink-700">{cls.excerpt}</p>
+            <p className="mt-2 text-[15px] leading-8 text-ink-700">{cls.excerpt}</p>
+
+            <section className="flex flex-col gap-3 rounded-xl bg-card p-4 ring-1 ring-ink-900/5 sm:flex-row sm:items-center" aria-label="مدرس کلاس">
+              <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-navy-800 text-lg font-black text-white font-display">
+                {cls.instructor.replace("استاد ", "").charAt(0)}
+              </span>
+              <div className="flex-1">
+                <p className="font-display text-base font-black text-navy-900">{cls.instructor}</p>
+                <p className="mt-0.5 text-sm text-ink-600">مدرس کارگاه اسدزاده در ارومیه</p>
+              </div>
+              <Link href="/instructors" className="text-sm font-bold text-teal-600 hover:text-teal-700">
+                مشاهده پروفایل ←
+              </Link>
+            </section>
           </div>
 
-          <section className="rounded-2xl bg-card p-6 shadow-card ring-1 ring-ink-900/5" aria-label="برنامه کلاس">
-            <h2 className="font-black text-navy-900">برنامه کلاس</h2>
+          <section className="rounded-xl bg-card p-4 ring-1 ring-ink-900/5" aria-label="برنامه کلاس">
+            <h2 className="font-display font-black text-navy-900">برنامه کلاس</h2>
             <dl className="mt-4 grid gap-3 sm:grid-cols-2">
               {[
                 { icon: CalendarDays, k: "تاریخ شروع", v: cls.startDate },
@@ -128,12 +144,14 @@ export default async function ClassDetailPage({
               ))}
             </dl>
             <p className="mt-4 text-sm leading-7 text-ink-600">
-              مدرس: <strong className="text-navy-900">{cls.instructor}</strong>
+              مدرس: <strong className="font-display text-navy-900">{cls.instructor}</strong>
             </p>
           </section>
 
-          <section className="rounded-2xl bg-card p-6 shadow-card ring-1 ring-ink-900/5" aria-label="امکانات">
-            <h2 className="font-black text-navy-900">شهریه شامل چه چیزهایی است؟</h2>
+          <WorkshopLocation />
+
+          <section className="rounded-xl bg-card p-4 ring-1 ring-ink-900/5" aria-label="امکانات">
+            <h2 className="font-display font-black text-navy-900">شهریه شامل چه چیزهایی است؟</h2>
             <ul className="mt-4 grid gap-3 sm:grid-cols-2">
               {cls.includes.map((inc) => (
                 <li key={inc} className="flex items-center gap-2 text-[15px] text-ink-700">
@@ -145,10 +163,10 @@ export default async function ClassDetailPage({
           </section>
 
           <section aria-labelledby="faq">
-            <h2 id="faq" className="text-lg font-black text-navy-900">سؤالات پرتکرار</h2>
-            <div className="mt-4 space-y-3">
+            <h2 id="faq" className="font-display text-lg font-black text-navy-900">سؤالات پرتکرار</h2>
+            <div className="mt-2 space-y-2">
               {faqs.map((f) => (
-                <details key={f.q} className="group rounded-2xl bg-card px-5 py-4 shadow-card ring-1 ring-ink-900/5">
+                <details key={f.q} className="group rounded-xl bg-card px-5 py-3.5 ring-1 ring-ink-900/5">
                   <summary className="flex items-center justify-between gap-3 font-extrabold text-navy-900">
                     {f.q}
                     <Plus className="h-5 w-5 shrink-0 text-ink-400 group-open:hidden" />
@@ -164,7 +182,7 @@ export default async function ClassDetailPage({
         </div>
 
         <aside className="lg:sticky lg:top-28 lg:self-start">
-          <div className="overflow-hidden rounded-2xl bg-navy-900 text-white shadow-lift">
+          <div className="overflow-hidden rounded-xl bg-navy-900 text-white shadow-lift">
             <div className="pattern-strip" aria-hidden />
             <div className="p-6">
               <p className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${urgent ? "bg-madder-700" : "bg-teal-600"}`}>
@@ -195,7 +213,7 @@ export default async function ClassDetailPage({
                 )}
               </div>
               <p className="mt-4 text-[13px] leading-6 text-white/60">
-                بعد از ثبت‌نام، هماهنگی‌های کارگاه (آدرس دقیق، وسایل لازم و گروه هنرجویان) پیامک می‌شود.
+                کلاس در کارگاه ارومیه برگزار می‌شود؛ آدرس و کروکی در همین صفحه در دسترس است و جزئیات وسایل لازم پیامک می‌شود.
               </p>
             </div>
           </div>
@@ -204,7 +222,7 @@ export default async function ClassDetailPage({
 
       {related.length > 0 && (
         <div className="bg-sand-50">
-          <div className="shell py-12">
+          <div className="shell py-8">
             <h2 className="mb-6 text-xl font-black text-navy-900">کلاس‌های دیگر</h2>
             <div className="grid gap-5 md:grid-cols-2">
               {related.map((c) => (
