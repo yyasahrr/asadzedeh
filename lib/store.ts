@@ -139,6 +139,7 @@ export const getUserById = (id: string): User | undefined =>
   readDb().users.find((u) => u.id === id);
 export const getSession = (token: string): Session | undefined =>
   readDb().sessions.find((s) => s.token === token);
+export const getSessions = (): Session[] => readDb().sessions;
 
 /* ---------- Comments / Submissions ---------- */
 export const getComments = (): Comment[] => readDb().comments;
