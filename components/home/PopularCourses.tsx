@@ -1,10 +1,10 @@
-import { onlineCourses } from "@/lib/data";
+import { getCourses } from "@/lib/store";
 import { CourseCard } from "../cards/CourseCard";
 import { SectionHeading } from "../ui/SectionHeading";
 import { Button } from "../ui/Button";
 
 export function PopularCourses() {
-  const popular = onlineCourses.slice(0, 4);
+  const popular = getCourses().slice(0, 4);
   return (
     <section className="bg-sand-50" aria-labelledby="popular-courses">
       <div className="section-pad shell">

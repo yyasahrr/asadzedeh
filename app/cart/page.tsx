@@ -4,13 +4,13 @@ import Link from "next/link";
 import { ArrowRight, BadgePercent, ShieldCheck, Trash2 } from "lucide-react";
 import { PageHero } from "@/components/PageHero";
 import { Button } from "@/components/ui/Button";
-import { onlineCourses } from "@/lib/data";
+import { getCourses } from "@/lib/store";
 import { formatPrice, toFa } from "@/lib/format";
 
 export const metadata: Metadata = { title: "سبد خرید" };
 
 export default function CartPage() {
-  const items = [onlineCourses[0], onlineCourses[2]];
+  const items = getCourses().slice(0, 3).filter((_, i) => i !== 1);
   const total = items.reduce((s, c) => s + c.price, 0);
   const discount = 200000;
   return (

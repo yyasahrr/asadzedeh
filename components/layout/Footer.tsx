@@ -56,7 +56,7 @@ const columns = [
 
 export function Footer() {
   return (
-    <footer className="bg-navy-900 text-white">
+    <footer className="bg-navy-900 text-white print:hidden">
       <div className="pattern-strip" aria-hidden />
       <div className="shell py-12 lg:py-16">
         <div className="grid gap-10 lg:grid-cols-[1.3fr_2fr]">

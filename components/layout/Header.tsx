@@ -7,7 +7,7 @@ import { navLinks } from "./nav";
 
 export function Header() {
   return (
-    <header className="sticky top-0 z-40">
+    <header className="sticky top-0 z-40 print:hidden">
       <div className="border-b border-ink-900/10 bg-sand-50/95 backdrop-blur">
         <div className="shell flex h-[68px] items-center justify-between gap-3">
           <div className="flex items-center gap-6">

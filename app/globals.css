@@ -206,3 +206,23 @@
     border-radius: 999px;
   }
 }
+
+/* Certificate printing → save as PDF */
+@page {
+  size: A4 landscape;
+  margin: 0;
+}
+
+@media print {
+  html,
+  body {
+    background: #fff !important;
+  }
+  .print-sheet {
+    box-shadow: none !important;
+    margin: 0 !important;
+    max-width: none !important;
+    border-radius: 0 !important;
+    break-inside: avoid;
+  }
+}

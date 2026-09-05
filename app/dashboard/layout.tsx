@@ -15,7 +15,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <div className="shell py-8 lg:py-10">
       <div className="grid gap-6 lg:grid-cols-[260px_1fr]">
-        <aside className="lg:sticky lg:top-24 lg:self-start">
+        <aside className="lg:sticky lg:top-24 lg:self-start print:hidden">
           <div className="rounded-2xl bg-card p-4 shadow-card ring-1 ring-ink-900/5">
             <div className="mb-4 flex items-center gap-3 rounded-xl bg-sand-100 p-3">
               <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-navy-800 text-lg font-black text-white">

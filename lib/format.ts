@@ -26,3 +26,19 @@ export function formatPriceCompact(value: number): string {
 export function formatRating(value: number): string {
   return toFa(value.toFixed(1).replace(".", "٫"));
 }
+
+const FA_DIGITS = "۰۱۲۳۴۵۶۷۸۹";
+const AR_DIGITS = "٠١٢٣٤٥٦٧٨٩";
+
+/** Convert Persian/Arabic digits to English: «۲٬۸۵۰٬۰۰۰» -> usable number string. */
+export function normalizeDigits(input: string): string {
+  return input
+    .replace(/[۰-۹]/g, (d) => String(FA_DIGITS.indexOf(d)))
+    .replace(/[٠-٩]/g, (d) => String(AR_DIGITS.indexOf(d)));
+}
+
+/** Parse a price string possibly containing Persian digits/separators. */
+export function parsePrice(input: string): number {
+  const n = Number(normalizeDigits(input).replace(/[^0-9]/g, ""));
+  return Number.isFinite(n) ? n : 0;
+}

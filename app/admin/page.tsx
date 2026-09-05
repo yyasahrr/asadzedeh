@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { TrendingDown, TrendingUp } from "lucide-react";
 import { adminOverview } from "@/lib/data";
+import { getOrders } from "@/lib/store";
 import { formatPrice, toFa } from "@/lib/format";
 import { TableShell, Td } from "@/components/admin/TableShell";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
@@ -59,7 +60,7 @@ export default function AdminPage() {
           <Link href="/admin/orders" className="text-[13px] font-bold text-teal-600 hover:text-teal-700">همه سفارش‌ها ←</Link>
         </div>
         <TableShell head={["شماره", "هنرجو", "دوره", "مبلغ", "وضعیت"]}>
-          {adminOverview.recentOrders.map((o) => (
+          {getOrders().slice(0, 5).map((o) => (
             <tr key={o.id} className="transition-colors hover:bg-sand-50">
               <Td className="font-bold text-navy-800" ><span dir="ltr">{o.id}</span></Td>
               <Td className="font-semibold">{o.student}</Td>

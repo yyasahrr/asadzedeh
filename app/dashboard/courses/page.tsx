@@ -7,11 +7,13 @@ import { ProgressBar } from "@/components/ui/ProgressBar";
 
 export const metadata: Metadata = { title: "دوره‌های من" };
 
-const enrolled = [
-  { course: onlineCourses[5], progress: 68, lesson: "درس ۹: ایجاد بافت برجسته" },
-  { course: onlineCourses[0], progress: 34, lesson: "درس ۵: گره فارسی" },
-  { course: onlineCourses[2], progress: 82, lesson: "درس ۱۳: نیل و خم آبی" },
-];
+const enrolled = (
+  [
+    { course: onlineCourses[5], progress: 68, lesson: "درس ۹: ایجاد بافت برجسته" },
+    { course: onlineCourses[0], progress: 34, lesson: "درس ۵: گره فارسی" },
+    { course: onlineCourses[2], progress: 82, lesson: "درس ۱۳: نیل و خم آبی" },
+  ] as const
+).filter((e) => Boolean(e.course));
 
 export default function MyCoursesPage() {
   return (

@@ -1,4 +1,4 @@
-import { inPersonClasses } from "@/lib/data";
+import { getClasses } from "@/lib/store";
 import { InPersonCourseCard } from "../cards/InPersonCourseCard";
 import { SectionHeading } from "../ui/SectionHeading";
 import { Button } from "../ui/Button";
@@ -15,7 +15,7 @@ export function InPersonPreview() {
           link={{ href: "/classes", label: "مشاهده همه کلاس‌ها" }}
         />
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-          {inPersonClasses.slice(0, 3).map((c) => (
+          {getClasses().slice(0, 3).map((c) => (
             <InPersonCourseCard key={c.slug} cls={c} />
           ))}
         </div>

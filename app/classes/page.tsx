@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { MapPin } from "lucide-react";
 import { PageHero } from "@/components/PageHero";
 import { InPersonCourseCard } from "@/components/cards/InPersonCourseCard";
-import { inPersonClasses } from "@/lib/data";
+import { getClasses } from "@/lib/store";
 
 export const metadata: Metadata = {
   title: "دوره‌های حضوری",
@@ -23,7 +23,7 @@ export default function ClassesPage() {
           همه کلاس‌ها: کارگاه اسدزاده، تهران
         </p>
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-          {inPersonClasses.map((c) => (
+          {getClasses().map((c) => (
             <InPersonCourseCard key={c.slug} cls={c} />
           ))}
         </div>

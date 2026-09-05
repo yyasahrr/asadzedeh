@@ -14,7 +14,7 @@ import {
   ShieldCheck,
   UsersRound,
 } from "lucide-react";
-import { onlineCourses } from "@/lib/data";
+import { getCourse, getCourses } from "@/lib/store";
 import { formatPrice, formatPriceCompact, toFa } from "@/lib/format";
 import { PageHero } from "@/components/PageHero";
 import { Badge } from "@/components/ui/Badge";
@@ -23,21 +23,21 @@ import { Stars } from "@/components/ui/Stars";
 import { CourseCard } from "@/components/cards/CourseCard";
 
 export function generateStaticParams() {
-  return onlineCourses.map((c) => ({ slug: c.slug }));
+  return getCourses().map((c) => ({ slug: c.slug }));
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const course = onlineCourses.find((c) => c.slug === slug);
+  const course = getCourse(slug);
   return { title: course ? course.shortTitle : "دوره" };
 }
 
 export default async function CourseDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const course = onlineCourses.find((c) => c.slug === slug);
+  const course = getCourse(slug);
   if (!course) notFound();
 
-  const related = onlineCourses.filter((c) => c.slug !== course.slug).slice(0, 3);
+  const related = getCourses().filter((c) => c.slug !== course.slug).slice(0, 3);
   const discount = course.oldPrice
     ? Math.round(((course.oldPrice - course.price) / course.oldPrice) * 100)
     : 0;

@@ -80,3 +80,27 @@ export interface StudentWork {
   course: string;
   image: string;
 }
+
+export interface Student {
+  name: string;
+  phone: string;
+  courses: number;
+  joinDate: string;
+  status: string;
+}
+
+export interface Order {
+  id: string;
+  student: string;
+  item: string;
+  amount: number;
+  status: string;
+}
+
+export interface Certificate {
+  code: string;
+  student: string;
+  course: string;
+  date: string;
+  hours: number;
+}

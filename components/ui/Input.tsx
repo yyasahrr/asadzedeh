@@ -1,4 +1,8 @@
-import type { InputHTMLAttributes, TextareaHTMLAttributes } from "react";
+import type {
+  InputHTMLAttributes,
+  SelectHTMLAttributes,
+  TextareaHTMLAttributes,
+} from "react";
 import { cn } from "@/lib/utils";
 
 const base =
@@ -10,6 +14,18 @@ export function Input({ className, ...rest }: InputHTMLAttributes<HTMLInputEleme
 
 export function Textarea({ className, ...rest }: TextareaHTMLAttributes<HTMLTextAreaElement>) {
   return <textarea className={cn(base, "min-h-28 py-3", className)} {...rest} />;
+}
+
+export function Select({
+  className,
+  children,
+  ...rest
+}: SelectHTMLAttributes<HTMLSelectElement>) {
+  return (
+    <select className={cn(base, "h-11 cursor-pointer", className)} {...rest}>
+      {children}
+    </select>
+  );
 }
 
 export function FieldLabel({ children, htmlFor }: { children: string; htmlFor?: string }) {

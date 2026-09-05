@@ -334,7 +334,7 @@ export const inPersonClasses: InPersonClass[] = [
     remaining: 9,
     location: "کارگاه اسدزاده، تهران",
     price: 2600000,
-    image: "/images/student-kilims.jpg",
+    image: "/images/workshop-threads.jpg",
     excerpt:
       "آشنایی بچه‌های ۸ تا ۱۴ سال با بافت، رنگ و نقش؛ روی دارهای کوچک با بازی و قصه‌های ایلات.",
     includes: ["دار کوچک اختصاصی", "تمام مواد مصرفی", "نمایشگاه پایان دوره", "گواهی هنرجوی کوچک"],
@@ -528,8 +528,8 @@ export const articles: Article[] = [
 /* ---------------- Student works ---------------- */
 
 export const studentWorks: StudentWork[] = [
-  { id: 1, title: "گبه سه‌کله بز", student: "سارا محمدی", course: "گبه‌بافی", image: "/images/student-gabbeh.jpg" },
-  { id: 2, title: "ست گلیم ذهنی‌باف", student: "لیلا کریمی", course: "گلیم‌بافی مقدماتی", image: "/images/student-kilims.jpg" },
+  { id: 1, title: "گبه سه‌کله بز", student: "سارا محمدی", course: "گبه‌بافی", image: "/images/course-kilim.jpg" },
+  { id: 2, title: "ست گلیم ذهنی‌باف", student: "لیلا کریمی", course: "گلیم‌بافی مقدماتی", image: "/images/workshop-threads.jpg" },
   { id: 3, title: "قالیچه لچک‌ترنج", student: "حسین احمدی", course: "فرش‌بافی مقدماتی", image: "/images/course-carpet.jpg" },
   { id: 4, title: "پالت رنگ طبیعی", student: "نگار رضایی", course: "رنگرزی سنتی", image: "/images/workshop-threads.jpg" },
 ];
@@ -571,7 +571,7 @@ export const dashboardStudent = {
     title: "گبه‌بافی؛ بافت رها و ذهنی ایلات",
     lesson: "درس ۹: ایجاد بافت برجسته",
     progress: 68,
-    image: "/images/student-gabbeh.jpg",
+    image: "/images/course-kilim.jpg",
   },
   assignments: [
     { title: "ارسال عکس رج ۲۰ تا ۴۰ قالیچه", course: "فرش‌بافی مقدماتی", due: "۲۵ شهریور", status: "در انتظار ارسال" as const },

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { PageHero } from "@/components/PageHero";
 import { CourseExplorer } from "@/components/courses/CourseExplorer";
-import { onlineCourses } from "@/lib/data";
+import { getCourses } from "@/lib/store";
 
 export const metadata: Metadata = {
   title: "دوره‌های آنلاین",
@@ -17,7 +17,7 @@ export default function CoursesPage() {
         crumbs={[{ href: "/", label: "خانه" }, { label: "دوره‌های آنلاین" }]}
       />
       <div className="shell py-10 lg:py-12">
-        <CourseExplorer courses={onlineCourses} />
+        <CourseExplorer courses={getCourses()} />
       </div>
     </>
   );

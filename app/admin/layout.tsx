@@ -8,6 +8,7 @@ const items = [
   { href: "/admin/students", label: "هنرجویان", icon: "students" },
   { href: "/admin/orders", label: "سفارش‌ها", icon: "orders", badge: "۱۲" },
   { href: "/admin/classes", label: "کلاس‌های حضوری", icon: "classes" },
+  { href: "/admin/certificates", label: "گواهی‌ها", icon: "certificates" },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

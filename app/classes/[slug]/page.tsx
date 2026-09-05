@@ -2,28 +2,28 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { CalendarDays, CheckCircle2, Clock3, MapPin, UsersRound } from "lucide-react";
-import { inPersonClasses } from "@/lib/data";
+import { getClass, getClasses } from "@/lib/store";
 import { formatPriceCompact, toFa } from "@/lib/format";
 import { PageHero } from "@/components/PageHero";
 import { Button } from "@/components/ui/Button";
 import { InPersonCourseCard } from "@/components/cards/InPersonCourseCard";
 
 export function generateStaticParams() {
-  return inPersonClasses.map((c) => ({ slug: c.slug }));
+  return getClasses().map((c) => ({ slug: c.slug }));
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const cls = inPersonClasses.find((c) => c.slug === slug);
+  const cls = getClass(slug);
   return { title: cls ? cls.title : "کلاس حضوری" };
 }
 
 export default async function ClassDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const cls = inPersonClasses.find((c) => c.slug === slug);
+  const cls = getClass(slug);
   if (!cls) notFound();
 
-  const related = inPersonClasses.filter((c) => c.slug !== cls.slug).slice(0, 2);
+  const related = getClasses().filter((c) => c.slug !== cls.slug).slice(0, 2);
   const urgent = cls.remaining <= 3;
 
   return (
