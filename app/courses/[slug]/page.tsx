@@ -307,16 +307,22 @@ export default async function CourseDetailPage({
                 )}
               </div>
               <div className="mt-5">
-                <AddToCartButton
-                  item={{
-                    kind: "course",
-                    slug: course.slug,
-                    title: course.title,
-                    price: course.price,
-                    image: course.image,
-                    meta: `${course.instructor} • ${toFa(course.sessions)} جلسه`,
-                  }}
-                />
+                {enrolled ? (
+                  <Link href={`/dashboard/courses/${course.slug}`} className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-teal-600 text-sm font-bold text-white hover:bg-teal-700">
+                    <PlayCircle className="h-4 w-4" /> شما قبلاً خریداری کرده‌اید — ورود به دوره
+                  </Link>
+                ) : (
+                  <AddToCartButton
+                    item={{
+                      kind: "course",
+                      slug: course.slug,
+                      title: course.title,
+                      price: course.price,
+                      image: course.image,
+                      meta: `${course.instructor} • ${toFa(course.sessions)} جلسه`,
+                    }}
+                  />
+                )}
               </div>
               <ul className="mt-5 space-y-2.5 border-t border-dashed border-ink-900/10 pt-5 text-sm text-ink-700">
                 <li className="flex items-center gap-2"><InfinityIcon className="h-4 w-4 text-teal-600" /> دسترسی مادام‌العمر به ویدیوها</li>

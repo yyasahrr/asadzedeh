@@ -39,6 +39,7 @@ const iconMap: Record<string, LucideIcon> = {
   orders: ReceiptText,
   profile: UserRound,
   students: UsersRound,
+  enrollments: UsersRound,
   blog: FileText,
   media: Images,
   content: LayoutTemplate,

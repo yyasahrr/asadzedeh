@@ -8,7 +8,7 @@ import type { CartItem } from "@/lib/cart";
 import { getSessionUser, hashPassword } from "@/lib/auth";
 import { sendSms } from "@/lib/notify";
 import { requestPayment } from "@/lib/payment";
-import { getClasses, getCourses, getOrders, getProducts, getSettings, getUserByPhone, getUsers, writeDb } from "@/lib/store";
+import { getClasses, getCourses, getEnrollments, getOrders, getProducts, getSettings, getUserByPhone, getUsers, writeDb } from "@/lib/store";
 import type { OrderLine, ShippingInfo, User } from "@/lib/types";
 import { grantAccessForOrder } from "@/app/admin/actions";
 
@@ -78,6 +78,32 @@ export async function startCheckout(fd: FormData) {
   const { lines, problems } = buildLines(items);
   if (problems.length > 0 || lines.length === 0) {
     redirect(`/checkout?error=${encodeURIComponent(problems[0] ?? "سبد خرید معتبر نیست")}`);
+  }
+
+  // ── جلوگیری از خرید تکراری ──
+  const checkUserId = user?.id;
+  const checkPhone = phone || user?.phone;
+  if (checkUserId || checkPhone) {
+    const allOrders = getOrders();
+    const allEnrollments = getEnrollments();
+    for (const l of lines) {
+      if (l.kind === "course") {
+        const alreadyEnrolled = allEnrollments.some(
+          (e) => e.courseSlug === l.slug && (e.userId === checkUserId || (checkPhone && allOrders.find((o) => o.id === e.orderId)?.phone === checkPhone))
+        );
+        if (alreadyEnrolled) {
+          redirect(`/checkout?error=${encodeURIComponent(`شما قبلاً دوره «${l.title}» را خریداری کرده‌اید`)}`);
+        }
+      }
+      if (l.kind === "class") {
+        const alreadyBought = allOrders.some(
+          (o) => o.id !== id && o.status === "پرداخت شده" && (o.userId === checkUserId || (checkPhone && o.phone === checkPhone)) && (o.lines ?? []).some((ol) => ol.kind === "class" && ol.slug === l.slug)
+        );
+        if (alreadyBought) {
+          redirect(`/checkout?error=${encodeURIComponent(`شما قبلاً کلاس «${l.title}» را خریداری کرده‌اید`)}`);
+        }
+      }
+    }
   }
 
   const subtotal = lines.reduce((s, l) => s + l.price * l.qty, 0);
@@ -228,4 +254,29 @@ export async function releaseOrder(orderId: string) {
       return hit ? { ...p, stock: p.stock + hit.qty, sold: Math.max(0, p.sold - hit.qty) } : p;
     }),
   });
+}
+
+/**
+ * بررسی آیا کاربر قبلاً آیتم‌های سبد را خریداری کرده است.
+ * آیدی‌های تکراری برمی‌گرداند.
+ */
+export async function checkAlreadyOwned(items: { kind: string; slug: string }[]): Promise<string[]> {
+  const user = await getSessionUser();
+  if (!user) return [];
+  const allOrders = getOrders();
+  const allEnrollments = getEnrollments();
+  const owned: string[] = [];
+  for (const item of items) {
+    if (item.kind === "course") {
+      const enrolled = allEnrollments.some((e) => e.courseSlug === item.slug && e.userId === user.id);
+      if (enrolled) owned.push(item.slug);
+    }
+    if (item.kind === "class") {
+      const bought = allOrders.some(
+        (o) => o.status === "پرداخت شده" && o.userId === user.id && (o.lines ?? []).some((l) => l.kind === "class" && l.slug === item.slug)
+      );
+      if (bought) owned.push(item.slug);
+    }
+  }
+  return owned;
 }

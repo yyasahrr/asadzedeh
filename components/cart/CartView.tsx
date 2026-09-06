@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, BadgePercent, Minus, Plus, ShieldCheck, ShoppingBag, Trash2 } from "lucide-react";
+import { ArrowRight, BadgePercent, Minus, Plus, ShieldCheck, ShoppingBag, Trash2, AlertTriangle } from "lucide-react";
 import {
   COUPON_CODE,
   cartTotal,
@@ -15,6 +15,7 @@ import {
   setQty,
   type CartItem,
 } from "@/lib/cart";
+import { checkAlreadyOwned } from "@/app/checkout/actions";
 import { formatPrice, toFa } from "@/lib/format";
 
 export function CartView() {
@@ -24,12 +25,21 @@ export function CartView() {
   });
   const [coupon, setCoupon] = useState("");
   const [applied, setApplied] = useState("");
+  const [ownedSlugs, setOwnedSlugs] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const onChange = () => setItems(getCart());
     window.addEventListener("az:cart", onChange);
     return () => window.removeEventListener("az:cart", onChange);
   }, []);
+
+  // Check for already-owned items on mount
+  useEffect(() => {
+    if (!items || items.length === 0) return;
+    const courseItems = items.filter((i) => i.kind === "course" || i.kind === "class").map((i) => ({ kind: i.kind, slug: i.slug }));
+    if (courseItems.length === 0) return;
+    checkAlreadyOwned(courseItems).then((owned) => setOwnedSlugs(new Set(owned)));
+  }, [items]);
 
   if (items === null) {
     return <div className="rounded-2xl bg-card p-10 text-center shadow-card">در حال بارگذاری سبد…</div>;
@@ -56,18 +66,31 @@ export function CartView() {
   const total = cartTotal(items);
   const discount = couponDiscount(total, applied);
   const badCoupon = applied !== "" && discount === 0;
+  const hasOwned = ownedSlugs.size > 0;
 
   return (
     <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
       <div className="space-y-4">
-        {items.map((c) => (
-          <article key={c.slug} className="flex flex-col gap-4 rounded-2xl bg-card p-4 shadow-card ring-1 ring-ink-900/5 sm:flex-row">
+        {hasOwned && (
+          <div className="flex items-start gap-3 rounded-2xl bg-ochre-50 p-4 ring-1 ring-ochre-500/20">
+            <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-ochre-600" />
+            <div>
+              <p className="text-sm font-bold text-ochre-800">برخی اقلام سبد قبلاً خریداری شده‌اند</p>
+              <p className="mt-0.5 text-xs text-ochre-600">این اقلام در مرحله پرداخت حذف خواهند شد. برای خرید مجدد به پشتیبانی پیام دهید.</p>
+            </div>
+          </div>
+        )}
+        {items.map((c) => {
+          const isOwned = ownedSlugs.has(c.slug);
+          return (
+          <article key={c.slug} className={`flex flex-col gap-4 rounded-2xl bg-card p-4 shadow-card ring-1 ring-ink-900/5 sm:flex-row ${isOwned ? "opacity-60 ring-2 ring-ochre-400/40" : ""}`}>
             <div className="relative h-40 w-full shrink-0 overflow-hidden rounded-xl sm:w-52">
               <Image src={c.image} alt={c.title} fill sizes="220px" className="object-cover" />
             </div>
             <div className="flex flex-1 flex-col">
               <p className="text-xs font-bold text-teal-600">{c.kind === "course" ? "دوره آنلاین" : c.kind === "class" ? "کلاس حضوری" : c.physical === false ? "پیش‌سفارش" : "کالای فروشگاه"}</p>
               <h2 className="mt-1 leading-8 font-extrabold text-navy-900">{c.title}</h2>
+              {isOwned && <span className="mt-1 inline-flex w-fit items-center gap-1 rounded-md bg-ochre-100 px-2 py-0.5 text-[11px] font-bold text-ochre-700"><AlertTriangle className="h-3 w-3" /> قبلاً خریداری شده</span>}
               {c.meta && <p className="mt-1 text-sm text-ink-500">{c.meta}</p>}
               <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-3">
                 <span className="text-lg font-black text-navy-900">
@@ -92,7 +115,8 @@ export function CartView() {
               </div>
             </div>
           </article>
-        ))}
+          );
+        })}
         <Link href="/courses" className="inline-flex items-center gap-1.5 text-sm font-bold text-teal-600 hover:text-teal-700">
           <ArrowRight className="h-4 w-4" />
           ادامه خرید

@@ -55,6 +55,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     { href: "/admin/content", label: "محتوای سایت", icon: "content", perm: "content" },
     { href: "/admin/comments", label: "نظرات", icon: "comments", perm: "comments", badge: pendingComments ? toFa(pendingComments) : undefined },
     { href: "/admin/students", label: "هنرجویان", icon: "students", perm: "students" },
+    { href: "/admin/enrollments", label: "اعضای دوره‌ها", icon: "enrollments", perm: "orders" },
     { href: "/admin/orders", label: "سفارش‌ها", icon: "orders", perm: "orders", badge: pendingOrders ? toFa(pendingOrders) : undefined },
     { href: "/admin/submissions", label: "تمرین‌ها", icon: "assignments", perm: "submissions", badge: pendingSubs ? toFa(pendingSubs) : undefined },
     { href: "/admin/certificates", label: "گواهی‌ها", icon: "certificates", perm: "certificates" },

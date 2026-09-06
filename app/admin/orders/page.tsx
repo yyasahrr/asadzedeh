@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Check, MapPin, Package, Truck } from "lucide-react";
+import { Check, MapPin, Package, Search, Truck } from "lucide-react";
 import { getOrders } from "@/lib/store";
 import { formatPrice, toFa } from "@/lib/format";
 import { TableShell, Td } from "@/components/admin/TableShell";
@@ -13,24 +13,63 @@ import { cn } from "@/lib/utils";
 export const metadata: Metadata = { title: "سفارش‌ها" };
 export const dynamic = "force-dynamic";
 
-const filters = ["همه", "پرداخت شده", "در انتظار پرداخت", "ارسال شده", "تحویل شده", "لغو شده", "کالا"];
+const typeFilters = [
+  { key: "all", label: "همه" },
+  { key: "class", label: "حضوری" },
+  { key: "course", label: "آنلاین" },
+  { key: "product", label: "محصول" },
+];
+
+const statusFilters = ["همه", "پرداخت شده", "در انتظار پرداخت", "ارسال شده", "تحویل شده", "لغو شده"];
 const statuses = ["پرداخت شده", "در انتظار پرداخت", "ارسال شده", "تحویل شده", "لغو شده"];
+
+function orderMatchesType(o: { lines?: { kind: string }[]; shipping?: unknown; item?: string }, type: string): boolean {
+  if (type === "all") return true;
+  if (type === "class") return !!o.lines?.some((l) => l.kind === "class");
+  if (type === "course") return !!o.lines?.some((l) => l.kind === "course");
+  if (type === "product") return !!o.lines?.some((l) => l.kind === "product" || l.kind === "preorder") || !!o.shipping;
+  return true;
+}
 
 export default async function AdminOrdersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string }>;
+  searchParams: Promise<{ status?: string; type?: string; q?: string }>;
 }) {
   const user = await getSessionUser();
   if (!user || !can(user, "orders")) return <Denied />;
-  const { status = "همه" } = await searchParams;
+  const { status = "همه", type = "all", q = "" } = await searchParams;
   const all = getOrders();
-  const filtered = all.filter((o) => {
+
+  // Step 1: Filter by type
+  const byType = all.filter((o) => orderMatchesType(o, type));
+
+  // Step 2: Filter by status
+  const byStatus = byType.filter((o) => {
     if (status === "همه") return true;
-    if (status === "کالا") return !!o.shipping || o.lines?.some((l) => l.kind === "product" || l.kind === "preorder");
     return o.status === status;
   });
+
+  // Step 3: Filter by search query
+  const filtered = q.trim()
+    ? byStatus.filter(
+        (o) =>
+          o.student.includes(q.trim()) ||
+          o.id.toLowerCase().includes(q.trim().toLowerCase()) ||
+          o.item?.includes(q.trim()) ||
+          o.lines?.some((l) => l.title.includes(q.trim()))
+      )
+    : byStatus;
+
   const toShip = all.filter((o) => o.status === "پرداخت شده" && o.shipping && o.shipping.methodId !== "pickup" && !o.shipping.method.includes("حضوری")).length;
+
+  // Type counts
+  const typeCounts = {
+    all: all.length,
+    class: all.filter((o) => orderMatchesType(o, "class")).length,
+    course: all.filter((o) => orderMatchesType(o, "course")).length,
+    product: all.filter((o) => orderMatchesType(o, "product")).length,
+  };
 
   return (
     <div className="space-y-5">
@@ -42,21 +81,54 @@ export default async function AdminOrdersPage({
           </span>
         )}
       </div>
+
+      {/* Search */}
+      <form className="relative" role="search">
+        <Search className="absolute top-1/2 right-4 h-4 w-4 -translate-y-1/2 text-ink-400" aria-hidden />
+        <label htmlFor="admin-order-q" className="sr-only">جست‌وجوی سفارش</label>
+        <input
+          id="admin-order-q"
+          name="q"
+          defaultValue={q}
+          placeholder="جست‌وجو بر اساس نام خریدار، شماره سفارش یا عنوان اقلام…"
+          className="h-11 w-full rounded-xl border border-ink-900/10 bg-card pr-11 pl-4 text-sm focus:border-teal-600 focus:outline-none"
+        />
+      </form>
+
+      {/* Type filters */}
       <div className="flex flex-wrap gap-2">
-        {filters.map((f) => (
+        {typeFilters.map((f) => (
           <Link
-            key={f}
-            href={f === "همه" ? "/admin/orders" : `/admin/orders?status=${encodeURIComponent(f)}`}
-            aria-current={status === f ? "true" : undefined}
+            key={f.key}
+            href={`/admin/orders?type=${f.key}${status !== "همه" ? `&status=${encodeURIComponent(status)}` : ""}${q ? `&q=${encodeURIComponent(q)}` : ""}`}
+            aria-current={type === f.key ? "true" : undefined}
             className={cn(
               "rounded-full px-4 py-2 text-sm font-bold transition-colors",
-              status === f ? "bg-navy-800 text-white" : "bg-card text-ink-600 shadow-card ring-1 ring-ink-900/5 hover:bg-sand-100"
+              type === f.key ? "bg-navy-800 text-white" : "bg-card text-ink-600 shadow-card ring-1 ring-ink-900/5 hover:bg-sand-100"
             )}
           >
-            {f === "کالا" ? "سفارش‌های کالا" : f}
+            {f.label} ({toFa(typeCounts[f.key as keyof typeof typeCounts])})
           </Link>
         ))}
       </div>
+
+      {/* Status filters */}
+      <div className="flex flex-wrap gap-2">
+        {statusFilters.map((f) => (
+          <Link
+            key={f}
+            href={`/admin/orders?status=${encodeURIComponent(f)}${type !== "all" ? `&type=${type}` : ""}${q ? `&q=${encodeURIComponent(q)}` : ""}`}
+            aria-current={status === f ? "true" : undefined}
+            className={cn(
+              "rounded-full px-3.5 py-1.5 text-xs font-bold transition-colors",
+              status === f ? "bg-teal-600 text-white" : "bg-sand-100 text-ink-600 hover:bg-sand-200"
+            )}
+          >
+            {f}
+          </Link>
+        ))}
+      </div>
+
       <TableShell head={["شماره", "خریدار", "اقلام", "ارسال", "مبلغ", "وضعیت", "تغییر وضعیت"]}>
         {filtered.map((o) => (
           <tr key={o.id} className="align-top transition-colors hover:bg-sand-50">
@@ -144,7 +216,7 @@ export default async function AdminOrdersPage({
         ))}
       </TableShell>
       {filtered.length === 0 && (
-        <p className="rounded-2xl bg-card p-8 text-center text-sm text-ink-500 shadow-card">سفارشی با این وضعیت نیست.</p>
+        <p className="rounded-2xl bg-card p-8 text-center text-sm text-ink-500 shadow-card">سفارشی با این فیلترها پیدا نشد.</p>
       )}
     </div>
   );

@@ -12,6 +12,8 @@ import { ShareButton } from "@/components/ShareButton";
 import { AddToCartButton } from "@/components/cart/AddToCartButton";
 import { WorkshopLocation } from "@/components/workshop/WorkshopLocation";
 import { TrailerBlock } from "@/components/video/TrailerBlock";
+import { hasPaidClassAccess } from "@/lib/access";
+import { getSessionUser } from "@/lib/auth";
 
 export function generateStaticParams() {
   return getClasses().map((c) => ({ slug: c.slug }));
@@ -58,6 +60,9 @@ export default async function ClassDetailPage({
   const { comment } = await searchParams;
   const cls = getClass(slug);
   if (!cls) notFound();
+
+  const user = await getSessionUser();
+  const alreadyOwned = hasPaidClassAccess(user, slug);
 
   const related = getClasses().filter((c) => c.slug !== cls.slug).slice(0, 2);
   const siteUrl = getSettings().site.siteUrl.replace(/\/$/, "");
@@ -237,7 +242,11 @@ export default async function ClassDetailPage({
               <div className="mt-3 text-2xl font-black">{formatPriceCompact(cls.price)}</div>
               <p className="mt-1 text-xs text-white/60">امکان پرداخت در دو قسط</p>
               <div className="mt-5">
-                {cls.remaining <= 0 ? (
+                {alreadyOwned ? (
+                  <Link href={`/dashboard/classes/${cls.slug}`} className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-teal-600 text-sm font-bold text-white hover:bg-teal-700">
+                    <BookOpen className="h-4 w-4" /> شما قبلاً ثبت‌نام کرده‌اید — ورود به کلاس
+                  </Link>
+                ) : cls.remaining <= 0 ? (
                   <Button href="/classes" variant="sand" size="lg" className="w-full">مشاهده کلاس‌های دیگر</Button>
                 ) : (
                   <AddToCartButton
