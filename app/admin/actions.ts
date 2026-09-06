@@ -637,6 +637,7 @@ export async function addClassLesson(fd: FormData) {
     free: bool(fd, "free"),
     description: str(fd, "description") || undefined,
     attachments: parseLessonAttachments(fd),
+    completedDate: str(fd, "completedDate") || undefined,
   };
   writeDb({ classes: getClasses().map((item) => item.slug === slug ? { ...item, lessons: [...lessons, lesson] } : item) });
   await audit({ action: "class.lesson.add", actor: actor(me), target: `class:${slug}`, detail: { lesson: lesson.title, videoId: lesson.videoId } });
@@ -664,6 +665,7 @@ export async function updateClassLesson(fd: FormData) {
           free: bool(fd, "free"),
           description: str(fd, "description") || undefined,
           attachments: parseLessonAttachments(fd),
+          completedDate: str(fd, "completedDate") || undefined,
         }
       : lesson,
   );

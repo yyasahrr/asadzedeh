@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, CreditCard } from "lucide-react";
 import { getOrder } from "@/lib/store";
 import { formatPrice } from "@/lib/format";
 import { ClearCart } from "@/components/checkout/ClearCart";
@@ -16,6 +16,7 @@ export default async function SuccessPage({
   const order = orderId ? getOrder(orderId) : undefined;
   const hasCourse = order?.lines?.some((l) => l.kind === "course") ?? true;
   const hasPhysical = order?.lines?.some((l) => l.kind === "product") ?? false;
+  const classLines = order?.lines?.filter((l) => l.kind === "class") ?? [];
 
   return (
     <div className="shell py-14">
@@ -51,6 +52,23 @@ export default async function SuccessPage({
             مشاهده دوره‌ها
           </Link>
         </div>
+        {classLines.length > 0 && orderId && (
+          <div className="mt-4 w-full rounded-xl bg-teal-50 p-4 ring-1 ring-teal-600/15">
+            <p className="mb-3 text-sm font-bold text-teal-800">کارت ورود کلاس‌های حضوری</p>
+            <div className="flex flex-wrap gap-2">
+              {classLines.map((line) => (
+                <a
+                  key={line.slug}
+                  href={`/api/enrollment-card?class=${line.slug}&order=${orderId}`}
+                  className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-4 py-2 text-sm font-bold text-white hover:bg-teal-700"
+                  download
+                >
+                  <CreditCard className="h-4 w-4" /> دانلود کارت {line.title}
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

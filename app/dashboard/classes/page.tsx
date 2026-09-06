@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BookOpen, CalendarDays, Clock3, MapPin } from "lucide-react";
+import { BookOpen, CalendarDays, Clock3, CreditCard, MapPin } from "lucide-react";
 import { getSessionUser } from "@/lib/auth";
 import { getClasses, getOrders } from "@/lib/store";
 import { toFa } from "@/lib/format";
@@ -76,6 +76,13 @@ export default async function MyClassesPage() {
                     <BookOpen className="h-4 w-4" /> ورود به محتوای کلاس
                   </Link>
                 ) : null}
+                <a
+                  href={`/api/enrollment-card?class=${cls.slug}&order=${order.id}`}
+                  className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-teal-600 px-4 text-sm font-bold text-white hover:bg-teal-700"
+                  download
+                >
+                  <CreditCard className="h-4 w-4" /> دانلود کارت ورود
+                </a>
                 <Link href={`/classes/${cls.slug}`} className="inline-flex min-h-10 items-center rounded-xl bg-sand-200 px-4 text-sm font-bold text-ink-700 hover:bg-sand-300">
                   صفحه دوره
                 </Link>

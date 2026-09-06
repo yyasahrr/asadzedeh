@@ -314,6 +314,11 @@ export function LessonManager({
             )}
           </div>
           <div>
+            <FieldLabel htmlFor="l-completedDate">تاریخ برگزاری جلسه</FieldLabel>
+            <Input id="l-completedDate" name="completedDate" type="date" defaultValue={editing?.completedDate ?? ""} dir="ltr" className="text-left" />
+            <p className="mt-0.5 text-[11px] text-ink-400">اگر جلسه برگزار شده، تاریخ آن را وارد کنید تا در داشبورد هنرجو نمایش داده شود.</p>
+          </div>
+          <div>
             <FieldLabel htmlFor="l-desc">توضیحات درس</FieldLabel>
             <Textarea id="l-desc" name="description" defaultValue={editing?.description} className="min-h-28" placeholder="آنچه هنرجو در این درس یاد می‌گیرد، تمرین‌ها و نکات لازم…" />
           </div>

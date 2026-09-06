@@ -84,6 +84,8 @@ export interface Lesson {
   free: boolean;
   description?: string;
   attachments?: LessonAttachment[];
+  /** تاریخ برگزاری جلسه (توسط ادمین ثبت می‌شود). */
+  completedDate?: string;
 }
 
 export interface LessonAttachment {
