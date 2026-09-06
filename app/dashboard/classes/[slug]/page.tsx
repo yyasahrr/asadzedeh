@@ -33,7 +33,8 @@ export default async function InPersonClassContentPage({
   const currentIndex = current ? lessons.findIndex((lesson) => lesson.id === current.id) : -1;
   const previous = currentIndex > 0 ? lessons[currentIndex - 1] : undefined;
   const next = currentIndex >= 0 ? lessons[currentIndex + 1] : undefined;
-  const chapters = Array.from(new Set(lessons.map((lesson) => lesson.chapter)));
+  const chapters = Array.from(new Set(lessons.map((lesson) => lesson.chapterId)));
+  const chapterById = new Map((inPersonClass.chapters ?? []).map((ch) => [ch.id, ch.title]));
 
   return (
     <div className="space-y-5">
@@ -81,9 +82,9 @@ export default async function InPersonClassContentPage({
           <aside className="space-y-3 lg:sticky lg:top-24 lg:self-start" aria-label="فهرست فصل‌ها">
             {chapters.map((chapter) => (
               <section key={chapter} className="overflow-hidden rounded-xl bg-card ring-1 ring-ink-900/8">
-                <h2 className="bg-sand-50 px-4 py-2.5 text-xs font-black text-navy-900">{chapter}</h2>
+                <h2 className="bg-sand-50 px-4 py-2.5 text-xs font-black text-navy-900">{chapterById.get(chapter) ?? chapter}</h2>
                 <ul className="divide-y divide-ink-900/5">
-                  {lessons.filter((lesson) => lesson.chapter === chapter).map((lesson) => {
+                  {lessons.filter((lesson) => lesson.chapterId === chapter).map((lesson) => {
                     const active = current.id === lesson.id;
                     return (
                       <li key={lesson.id}>

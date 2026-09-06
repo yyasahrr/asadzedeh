@@ -63,7 +63,8 @@ export default async function ClassDetailPage({
   const siteUrl = getSettings().site.siteUrl.replace(/\/$/, "");
   const urgent = cls.remaining <= 3;
   const lessons = [...(cls.lessons ?? [])].sort((a, b) => a.order - b.order);
-  const chapters = Array.from(new Set(lessons.map((lesson) => lesson.chapter)));
+  const chapters = Array.from(new Set(lessons.map((lesson) => lesson.chapterId)));
+  const chapterById = new Map((cls.chapters ?? []).map((ch) => [ch.id, ch.title]));
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -163,11 +164,12 @@ export default async function ClassDetailPage({
               </div>
               <div className="mt-4 space-y-2">
                 {chapters.map((chapter, chapterIndex) => {
-                  const chapterLessons = lessons.filter((lesson) => lesson.chapter === chapter);
+                  const chapterLessons = lessons.filter((lesson) => lesson.chapterId === chapter);
+                  const chTitle = chapterById.get(chapter) ?? chapter;
                   return (
                     <details key={chapter} open={chapterIndex === 0} className="group overflow-hidden rounded-xl border border-ink-900/8">
                       <summary className="flex cursor-pointer items-center justify-between gap-3 bg-sand-50 px-4 py-3 font-extrabold text-navy-900">
-                        <span>{chapter}</span>
+                        <span>{chTitle}</span>
                         <span className="text-xs font-semibold text-ink-500">{toFa(chapterLessons.length)} درس</span>
                       </summary>
                       <ol className="divide-y divide-ink-900/5">

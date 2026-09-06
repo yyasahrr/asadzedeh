@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CircleCheck, ExternalLink, FileText, Video } from "lucide-react";
-import { instructorAddLesson, instructorDeleteLesson, instructorMoveLesson, instructorUpdateCourseText, instructorUpdateLesson } from "../../actions";
+import { instructorAddChapter, instructorAddLesson, instructorDeleteChapter, instructorDeleteLesson, instructorMoveChapter, instructorMoveLesson, instructorUpdateChapter, instructorUpdateCourseText, instructorUpdateLesson } from "../../actions";
 import { LessonManager } from "@/components/admin/LessonManager";
 import { SecurePlayer } from "@/components/video/SecurePlayer";
 import { FieldLabel, Textarea } from "@/components/ui/Input";
@@ -72,6 +72,7 @@ export default async function InstructorCoursePage({
         basePath={base}
         editing={editing}
         actions={{ add: instructorAddLesson, update: instructorUpdateLesson, remove: instructorDeleteLesson, move: instructorMoveLesson }}
+        chapterActions={{ add: instructorAddChapter, update: instructorUpdateChapter, remove: instructorDeleteChapter, move: instructorMoveChapter }}
       />
 
       <form action={instructorUpdateCourseText} className="grid gap-4 rounded-2xl bg-card p-5 shadow-card ring-1 ring-ink-900/5">

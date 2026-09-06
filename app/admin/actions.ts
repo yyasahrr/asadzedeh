@@ -40,6 +40,7 @@ import {
   writeDb,
 } from "@/lib/store";
 import type {
+  Chapter,
   CourseProtection,
   Instructor,
   Lesson,
@@ -268,6 +269,137 @@ export async function deleteCourse(fd: FormData) {
   redirect("/admin/courses");
 }
 
+/* ---------- chapters ---------- */
+
+export async function addChapter(fd: FormData) {
+  const me = await staff("courses");
+  const slug = str(fd, "slug");
+  const title = str(fd, "title");
+  const course = getCourse(slug);
+  if (!course || !title) return;
+  const chapters = course.chapters ?? [];
+  const chapter: Chapter = {
+    id: `ch-${Date.now().toString(36)}`,
+    title,
+    order: chapters.length + 1,
+  };
+  writeDb({ courses: getCourses().map((c) => (c.slug === slug ? { ...c, chapters: [...chapters, chapter] } : c)) });
+  await audit({ action: "course.chapter.add", actor: actor(me), target: `course:${slug}`, detail: { chapter: chapter.title } });
+  revalidatePath(`/admin/courses/${slug}/lessons`);
+  revalidatePath(`/courses/${slug}`);
+  redirect(`/admin/courses/${slug}/lessons`);
+}
+
+export async function updateChapter(fd: FormData) {
+  const me = await staff("courses");
+  const slug = str(fd, "slug");
+  const id = str(fd, "id");
+  const title = str(fd, "title");
+  const course = getCourse(slug);
+  if (!course || !title) return;
+  const chapters = (course.chapters ?? []).map((ch) => (ch.id === id ? { ...ch, title } : ch));
+  writeDb({ courses: getCourses().map((c) => (c.slug === slug ? { ...c, chapters } : c)) });
+  await audit({ action: "course.chapter.update", actor: actor(me), target: `course:${slug}`, detail: { chapterId: id, title } });
+  revalidatePath(`/admin/courses/${slug}/lessons`);
+  revalidatePath(`/courses/${slug}`);
+  redirect(`/admin/courses/${slug}/lessons`);
+}
+
+export async function deleteChapter(fd: FormData) {
+  const me = await staff("courses");
+  const slug = str(fd, "slug");
+  const id = str(fd, "id");
+  const course = getCourse(slug);
+  if (!course) return;
+  const chapters = (course.chapters ?? []).filter((ch) => ch.id !== id).map((ch, i) => ({ ...ch, order: i + 1 }));
+  const lessons = (course.lessons ?? []).map((l) => l.chapterId === id ? { ...l, chapterId: chapters[0]?.id ?? "" } : l);
+  writeDb({ courses: getCourses().map((c) => (c.slug === slug ? { ...c, chapters, lessons } : c)) });
+  await audit({ action: "course.chapter.delete", level: "warn", actor: actor(me), target: `course:${slug}`, detail: { chapterId: id } });
+  revalidatePath(`/admin/courses/${slug}/lessons`);
+  revalidatePath(`/courses/${slug}`);
+  redirect(`/admin/courses/${slug}/lessons`);
+}
+
+export async function moveChapter(fd: FormData) {
+  await staff("courses");
+  const slug = str(fd, "slug");
+  const id = str(fd, "id");
+  const dir = str(fd, "dir") === "up" ? -1 : 1;
+  const course = getCourse(slug);
+  if (!course) return;
+  const chapters = [...(course.chapters ?? [])].sort((a, b) => a.order - b.order);
+  const idx = chapters.findIndex((ch) => ch.id === id);
+  const j = idx + dir;
+  if (idx < 0 || j < 0 || j >= chapters.length) return;
+  [chapters[idx], chapters[j]] = [chapters[j], chapters[idx]];
+  writeDb({ courses: getCourses().map((c) => (c.slug === slug ? { ...c, chapters: chapters.map((ch, i) => ({ ...ch, order: i + 1 })) } : c)) });
+  revalidatePath(`/admin/courses/${slug}/lessons`);
+}
+
+/* ---------- class chapters ---------- */
+
+export async function addClassChapter(fd: FormData) {
+  const me = await staff("classes");
+  const slug = str(fd, "slug");
+  const title = str(fd, "title");
+  const cls = getClass(slug);
+  if (!cls || !title) return;
+  const chapters = cls.chapters ?? [];
+  const chapter: Chapter = {
+    id: `ch-${Date.now().toString(36)}`,
+    title,
+    order: chapters.length + 1,
+  };
+  writeDb({ classes: getClasses().map((c) => (c.slug === slug ? { ...c, chapters: [...chapters, chapter] } : c)) });
+  await audit({ action: "class.chapter.add", actor: actor(me), target: `class:${slug}`, detail: { chapter: chapter.title } });
+  revalidatePath(`/admin/classes/${slug}/lessons`);
+  redirect(`/admin/classes/${slug}/lessons`);
+}
+
+export async function updateClassChapter(fd: FormData) {
+  const me = await staff("classes");
+  const slug = str(fd, "slug");
+  const id = str(fd, "id");
+  const title = str(fd, "title");
+  const cls = getClass(slug);
+  if (!cls || !title) return;
+  const chapters = (cls.chapters ?? []).map((ch) => (ch.id === id ? { ...ch, title } : ch));
+  writeDb({ classes: getClasses().map((c) => (c.slug === slug ? { ...c, chapters } : c)) });
+  await audit({ action: "class.chapter.update", actor: actor(me), target: `class:${slug}`, detail: { chapterId: id, title } });
+  revalidatePath(`/admin/classes/${slug}/lessons`);
+  redirect(`/admin/classes/${slug}/lessons`);
+}
+
+export async function deleteClassChapter(fd: FormData) {
+  const me = await staff("classes");
+  const slug = str(fd, "slug");
+  const id = str(fd, "id");
+  const cls = getClass(slug);
+  if (!cls) return;
+  const chapters = (cls.chapters ?? []).filter((ch) => ch.id !== id).map((ch, i) => ({ ...ch, order: i + 1 }));
+  const lessons = (cls.lessons ?? []).map((l) => l.chapterId === id ? { ...l, chapterId: chapters[0]?.id ?? "" } : l);
+  writeDb({ classes: getClasses().map((c) => (c.slug === slug ? { ...c, chapters, lessons } : c)) });
+  await audit({ action: "class.chapter.delete", level: "warn", actor: actor(me), target: `class:${slug}`, detail: { chapterId: id } });
+  revalidatePath(`/admin/classes/${slug}/lessons`);
+  redirect(`/admin/classes/${slug}/lessons`);
+}
+
+export async function moveClassChapter(fd: FormData) {
+  await staff("classes");
+  const slug = str(fd, "slug");
+  const id = str(fd, "id");
+  const dir = str(fd, "dir") === "up" ? -1 : 1;
+  const cls = getClass(slug);
+  if (!cls) return;
+  const chapters = [...(cls.chapters ?? [])].sort((a, b) => a.order - b.order);
+  const idx = chapters.findIndex((ch) => ch.id === id);
+  const j = idx + dir;
+  if (idx < 0 || j < 0 || j >= chapters.length) return;
+  [chapters[idx], chapters[j]] = [chapters[j], chapters[idx]];
+  writeDb({ classes: getClasses().map((c) => (c.slug === slug ? { ...c, chapters: chapters.map((ch, i) => ({ ...ch, order: i + 1 })) } : c)) });
+  revalidatePath(`/admin/classes/${slug}/lessons`);
+}
+
 /* ---------- lessons (course episodes) ---------- */
 
 export async function addLesson(fd: FormData) {
@@ -277,10 +409,11 @@ export async function addLesson(fd: FormData) {
   const title = str(fd, "title");
   if (!course || !title) return;
   const lessons = course.lessons ?? [];
+  const chapterId = str(fd, "chapterId") || course.chapters?.[0]?.id || "";
   const lesson: Lesson = {
     id: `l-${Date.now().toString(36)}`,
     title,
-    chapter: str(fd, "chapter") || course.syllabus[0]?.title || "فصل ۱",
+    chapterId,
     order: lessons.length + 1,
     videoId: str(fd, "videoId") || undefined,
     durationMin: num(fd, "durationMin", 10),
@@ -306,7 +439,7 @@ export async function updateLesson(fd: FormData) {
       ? {
           ...l,
           title: str(fd, "title") || l.title,
-          chapter: str(fd, "chapter") || l.chapter,
+          chapterId: str(fd, "chapterId") || l.chapterId,
           order: num(fd, "order", l.order),
           videoId: str(fd, "videoId") || undefined,
           durationMin: num(fd, "durationMin", l.durationMin),
@@ -492,10 +625,11 @@ export async function addClassLesson(fd: FormData) {
   const title = str(fd, "title");
   if (!inPersonClass || !title) return;
   const lessons = inPersonClass.lessons ?? [];
+  const chapterId = str(fd, "chapterId") || inPersonClass.chapters?.[0]?.id || "";
   const lesson: Lesson = {
     id: `cl-${Date.now().toString(36)}`,
     title,
-    chapter: str(fd, "chapter") || "فصل ۱",
+    chapterId,
     order: lessons.length + 1,
     videoId: str(fd, "videoId") || undefined,
     durationMin: num(fd, "durationMin", 10),
@@ -522,7 +656,7 @@ export async function updateClassLesson(fd: FormData) {
       ? {
           ...lesson,
           title: str(fd, "title") || lesson.title,
-          chapter: str(fd, "chapter") || lesson.chapter,
+          chapterId: str(fd, "chapterId") || lesson.chapterId,
           order: num(fd, "order", lesson.order),
           videoId: str(fd, "videoId") || undefined,
           durationMin: num(fd, "durationMin", lesson.durationMin),

@@ -3,9 +3,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CircleCheck, Eye, Pencil, Video } from "lucide-react";
 import {
+  addClassChapter,
   addClassLesson,
+  deleteClassChapter,
   deleteClassLesson,
+  moveClassChapter,
   moveClassLesson,
+  updateClassChapter,
   updateClassLesson,
 } from "../../../actions";
 import { Denied } from "@/components/admin/Denied";
@@ -90,6 +94,7 @@ export default async function ClassLessonsPage({
         basePath={`/admin/classes/${slug}/lessons`}
         editing={editing}
         actions={{ add: addClassLesson, update: updateClassLesson, remove: deleteClassLesson, move: moveClassLesson }}
+        chapterActions={{ add: addClassChapter, update: updateClassChapter, remove: deleteClassChapter, move: moveClassChapter }}
         videoLibraryHref="/admin/videos"
       />
     </div>

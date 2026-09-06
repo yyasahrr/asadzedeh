@@ -36,7 +36,8 @@ export default async function CoursePlayerPage({ params, searchParams }: { param
     visible.find((l) => !completed.has(l.id)) ||
     visible[0];
   const pct = lessons.length ? Math.round((completed.size / lessons.length) * 100) : 0;
-  const chapters = Array.from(new Set(lessons.map((l) => l.chapter)));
+  const chapters = Array.from(new Set(lessons.map((l) => l.chapterId)));
+  const chapterById = new Map((course.chapters ?? []).map((ch) => [ch.id, ch.title]));
   const idx = current ? visible.findIndex((l) => l.id === current.id) : -1;
   const next = idx >= 0 ? visible[idx + 1] : undefined;
   const prev = idx > 0 ? visible[idx - 1] : undefined;
@@ -100,9 +101,9 @@ export default async function CoursePlayerPage({ params, searchParams }: { param
           <aside className="space-y-3 lg:sticky lg:top-24 lg:self-start">
             {chapters.map((ch) => (
               <div key={ch} className="overflow-hidden rounded-2xl bg-card shadow-card ring-1 ring-ink-900/5">
-                <div className="bg-sand-50 px-4 py-2.5 text-xs font-black text-navy-900">{ch}</div>
+                <div className="bg-sand-50 px-4 py-2.5 text-xs font-black text-navy-900">{chapterById.get(ch) ?? ch}</div>
                 <ul className="divide-y divide-ink-900/5">
-                  {lessons.filter((l) => l.chapter === ch).map((l) => {
+                  {lessons.filter((l) => l.chapterId === ch).map((l) => {
                     const locked = !enrolled && !l.free;
                     const active = current.id === l.id;
                     const inner = (

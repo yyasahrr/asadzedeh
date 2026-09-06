@@ -78,20 +78,26 @@ export interface Db {
 function withSeedLessons(course: OnlineCourse): OnlineCourse {
   if (course.lessons && course.lessons.length > 0) return course;
   let order = 0;
+  const chapters = course.syllabus.map((s, i) => ({
+    id: `ch-${course.slug}-${i + 1}`,
+    title: s.title,
+    order: i + 1,
+  }));
+  const chapterIdByTitle = new Map(chapters.map((ch) => [ch.title, ch.id]));
   const lessons = course.syllabus.flatMap((chapter) =>
     chapter.lessons.map((title) => {
       order += 1;
       return {
         id: `ls-${course.slug}-${order}`,
         title,
-        chapter: chapter.title,
+        chapterId: chapterIdByTitle.get(chapter.title) ?? chapters[0]?.id ?? "",
         order,
         durationMin: 18 + ((order * 7) % 25),
         free: order === 1,
       };
     })
   );
-  return { ...course, lessons };
+  return { ...course, chapters, lessons };
 }
 
 function seed(): Db {

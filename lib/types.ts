@@ -25,6 +25,8 @@ export interface OnlineCourse {
   trailer?: Trailer;
   /** Slug of the instructor profile (links to Instructor). */
   instructorSlug?: string;
+  /** فصل‌های دوره (مدیریت ساختاریافته). */
+  chapters?: Chapter[];
   /** Uploaded lesson videos (online courses). */
   lessons?: Lesson[];
   /** Per-course video protection profile. */
@@ -64,11 +66,17 @@ export interface VideoAsset {
   chunks?: { received: number; total: number };
 }
 
+export interface Chapter {
+  id: string;
+  title: string;
+  order: number;
+}
+
 export interface Lesson {
   id: string;
   title: string;
-  /** Chapter name (matches syllabus title) */
-  chapter: string;
+  /** Chapter id (links to Chapter.id) */
+  chapterId: string;
   order: number;
   videoId?: string;
   durationMin: number;
@@ -134,6 +142,8 @@ export interface InPersonClass {
   includes: string[];
   trailer?: Trailer;
   instructorSlug?: string;
+  /** فصل‌های کلاس حضوری. */
+  chapters?: Chapter[];
   /** فصل‌ها، درس‌ها و محتوای تکمیلی کلاس حضوری. */
   lessons?: Lesson[];
 }

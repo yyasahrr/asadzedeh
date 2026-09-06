@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CircleCheck, Eye, Pencil, Video } from "lucide-react";
-import { addLesson, deleteLesson, moveLesson, updateLesson } from "../../../actions";
+import { addChapter, addLesson, deleteChapter, deleteLesson, moveChapter, moveLesson, updateChapter, updateLesson } from "../../../actions";
 import { Denied } from "@/components/admin/Denied";
 import { LessonManager } from "@/components/admin/LessonManager";
 import { SecurePlayer } from "@/components/video/SecurePlayer";
@@ -80,6 +80,7 @@ export default async function LessonsPage({
         basePath={`/admin/courses/${slug}/lessons`}
         editing={editing}
         actions={{ add: addLesson, update: updateLesson, remove: deleteLesson, move: moveLesson }}
+        chapterActions={{ add: addChapter, update: updateChapter, remove: deleteChapter, move: moveChapter }}
         videoLibraryHref="/admin/videos"
       />
     </div>

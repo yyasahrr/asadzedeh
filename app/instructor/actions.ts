@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { audit } from "@/lib/audit";
 import { getSessionUser, type SessionUser } from "@/lib/auth";
 import { getCourses, getCourse, getInstructorByUser, getInstructors, getSubmissions, writeDb } from "@/lib/store";
-import type { Instructor, Lesson } from "@/lib/types";
+import type { Chapter, Instructor, Lesson } from "@/lib/types";
 
 /* Instructor panel actions: every write is scoped to the instructor's own courses. */
 
@@ -49,10 +49,11 @@ export async function instructorAddLesson(fd: FormData) {
   const title = str(fd, "title");
   if (!course || !title) return;
   const lessons = course.lessons ?? [];
+  const chapterId = str(fd, "chapterId") || course.chapters?.[0]?.id || "";
   const lesson: Lesson = {
     id: `l-${Date.now().toString(36)}`,
     title,
-    chapter: str(fd, "chapter") || course.syllabus[0]?.title || "فصل ۱",
+    chapterId,
     order: lessons.length + 1,
     videoId: str(fd, "videoId") || undefined,
     durationMin: num(fd, "durationMin", 10),
@@ -76,7 +77,7 @@ export async function instructorUpdateLesson(fd: FormData) {
       ? {
           ...l,
           title: str(fd, "title") || l.title,
-          chapter: str(fd, "chapter") || l.chapter,
+          chapterId: str(fd, "chapterId") || l.chapterId,
           order: num(fd, "order", l.order),
           videoId: str(fd, "videoId") || undefined,
           durationMin: num(fd, "durationMin", l.durationMin),
@@ -117,6 +118,66 @@ export async function instructorMoveLesson(fd: FormData) {
   if (idx < 0 || j < 0 || j >= lessons.length) return;
   [lessons[idx], lessons[j]] = [lessons[j], lessons[idx]];
   writeDb({ courses: getCourses().map((c) => (c.slug === slug ? { ...c, lessons: lessons.map((l, i) => ({ ...l, order: i + 1 })) } : c)) });
+  refresh(slug);
+}
+
+/* ---------- instructor chapter actions ---------- */
+
+export async function instructorAddChapter(fd: FormData) {
+  const { user, inst } = await me();
+  const slug = str(fd, "slug");
+  const course = ownCourse(slug, inst);
+  const title = str(fd, "title");
+  if (!course || !title) return;
+  const chapters = course.chapters ?? [];
+  const chapter: Chapter = { id: `ch-${Date.now().toString(36)}`, title, order: chapters.length + 1 };
+  writeDb({ courses: getCourses().map((c) => (c.slug === slug ? { ...c, chapters: [...chapters, chapter] } : c)) });
+  await audit({ action: "course.chapter.add", actor: actor(user), target: `course:${slug}`, detail: { chapter: title, byInstructor: inst.slug } });
+  refresh(slug);
+  redirect(`/instructor/courses/${slug}`);
+}
+
+export async function instructorUpdateChapter(fd: FormData) {
+  const { user, inst } = await me();
+  const slug = str(fd, "slug");
+  const id = str(fd, "id");
+  const title = str(fd, "title");
+  const course = ownCourse(slug, inst);
+  if (!course || !title) return;
+  const chapters = (course.chapters ?? []).map((ch) => (ch.id === id ? { ...ch, title } : ch));
+  writeDb({ courses: getCourses().map((c) => (c.slug === slug ? { ...c, chapters } : c)) });
+  await audit({ action: "course.chapter.update", actor: actor(user), target: `course:${slug}`, detail: { chapterId: id, title } });
+  refresh(slug);
+  redirect(`/instructor/courses/${slug}`);
+}
+
+export async function instructorDeleteChapter(fd: FormData) {
+  const { user, inst } = await me();
+  const slug = str(fd, "slug");
+  const id = str(fd, "id");
+  const course = ownCourse(slug, inst);
+  if (!course) return;
+  const chapters = (course.chapters ?? []).filter((ch) => ch.id !== id).map((ch, i) => ({ ...ch, order: i + 1 }));
+  const lessons = (course.lessons ?? []).map((l) => l.chapterId === id ? { ...l, chapterId: chapters[0]?.id ?? "" } : l);
+  writeDb({ courses: getCourses().map((c) => (c.slug === slug ? { ...c, chapters, lessons } : c)) });
+  await audit({ action: "course.chapter.delete", level: "warn", actor: actor(user), target: `course:${slug}`, detail: { chapterId: id } });
+  refresh(slug);
+  redirect(`/instructor/courses/${slug}`);
+}
+
+export async function instructorMoveChapter(fd: FormData) {
+  const { inst } = await me();
+  const slug = str(fd, "slug");
+  const id = str(fd, "id");
+  const dir = str(fd, "dir") === "up" ? -1 : 1;
+  const course = ownCourse(slug, inst);
+  if (!course) return;
+  const chapters = [...(course.chapters ?? [])].sort((a, b) => a.order - b.order);
+  const idx = chapters.findIndex((ch) => ch.id === id);
+  const j = idx + dir;
+  if (idx < 0 || j < 0 || j >= chapters.length) return;
+  [chapters[idx], chapters[j]] = [chapters[j], chapters[idx]];
+  writeDb({ courses: getCourses().map((c) => (c.slug === slug ? { ...c, chapters: chapters.map((ch, i) => ({ ...ch, order: i + 1 })) } : c)) });
   refresh(slug);
 }
 

@@ -75,7 +75,8 @@ export default async function CourseDetailPage({
   const user = await getSessionUser();
   const enrolled = isEnrolled(user, course.slug);
   const lessons = [...(course.lessons ?? [])].sort((a, b) => a.order - b.order);
-  const chapters = Array.from(new Set(lessons.map((l) => l.chapter)));
+  const chapters = Array.from(new Set(lessons.map((l) => l.chapterId))); 
+  const chapterById = new Map((course.chapters ?? []).map((ch) => [ch.id, ch.title]));
   const freeCount = lessons.filter((l) => l.free).length;
   const videoIds = new Set(getVideos().filter((v) => v.status !== "failed").map((v) => v.id));
 
@@ -169,13 +170,14 @@ export default async function CourseDetailPage({
             <div className="mt-2 space-y-2">
               {lessons.length > 0
                 ? chapters.map((ch, i) => {
-                    const items = lessons.filter((l) => l.chapter === ch);
+                    const items = lessons.filter((l) => l.chapterId === ch);
+                    const chTitle = chapterById.get(ch) ?? ch;
                     return (
                       <details key={ch} open={i === 0} className="group overflow-hidden rounded-xl bg-card ring-1 ring-ink-900/5 open:ring-teal-600/30">
                         <summary className="flex items-center justify-between gap-3 p-4 font-extrabold text-navy-900">
                           <span className="flex items-center gap-3">
                             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-sand-100 text-sm font-black text-navy-800">{toFa(i + 1)}</span>
-                            {ch}
+                            {chTitle}
                             <span className="text-xs font-normal text-ink-400">({toFa(items.length)} جلسه)</span>
                           </span>
                           <span className="text-ink-400">
