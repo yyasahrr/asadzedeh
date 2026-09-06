@@ -63,7 +63,7 @@ export async function instructorAddLesson(fd: FormData) {
   writeDb({ courses: getCourses().map((c) => (c.slug === slug ? { ...c, lessons: [...lessons, lesson] } : c)) });
   await audit({ action: "course.lesson.add", actor: actor(user), target: `course:${slug}`, detail: { lesson: title, byInstructor: inst.slug } });
   refresh(slug);
-  redirect(`/instructor/courses/${slug}`);
+  redirect(`/instructor/courses/${slug}?chapter=${chapterId}`);
 }
 
 export async function instructorUpdateLesson(fd: FormData) {
@@ -89,8 +89,9 @@ export async function instructorUpdateLesson(fd: FormData) {
   lessons.sort((a, b) => a.order - b.order).forEach((l, i) => (l.order = i + 1));
   writeDb({ courses: getCourses().map((c) => (c.slug === slug ? { ...c, lessons } : c)) });
   await audit({ action: "course.lesson.update", actor: actor(user), target: `course:${slug}`, detail: { lesson: id, byInstructor: inst.slug } });
+  const chapterId = str(fd, "chapterId");
   refresh(slug);
-  redirect(`/instructor/courses/${slug}`);
+  redirect(`/instructor/courses/${slug}${chapterId ? `?chapter=${chapterId}` : ""}`);
 }
 
 export async function instructorDeleteLesson(fd: FormData) {

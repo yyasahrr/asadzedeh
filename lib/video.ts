@@ -265,9 +265,4 @@ export function formatBytes(n: number): string {
   return `${Math.round(n / 1024)} KB`;
 }
 
-export function formatDuration(sec?: number): string {
-  if (!sec) return "—";
-  const m = Math.floor(sec / 60);
-  const s = sec % 60;
-  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-}
+export { formatDuration } from "./format";

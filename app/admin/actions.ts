@@ -425,7 +425,7 @@ export async function addLesson(fd: FormData) {
   await audit({ action: "course.lesson.add", actor: actor(me), target: `course:${slug}`, detail: { lesson: lesson.title, videoId: lesson.videoId } });
   revalidatePath(`/admin/courses/${slug}/lessons`);
   revalidatePath(`/courses/${slug}`);
-  redirect(`/admin/courses/${slug}/lessons`);
+  redirect(`/admin/courses/${slug}/lessons?chapter=${chapterId}`);
 }
 
 export async function updateLesson(fd: FormData) {
@@ -452,9 +452,10 @@ export async function updateLesson(fd: FormData) {
   lessons.sort((a, b) => a.order - b.order);
   writeDb({ courses: getCourses().map((c) => (c.slug === slug ? { ...c, lessons } : c)) });
   await audit({ action: "course.lesson.update", actor: actor(me), target: `course:${slug}`, detail: { lessonId: id } });
+  const chapterId = str(fd, "chapterId");
   revalidatePath(`/admin/courses/${slug}/lessons`);
   revalidatePath(`/courses/${slug}`);
-  redirect(`/admin/courses/${slug}/lessons`);
+  redirect(`/admin/courses/${slug}/lessons${chapterId ? `?chapter=${chapterId}` : ""}`);
 }
 
 export async function deleteLesson(fd: FormData) {
@@ -642,7 +643,7 @@ export async function addClassLesson(fd: FormData) {
   revalidatePath(`/admin/classes/${slug}/lessons`);
   revalidatePath(`/classes/${slug}`);
   revalidatePath(`/dashboard/classes/${slug}`);
-  redirect(`/admin/classes/${slug}/lessons`);
+  redirect(`/admin/classes/${slug}/lessons?chapter=${chapterId}`);
 }
 
 export async function updateClassLesson(fd: FormData) {
@@ -669,10 +670,11 @@ export async function updateClassLesson(fd: FormData) {
   lessons.sort((a, b) => a.order - b.order);
   writeDb({ classes: getClasses().map((item) => item.slug === slug ? { ...item, lessons } : item) });
   await audit({ action: "class.lesson.update", actor: actor(me), target: `class:${slug}`, detail: { lessonId: id } });
+  const chapterId = str(fd, "chapterId");
   revalidatePath(`/admin/classes/${slug}/lessons`);
   revalidatePath(`/classes/${slug}`);
   revalidatePath(`/dashboard/classes/${slug}`);
-  redirect(`/admin/classes/${slug}/lessons`);
+  redirect(`/admin/classes/${slug}/lessons${chapterId ? `?chapter=${chapterId}` : ""}`);
 }
 
 export async function deleteClassLesson(fd: FormData) {

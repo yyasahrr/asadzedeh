@@ -51,3 +51,11 @@ export function faToday(): string {
     year: "numeric",
   });
 }
+
+/** Format seconds as MM:SS, e.g. 125 -> "02:05". */
+export function formatDuration(sec?: number): string {
+  if (!sec) return "—";
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}

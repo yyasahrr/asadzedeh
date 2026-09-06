@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useCallback, useRef, useState } from "react";
 import {
   ArrowDown,
@@ -16,8 +17,7 @@ import {
   X,
 } from "lucide-react";
 import type { InPersonClass, Lesson, OnlineCourse, VideoAsset } from "@/lib/types";
-import { toFa } from "@/lib/format";
-import { formatDuration } from "@/lib/video";
+import { formatDuration, toFa } from "@/lib/format";
 import { FieldLabel, Input, Select, Textarea } from "../ui/Input";
 import { DeleteButton } from "./DeleteButton";
 import { LessonAttachmentsField } from "./LessonAttachmentsField";
@@ -49,11 +49,20 @@ export function LessonManager({
   const chapters = [...(course.chapters ?? [])].sort((a, b) => a.order - b.order);
   const ownerTitle = "shortTitle" in course ? course.shortTitle : course.title;
 
+  const searchParams = useSearchParams();
+  const urlChapterId = searchParams.get("chapter") ?? undefined;
+
   const [openChapters, setOpenChapters] = useState<Set<string>>(() => new Set(chapters.map((ch) => ch.id)));
   const [showNewChapter, setShowNewChapter] = useState(false);
   const [newChapterTitle, setNewChapterTitle] = useState("");
   const [editingChapterId, setEditingChapterId] = useState<string | null>(null);
   const [editingChapterTitle, setEditingChapterTitle] = useState("");
+  const [selectedChapterId, setSelectedChapterId] = useState<string>(urlChapterId ?? editing?.chapterId ?? chapters[0]?.id ?? "");
+  const [userChangedChapter, setUserChangedChapter] = useState(false);
+
+  const effectiveChapterId = userChangedChapter
+    ? selectedChapterId
+    : urlChapterId ?? editing?.chapterId ?? selectedChapterId;
 
   const newChapterRef = useRef<HTMLInputElement>(null);
   const editChapterRef = useRef<HTMLInputElement>(null);
@@ -189,7 +198,7 @@ export function LessonManager({
                             <input type="hidden" name="dir" value="down" />
                             <button type="submit" title="پایین" className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-ink-500 hover:bg-sand-100"><ArrowDown className="h-3.5 w-3.5" /></button>
                           </form>
-                          <Link href={`${basePath}?edit=${l.id}`} title="ویرایش" className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-navy-700 hover:bg-sand-100">
+                          <Link href={`${basePath}?edit=${l.id}&chapter=${l.chapterId}`} title="ویرایش" className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-navy-700 hover:bg-sand-100">
                             <Pencil className="h-4 w-4" />
                           </Link>
                           <DeleteButton action={actions.remove} hidden={[{ name: "slug", value: course.slug }, { name: "id", value: l.id }]} label={l.title} />
@@ -269,7 +278,7 @@ export function LessonManager({
           </div>
           <div>
             <FieldLabel htmlFor="l-chapter">انتخاب فصل *</FieldLabel>
-            <Select id="l-chapter" name="chapterId" required defaultValue={editing?.chapterId ?? chapters[0]?.id ?? ""}>
+            <Select id="l-chapter" name="chapterId" required value={effectiveChapterId} onChange={(e) => { setSelectedChapterId(e.target.value); setUserChangedChapter(true); }}>
               <option value="">— یک فصل انتخاب کنید —</option>
               {chapters.map((ch) => (
                 <option key={ch.id} value={ch.id}>
