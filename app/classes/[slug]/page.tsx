@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { CalendarDays, CheckCircle2, Clock3, MapPin, Minus, Plus, UsersRound } from "lucide-react";
+import { BookOpen, CalendarDays, CheckCircle2, Clock3, FileText, MapPin, Minus, PlayCircle, Plus, UsersRound } from "lucide-react";
 import { getClass, getClasses, getSettings } from "@/lib/store";
 import { formatPriceCompact, toFa } from "@/lib/format";
 import { PageHero } from "@/components/PageHero";
@@ -62,6 +62,8 @@ export default async function ClassDetailPage({
   const related = getClasses().filter((c) => c.slug !== cls.slug).slice(0, 2);
   const siteUrl = getSettings().site.siteUrl.replace(/\/$/, "");
   const urgent = cls.remaining <= 3;
+  const lessons = [...(cls.lessons ?? [])].sort((a, b) => a.order - b.order);
+  const chapters = Array.from(new Set(lessons.map((lesson) => lesson.chapter)));
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -145,6 +147,50 @@ export default async function ClassDetailPage({
               مدرس: <strong className="text-navy-900">{cls.instructor}</strong>
             </p>
           </section>
+
+          {lessons.length > 0 ? (
+            <section className="rounded-xl bg-card p-4 ring-1 ring-ink-900/5" aria-labelledby="class-curriculum-title">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <h2 id="class-curriculum-title" className="flex items-center gap-2 font-black text-navy-900">
+                    <BookOpen className="h-5 w-5 text-teal-700" /> فصل‌ها و برنامه آموزشی
+                  </h2>
+                  <p className="mt-1 text-xs text-ink-500">{toFa(chapters.length)} فصل • {toFa(lessons.length)} درس</p>
+                </div>
+                <Link href={`/dashboard/classes/${cls.slug}`} className="text-xs font-bold text-teal-700 hover:underline">
+                  محتوای هنرجویان ←
+                </Link>
+              </div>
+              <div className="mt-4 space-y-2">
+                {chapters.map((chapter, chapterIndex) => {
+                  const chapterLessons = lessons.filter((lesson) => lesson.chapter === chapter);
+                  return (
+                    <details key={chapter} open={chapterIndex === 0} className="group overflow-hidden rounded-xl border border-ink-900/8">
+                      <summary className="flex cursor-pointer items-center justify-between gap-3 bg-sand-50 px-4 py-3 font-extrabold text-navy-900">
+                        <span>{chapter}</span>
+                        <span className="text-xs font-semibold text-ink-500">{toFa(chapterLessons.length)} درس</span>
+                      </summary>
+                      <ol className="divide-y divide-ink-900/5">
+                        {chapterLessons.map((lesson) => (
+                          <li key={lesson.id} className="flex items-start gap-3 px-4 py-3">
+                            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-navy-800 text-xs font-black text-white">{toFa(lesson.order)}</span>
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-bold text-ink-800">{lesson.title}</p>
+                              {lesson.description ? <p className="mt-1 line-clamp-2 text-xs leading-6 text-ink-500">{lesson.description}</p> : null}
+                              <p className="mt-1.5 flex flex-wrap gap-3 text-[11px] text-ink-500">
+                                {lesson.videoId ? <span className="inline-flex items-center gap-1"><PlayCircle className="h-3.5 w-3.5" /> ویدیوی تکمیلی</span> : null}
+                                {lesson.attachments?.length ? <span className="inline-flex items-center gap-1"><FileText className="h-3.5 w-3.5" /> {toFa(lesson.attachments.length)} فایل</span> : null}
+                              </p>
+                            </div>
+                          </li>
+                        ))}
+                      </ol>
+                    </details>
+                  );
+                })}
+              </div>
+            </section>
+          ) : null}
 
           <WorkshopLocation />
 

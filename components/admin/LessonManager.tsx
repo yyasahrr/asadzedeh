@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { ArrowDown, ArrowUp, Clapperboard, Eye, Lock, Pencil, Plus } from "lucide-react";
-import type { Lesson, OnlineCourse, VideoAsset } from "@/lib/types";
+import { ArrowDown, ArrowUp, Clapperboard, Eye, FileText, Lock, Pencil, Plus } from "lucide-react";
+import type { InPersonClass, Lesson, OnlineCourse, VideoAsset } from "@/lib/types";
 import { toFa } from "@/lib/format";
 import { formatDuration } from "@/lib/video";
 import { FieldLabel, Input, Select, Textarea } from "../ui/Input";
 import { DeleteButton } from "./DeleteButton";
+import { LessonAttachmentsField } from "./LessonAttachmentsField";
 import { VideoUploader } from "./VideoUploader";
 
 const statusLabel: Record<string, string> = { uploaded: "آپلودشده", processing: "در حال پردازش", ready: "آماده", failed: "خطا" };
@@ -23,7 +24,7 @@ export function LessonManager({
   actions,
   videoLibraryHref,
 }: {
-  course: OnlineCourse;
+  course: OnlineCourse | InPersonClass;
   videos: VideoAsset[];
   basePath: string;
   editing?: Lesson;
@@ -32,14 +33,17 @@ export function LessonManager({
 }) {
   const videoById = new Map(videos.map((v) => [v.id, v]));
   const lessons = [...(course.lessons ?? [])].sort((a, b) => a.order - b.order);
-  const chapters = Array.from(new Set([...course.syllabus.map((s) => s.title), ...lessons.map((l) => l.chapter)]));
+  const syllabusChapters = "syllabus" in course ? course.syllabus.map((item) => item.title) : [];
+  const chapters = Array.from(new Set([...syllabusChapters, ...lessons.map((lesson) => lesson.chapter)].filter(Boolean)));
+  const ownerTitle = "shortTitle" in course ? course.shortTitle : course.title;
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
       <div className="space-y-3">
         {lessons.length === 0 && (
           <div className="rounded-2xl border-2 border-dashed border-ink-900/10 p-10 text-center text-sm text-ink-500">
-            هنوز جلسه‌ای ثبت نشده. از فرم کنار، اولین جلسه را اضافه کنید.
+            <p className="font-bold text-navy-900">هنوز درسی ثبت نشده است.</p>
+            <p className="mt-1">در فرم کنار، نام فصل را بنویسید و اولین درس آن فصل را همراه محتوایش اضافه کنید.</p>
           </div>
         )}
         {chapters.map((ch) => {
@@ -70,6 +74,11 @@ export function LessonManager({
                           ) : (
                             <span className="ms-1 text-ochre-600">• بدون ویدیو</span>
                           )}
+                          {l.attachments?.length ? (
+                            <span className="ms-1 inline-flex items-center gap-1 text-teal-700">
+                              • <FileText className="inline h-3 w-3" /> {toFa(l.attachments.length)} فایل
+                            </span>
+                          ) : null}
                         </p>
                       </div>
                       <div className="flex items-center gap-1">
@@ -108,17 +117,17 @@ export function LessonManager({
         <form action={editing ? actions.update : actions.add} className="grid gap-3 rounded-2xl bg-card p-5 shadow-card ring-1 ring-ink-900/5">
           <h2 className="flex items-center gap-2 font-black text-navy-900">
             {editing ? <Pencil className="h-4 w-4 text-teal-700" /> : <Plus className="h-4 w-4 text-teal-700" />}
-            {editing ? `ویرایش: ${editing.title}` : "افزودن جلسه جدید"}
+            {editing ? `ویرایش: ${editing.title}` : "افزودن درس / قسمت جدید"}
           </h2>
           <input type="hidden" name="slug" value={course.slug} />
           {editing && <input type="hidden" name="id" value={editing.id} />}
           <div>
-            <FieldLabel htmlFor="l-title">عنوان جلسه *</FieldLabel>
+            <FieldLabel htmlFor="l-title">عنوان درس / قسمت *</FieldLabel>
             <Input id="l-title" name="title" required defaultValue={editing?.title} placeholder="مثلاً: چله‌کشی روی دار" />
           </div>
           <div>
-            <FieldLabel htmlFor="l-chapter">فصل</FieldLabel>
-            <Input id="l-chapter" name="chapter" list="chapters" defaultValue={editing?.chapter ?? chapters[0] ?? ""} placeholder="نام فصل" />
+            <FieldLabel htmlFor="l-chapter">نام فصل *</FieldLabel>
+            <Input id="l-chapter" name="chapter" list="chapters" required defaultValue={editing?.chapter ?? chapters[0] ?? ""} placeholder="مثلاً: فصل اول — شناخت ابزار" />
             <datalist id="chapters">
               {chapters.map((c) => (
                 <option key={c} value={c} />
@@ -149,16 +158,17 @@ export function LessonManager({
             )}
           </div>
           <div>
-            <FieldLabel htmlFor="l-desc">توضیح کوتاه (اختیاری)</FieldLabel>
-            <Textarea id="l-desc" name="description" defaultValue={editing?.description} className="min-h-20" />
+            <FieldLabel htmlFor="l-desc">توضیحات درس</FieldLabel>
+            <Textarea id="l-desc" name="description" defaultValue={editing?.description} className="min-h-28" placeholder="آنچه هنرجو در این درس یاد می‌گیرد، تمرین‌ها و نکات لازم…" />
           </div>
+          <LessonAttachmentsField initial={editing?.attachments} />
           <label className="flex cursor-pointer items-center gap-2 text-sm font-bold text-ink-700">
             <input type="checkbox" name="free" value="1" defaultChecked={editing?.free} className="h-4 w-4 accent-teal-700" />
             پیش‌نمایش رایگان (بدون خرید قابل تماشاست)
           </label>
           <div className="flex gap-2">
             <button type="submit" className="inline-flex h-11 flex-1 cursor-pointer items-center justify-center rounded-xl bg-navy-800 text-sm font-bold text-white hover:bg-navy-700">
-              {editing ? "ذخیره تغییرات" : "افزودن جلسه"}
+              {editing ? "ذخیره تغییرات" : "افزودن درس"}
             </button>
             {editing && (
               <Link href={basePath} className="inline-flex h-11 items-center rounded-xl bg-sand-200 px-4 text-sm font-bold text-ink-700 hover:bg-sand-300">
@@ -168,7 +178,7 @@ export function LessonManager({
           </div>
         </form>
 
-        <VideoUploader defaultTitle={`${course.shortTitle} — جلسه ${toFa(lessons.length + 1)}`} />
+        <VideoUploader defaultTitle={`${ownerTitle} — درس ${toFa(lessons.length + 1)}`} />
         <p className="text-xs leading-6 text-ink-500">
           پس از آپلود، ویدیو در فهرست بالا ظاهر می‌شود و می‌توانید آن را به جلسه متصل کنید.
           {videoLibraryHref && (

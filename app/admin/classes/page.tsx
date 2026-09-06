@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Pencil, Plus } from "lucide-react";
+import { BookOpen, Pencil, Plus } from "lucide-react";
 import { getClasses } from "@/lib/store";
 import { toFa } from "@/lib/format";
 import { TableShell, Td } from "@/components/admin/TableShell";
@@ -43,6 +43,14 @@ export default function AdminClassesPage() {
               </Td>
               <Td>
                 <span className="flex items-center gap-1">
+                  <Link
+                    href={`/admin/classes/${c.slug}/lessons`}
+                    aria-label={`مدیریت محتوای ${c.title}`}
+                    title="فصل‌ها و درس‌ها"
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-teal-700 transition-colors hover:bg-teal-50"
+                  >
+                    <BookOpen className="h-4 w-4" />
+                  </Link>
                   <Link
                     href={`/admin/classes/${c.slug}/edit`}
                     aria-label={`ویرایش ${c.title}`}

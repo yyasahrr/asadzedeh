@@ -75,7 +75,15 @@ export interface Lesson {
   /** Free preview lessons can be watched without purchase. */
   free: boolean;
   description?: string;
-  attachments?: { label: string; path: string }[];
+  attachments?: LessonAttachment[];
+}
+
+export interface LessonAttachment {
+  label: string;
+  path: string;
+  fileName?: string;
+  mime?: string;
+  sizeBytes?: number;
 }
 
 export interface CourseProtection {
@@ -126,6 +134,8 @@ export interface InPersonClass {
   includes: string[];
   trailer?: Trailer;
   instructorSlug?: string;
+  /** فصل‌ها، درس‌ها و محتوای تکمیلی کلاس حضوری. */
+  lessons?: Lesson[];
 }
 
 export interface LearningPath {

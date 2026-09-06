@@ -83,6 +83,21 @@ export function ClassForm({
 
       <TrailerFields initial={c?.trailer} videos={videos} gallery={galleryImages} />
 
+      {c ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-teal-50 px-4 py-3 text-sm text-teal-950 ring-1 ring-teal-700/10 sm:col-span-2">
+          <span>
+            محتوای کلاس شامل {c.lessons?.length ?? 0} درس است؛ فصل‌ها، ویدیوها و فایل‌ها را جداگانه مدیریت کنید.
+          </span>
+          <Link href={`/admin/classes/${c.slug}/lessons`} className="rounded-lg bg-teal-700 px-3 py-2 text-xs font-bold text-white hover:bg-teal-800">
+            مدیریت فصل‌ها و درس‌ها
+          </Link>
+        </div>
+      ) : (
+        <div className="rounded-xl border border-dashed border-teal-700/25 bg-teal-50/60 px-4 py-3 text-sm leading-7 text-teal-950 sm:col-span-2">
+          پس از ذخیرهٔ مشخصات، مستقیماً وارد مرحلهٔ ساخت فصل‌ها می‌شوید و می‌توانید برای هر درس ویدیو، توضیحات و فایل ضمیمه قرار دهید.
+        </div>
+      )}
+
       <div className="flex flex-wrap items-center gap-3 sm:col-span-2">
         <button type="submit" className="inline-flex h-11 cursor-pointer items-center rounded-xl bg-navy-800 px-8 text-[15px] font-bold text-white transition-colors hover:bg-navy-700">
           {submitLabel}

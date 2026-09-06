@@ -120,6 +120,11 @@ export function CourseForm({
           </Link>
         </div>
       )}
+      {!c ? (
+        <div className="rounded-xl border border-dashed border-teal-700/25 bg-teal-50/60 px-4 py-3 text-sm leading-7 text-teal-950 sm:col-span-2">
+          پس از ذخیرهٔ اطلاعات کلی، مستقیماً وارد مرحلهٔ ساخت فصل‌ها و درس‌ها می‌شوید؛ ویدیو، توضیحات و فایل هر درس در آن مرحله ثبت می‌شود.
+        </div>
+      ) : null}
 
       <div className="flex flex-wrap items-center gap-3 sm:col-span-2">
         <button type="submit" className="inline-flex h-11 cursor-pointer items-center rounded-xl bg-navy-800 px-8 text-[15px] font-bold text-white transition-colors hover:bg-navy-700">

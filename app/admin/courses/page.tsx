@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Pencil, Plus, Search } from "lucide-react";
+import { BookOpen, Pencil, Plus, Search } from "lucide-react";
 import { getCourses } from "@/lib/store";
 import { formatPriceCompact, toFa } from "@/lib/format";
 import { TableShell, Td } from "@/components/admin/TableShell";
@@ -51,6 +51,14 @@ export default async function AdminCoursesPage({
             <Td className="font-bold whitespace-nowrap">{formatPriceCompact(c.price)}</Td>
             <Td>
               <span className="flex items-center gap-1">
+                <Link
+                  href={`/admin/courses/${c.slug}/lessons`}
+                  aria-label={`مدیریت محتوای ${c.shortTitle}`}
+                  title="فصل‌ها و درس‌ها"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-teal-700 transition-colors hover:bg-teal-50"
+                >
+                  <BookOpen className="h-4 w-4" />
+                </Link>
                 <Link
                   href={`/admin/courses/${c.slug}/edit`}
                   aria-label={`ویرایش ${c.shortTitle}`}

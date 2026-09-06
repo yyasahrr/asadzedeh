@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CalendarDays, Clock3, MapPin } from "lucide-react";
+import { BookOpen, CalendarDays, Clock3, MapPin } from "lucide-react";
 import { getSessionUser } from "@/lib/auth";
 import { getClasses, getOrders } from "@/lib/store";
 import { toFa } from "@/lib/format";
@@ -70,9 +70,16 @@ export default async function MyClassesPage() {
                 <br />
                 لطفاً ۱۵ دقیقه زودتر در کارگاه حاضر باشید. ابزار و مواد اولیه در کارگاه در اختیار شما قرار می‌گیرد.
               </p>
-              <Link href={`/classes/${cls.slug}`} className="mt-3 inline-block text-[13px] font-bold text-teal-600 hover:underline">
-                صفحه دوره ←
-              </Link>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {cls.lessons?.length ? (
+                  <Link href={`/dashboard/classes/${cls.slug}`} className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-navy-800 px-4 text-sm font-bold text-white hover:bg-navy-700">
+                    <BookOpen className="h-4 w-4" /> ورود به محتوای کلاس
+                  </Link>
+                ) : null}
+                <Link href={`/classes/${cls.slug}`} className="inline-flex min-h-10 items-center rounded-xl bg-sand-200 px-4 text-sm font-bold text-ink-700 hover:bg-sand-300">
+                  صفحه دوره
+                </Link>
+              </div>
             </>
           ) : (
             <p className="mt-3 text-sm text-ink-600">جزئیات این دوره به‌زودی به‌روزرسانی می‌شود.</p>

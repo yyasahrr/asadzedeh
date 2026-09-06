@@ -43,6 +43,7 @@ import type {
   CourseProtection,
   Instructor,
   Lesson,
+  LessonAttachment,
   PreorderStatus,
   Product,
   ShippingMethod,
@@ -153,6 +154,30 @@ function parseSyllabus(fd: FormData) {
   });
 }
 
+function parseLessonAttachments(fd: FormData): LessonAttachment[] {
+  try {
+    const parsed = JSON.parse(str(fd, "attachments") || "[]") as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed.flatMap((value) => {
+      if (!value || typeof value !== "object") return [];
+      const item = value as Partial<LessonAttachment>;
+      const pathValue = typeof item.path === "string" ? item.path.trim() : "";
+      const label = typeof item.label === "string" ? item.label.trim().slice(0, 120) : "";
+      const allowedPath = pathValue.startsWith("/api/lesson-files/") || pathValue.startsWith("/uploads/");
+      if (!allowedPath || !label) return [];
+      return [{
+        label,
+        path: pathValue,
+        fileName: typeof item.fileName === "string" ? item.fileName.slice(0, 180) : undefined,
+        mime: typeof item.mime === "string" ? item.mime.slice(0, 100) : undefined,
+        sizeBytes: typeof item.sizeBytes === "number" && item.sizeBytes > 0 ? item.sizeBytes : undefined,
+      }];
+    });
+  } catch {
+    return [];
+  }
+}
+
 /* ---------- courses ---------- */
 
 export async function createCourse(fd: FormData) {
@@ -261,6 +286,7 @@ export async function addLesson(fd: FormData) {
     durationMin: num(fd, "durationMin", 10),
     free: bool(fd, "free"),
     description: str(fd, "description") || undefined,
+    attachments: parseLessonAttachments(fd),
   };
   writeDb({ courses: getCourses().map((c) => (c.slug === slug ? { ...c, lessons: [...lessons, lesson] } : c)) });
   await audit({ action: "course.lesson.add", actor: actor(me), target: `course:${slug}`, detail: { lesson: lesson.title, videoId: lesson.videoId } });
@@ -286,6 +312,7 @@ export async function updateLesson(fd: FormData) {
           durationMin: num(fd, "durationMin", l.durationMin),
           free: bool(fd, "free"),
           description: str(fd, "description") || undefined,
+          attachments: parseLessonAttachments(fd),
         }
       : l
   );
@@ -351,6 +378,11 @@ export async function deleteVideo(fd: FormData) {
       lessons: (c.lessons ?? []).map((l) => (l.videoId === id ? { ...l, videoId: undefined } : l)),
       trailer: c.trailer?.kind === "upload" && c.trailer.src === id ? undefined : c.trailer,
     })),
+    classes: getClasses().map((c) => ({
+      ...c,
+      lessons: (c.lessons ?? []).map((lesson) => lesson.videoId === id ? { ...lesson, videoId: undefined } : lesson),
+      trailer: c.trailer?.kind === "upload" && c.trailer.src === id ? undefined : c.trailer,
+    })),
   });
   await audit({ action: "video.delete", level: "warn", actor: actor(me), target: `video:${id}`, detail: { title: video.title } });
   revalidatePath("/admin/videos");
@@ -397,11 +429,12 @@ export async function createClass(fd: FormData) {
     excerpt: str(fd, "excerpt"),
     includes: lines(str(fd, "includes")),
     trailer: parseTrailer(fd),
+    lessons: [],
   });
   writeDb({ classes });
   await audit({ action: "class.create", actor: actor(me), target: `class:${slug}`, detail: { title } });
   revalidateAll();
-  redirect("/admin/classes");
+  redirect(`/admin/classes/${slug}/lessons?created=1`);
 }
 
 export async function updateClass(fd: FormData) {
@@ -448,6 +481,102 @@ export async function deleteClass(fd: FormData) {
   await audit({ action: "class.delete", level: "warn", actor: actor(me), target: `class:${slug}` });
   revalidateAll();
   redirect("/admin/classes");
+}
+
+/* ---------- in-person class lessons ---------- */
+
+export async function addClassLesson(fd: FormData) {
+  const me = await staff("classes");
+  const slug = str(fd, "slug");
+  const inPersonClass = getClass(slug);
+  const title = str(fd, "title");
+  if (!inPersonClass || !title) return;
+  const lessons = inPersonClass.lessons ?? [];
+  const lesson: Lesson = {
+    id: `cl-${Date.now().toString(36)}`,
+    title,
+    chapter: str(fd, "chapter") || "فصل ۱",
+    order: lessons.length + 1,
+    videoId: str(fd, "videoId") || undefined,
+    durationMin: num(fd, "durationMin", 10),
+    free: bool(fd, "free"),
+    description: str(fd, "description") || undefined,
+    attachments: parseLessonAttachments(fd),
+  };
+  writeDb({ classes: getClasses().map((item) => item.slug === slug ? { ...item, lessons: [...lessons, lesson] } : item) });
+  await audit({ action: "class.lesson.add", actor: actor(me), target: `class:${slug}`, detail: { lesson: lesson.title, videoId: lesson.videoId } });
+  revalidatePath(`/admin/classes/${slug}/lessons`);
+  revalidatePath(`/classes/${slug}`);
+  revalidatePath(`/dashboard/classes/${slug}`);
+  redirect(`/admin/classes/${slug}/lessons`);
+}
+
+export async function updateClassLesson(fd: FormData) {
+  const me = await staff("classes");
+  const slug = str(fd, "slug");
+  const id = str(fd, "id");
+  const inPersonClass = getClass(slug);
+  if (!inPersonClass) return;
+  const lessons = (inPersonClass.lessons ?? []).map((lesson) =>
+    lesson.id === id
+      ? {
+          ...lesson,
+          title: str(fd, "title") || lesson.title,
+          chapter: str(fd, "chapter") || lesson.chapter,
+          order: num(fd, "order", lesson.order),
+          videoId: str(fd, "videoId") || undefined,
+          durationMin: num(fd, "durationMin", lesson.durationMin),
+          free: bool(fd, "free"),
+          description: str(fd, "description") || undefined,
+          attachments: parseLessonAttachments(fd),
+        }
+      : lesson,
+  );
+  lessons.sort((a, b) => a.order - b.order);
+  writeDb({ classes: getClasses().map((item) => item.slug === slug ? { ...item, lessons } : item) });
+  await audit({ action: "class.lesson.update", actor: actor(me), target: `class:${slug}`, detail: { lessonId: id } });
+  revalidatePath(`/admin/classes/${slug}/lessons`);
+  revalidatePath(`/classes/${slug}`);
+  revalidatePath(`/dashboard/classes/${slug}`);
+  redirect(`/admin/classes/${slug}/lessons`);
+}
+
+export async function deleteClassLesson(fd: FormData) {
+  const me = await staff("classes");
+  const slug = str(fd, "slug");
+  const id = str(fd, "id");
+  const inPersonClass = getClass(slug);
+  if (!inPersonClass) return;
+  const lessons = (inPersonClass.lessons ?? [])
+    .filter((lesson) => lesson.id !== id)
+    .map((lesson, index) => ({ ...lesson, order: index + 1 }));
+  writeDb({ classes: getClasses().map((item) => item.slug === slug ? { ...item, lessons } : item) });
+  await audit({ action: "class.lesson.delete", level: "warn", actor: actor(me), target: `class:${slug}`, detail: { lessonId: id } });
+  revalidatePath(`/admin/classes/${slug}/lessons`);
+  revalidatePath(`/dashboard/classes/${slug}`);
+  redirect(`/admin/classes/${slug}/lessons`);
+}
+
+export async function moveClassLesson(fd: FormData) {
+  await staff("classes");
+  const slug = str(fd, "slug");
+  const id = str(fd, "id");
+  const direction = str(fd, "dir") === "up" ? -1 : 1;
+  const inPersonClass = getClass(slug);
+  if (!inPersonClass) return;
+  const lessons = [...(inPersonClass.lessons ?? [])].sort((a, b) => a.order - b.order);
+  const index = lessons.findIndex((lesson) => lesson.id === id);
+  const targetIndex = index + direction;
+  if (index < 0 || targetIndex < 0 || targetIndex >= lessons.length) return;
+  [lessons[index], lessons[targetIndex]] = [lessons[targetIndex], lessons[index]];
+  writeDb({
+    classes: getClasses().map((item) =>
+      item.slug === slug ? { ...item, lessons: lessons.map((lesson, lessonIndex) => ({ ...lesson, order: lessonIndex + 1 })) } : item,
+    ),
+  });
+  revalidatePath(`/admin/classes/${slug}/lessons`);
+  revalidatePath(`/classes/${slug}`);
+  revalidatePath(`/dashboard/classes/${slug}`);
 }
 
 /* ---------- instructors ---------- */

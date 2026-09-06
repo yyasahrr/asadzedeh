@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Runtime uploads; HLS transport-stream segments use a .ts extension but are not TypeScript.
+    "data/videos/**",
+    "data/lesson-files/**",
   ]),
 ]);
 

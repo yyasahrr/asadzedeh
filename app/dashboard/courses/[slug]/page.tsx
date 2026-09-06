@@ -74,6 +74,7 @@ export default async function CoursePlayerPage({ params, searchParams }: { param
                 durationMin: current.durationMin,
                 videoId: current.videoId,
                 videoReady: !!current.videoId && videos.get(current.videoId)?.status !== "failed" && videos.has(current.videoId),
+                attachments: current.attachments,
               }}
               initiallyCompleted={completed.has(current.id)}
               spotLicense={enrollment?.spotLicense}

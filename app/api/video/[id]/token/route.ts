@@ -39,7 +39,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const token = signPayload({ v: id, u: user?.id ?? "anon", s: source, ua, exp });
   const watermarkText = access.watermark && user ? user.phone : "";
 
-  await audit({ action: "video.play", actor: user ? { id: user.id, name: user.name, role: user.role } : null, target: `video:${id}`, detail: { course: ctx.course?.slug, lesson: ctx.lesson?.id, source } });
+  await audit({
+    action: "video.play",
+    actor: user ? { id: user.id, name: user.name, role: user.role } : null,
+    target: `video:${id}`,
+    detail: { course: ctx.course?.slug, class: ctx.inPersonClass?.slug, lesson: ctx.lesson?.id, source },
+  });
 
   return Response.json({
     token,

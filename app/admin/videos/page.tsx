@@ -45,6 +45,8 @@ export default async function VideosPage({ searchParams }: { searchParams: Promi
     }
     for (const k of classes) {
       if (k.trailer?.kind === "upload" && k.trailer.src === id) out.push({ label: `تیزر کلاس: ${k.title}`, href: `/admin/classes/${k.slug}/edit` });
+      const lessonCount = (k.lessons ?? []).filter((lesson) => lesson.videoId === id).length;
+      if (lessonCount) out.push({ label: `${k.title} (${toFa(lessonCount)} درس)`, href: `/admin/classes/${k.slug}/lessons` });
     }
     return out;
   };
