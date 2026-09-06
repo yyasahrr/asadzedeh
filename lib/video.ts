@@ -50,7 +50,7 @@ export function findFfmpeg(): string | null {
   ].filter(Boolean);
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const staticPath = require("ffmpeg-static") as string | null;
+    const staticPath = require(/* turbopackOptional: true */ "ffmpeg-static") as string | null;
     if (staticPath) candidates.push(staticPath);
   } catch {
     /* optional dependency */
