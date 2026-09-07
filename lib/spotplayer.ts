@@ -1,3 +1,4 @@
+import { fetchWithTimeout } from "./http";
 import { getSettings } from "./store";
 
 /**
@@ -63,7 +64,9 @@ export async function createSpotLicense(opts: {
   };
 
   try {
-    const res = await fetch("https://panel.spotplayer.ir/license/edit/", {
+    const res = await fetchWithTimeout("https://panel.spotplayer.ir/license/edit/", {
+      timeoutMs: 20_000,
+      event: "spotplayer.license",
       method: "POST",
       headers: {
         "content-type": "application/json",
@@ -71,7 +74,6 @@ export async function createSpotLicense(opts: {
         $LEVEL: "-1",
       },
       body: JSON.stringify(body),
-      signal: AbortSignal.timeout(20_000),
     });
     const data = (await res.json()) as SpotResponse;
     if (data.ex?.msg) return { ok: false, error: data.ex.msg };

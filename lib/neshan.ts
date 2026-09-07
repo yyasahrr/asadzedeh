@@ -1,4 +1,5 @@
 import "server-only";
+import { fetchWithTimeout } from "./http";
 import { getSettings } from "./store";
 
 export const WORKSHOP_ADDRESS =
@@ -48,7 +49,10 @@ export async function getWorkshopMapLocation(): Promise<WorkshopMapLocation | nu
   });
 
   try {
-    const response = await fetch(`https://api.neshan.org/v1/search?${query}`, {
+    const response = await fetchWithTimeout(`https://api.neshan.org/v1/search?${query}`, {
+      timeoutMs: 8_000,
+      retry: { attempts: 2 },
+      event: "geocode.neshan",
       headers: { "Api-Key": serviceKey },
       next: { revalidate: 86_400 },
     });

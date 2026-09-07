@@ -1,6 +1,15 @@
 "use client";
 
+import * as Sentry from "@sentry/nextjs";
+import { useEffect } from "react";
+
 export default function GlobalError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
+  // The last-chance boundary: an unhandled error in the App Router. Sentry is a
+  // no-op unless a DSN was supplied at build/runtime.
+  useEffect(() => {
+    Sentry.captureException(error);
+  }, [error]);
+
   return (
     <html lang="fa" dir="rtl">
       <body style={{ fontFamily: "Tahoma, sans-serif", background: "#F3E9D6", color: "#191A19", padding: "4rem 1rem", textAlign: "center" }}>

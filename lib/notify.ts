@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import { fetchWithTimeout } from "./http";
 import { getNotifyLog, getSettings, writeDb } from "./store";
 
 function faNow(): string {
@@ -35,7 +36,10 @@ export async function sendSms(
 
   try {
     if (sms.provider === "kavenegar") {
-      const res = await fetch(`https://api.kavenegar.com/v1/${sms.apiKey}/sms/send.json`, {
+      const res = await fetchWithTimeout(`https://api.kavenegar.com/v1/${sms.apiKey}/sms/send.json`, {
+        timeoutMs: 10_000,
+        retry: { attempts: 2 },
+        event: "sms.kavenegar",
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ receptor: receptors.join(","), sender: sms.sender || undefined, message }),
@@ -48,7 +52,10 @@ export async function sendSms(
       throw new Error(data.return?.message || "خطای کاوه‌نگار");
     }
     // Ghasedak
-    const res = await fetch("https://api.ghasedak.me/v2/sms/send/simple", {
+    const res = await fetchWithTimeout("https://api.ghasedak.me/v2/sms/send/simple", {
+      timeoutMs: 10_000,
+      retry: { attempts: 2 },
+      event: "sms.ghasedak",
       method: "POST",
       headers: { "content-type": "application/json", apikey: sms.apiKey },
       body: JSON.stringify({

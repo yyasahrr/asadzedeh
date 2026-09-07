@@ -2,6 +2,7 @@ import type { Order } from "./types";
 import { getSettings } from "./store";
 import { demoPaymentAllowed } from "./env";
 import { tomanToRial } from "./money";
+import { fetchWithTimeout } from "./http";
 import { logger } from "./logger";
 
 /**
@@ -35,7 +36,11 @@ export async function requestPayment(order: Order, callbackUrl: string): Promise
   const base = payment.sandbox ? "https://sandbox.zarinpal.com" : "https://api.zarinpal.com";
   const amountRial = tomanToRial(order.amount);
   try {
-    const res = await fetch(`${base}/pg/v4/payment/request.json`, {
+    // Money movement: never retried. A second attempt would create a second
+    // gateway transaction.
+    const res = await fetchWithTimeout(`${base}/pg/v4/payment/request.json`, {
+      timeoutMs: 15_000,
+      event: "payment.request",
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
@@ -78,7 +83,12 @@ export async function verifyPayment(
   }
   const base = payment.sandbox ? "https://sandbox.zarinpal.com" : "https://api.zarinpal.com";
   try {
-    const res = await fetch(`${base}/pg/v4/payment/verify.json`, {
+    // Verification is idempotent — the gateway answers 101 for an authority
+    // that was already verified — so a retry here is safe.
+    const res = await fetchWithTimeout(`${base}/pg/v4/payment/verify.json`, {
+      timeoutMs: 15_000,
+      retry: { attempts: 3 },
+      event: "payment.verify",
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({

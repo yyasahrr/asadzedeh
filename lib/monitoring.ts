@@ -1,19 +1,29 @@
+import * as Sentry from "@sentry/nextjs";
 import { logger } from "./logger";
 
-/** Optional Sentry. No-op until SENTRY_DSN is set — never pretend it is configured. */
+/**
+ * Monitoring facade.
+ *
+ * Logging via Pino is always on and is the primary record. Sentry is an
+ * optional external destination: it is only "configured" when a client is
+ * actually initialised and enabled, never merely because a DSN string exists.
+ */
+
 export function sentryConfigured(): boolean {
-  return Boolean(process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN);
+  const client = Sentry.getClient();
+  return Boolean(client && client.getOptions().enabled !== false);
 }
 
 export function captureException(error: unknown, context?: Record<string, unknown>) {
   logger.error({ event: "exception", err: error instanceof Error ? error.message : String(error), ...context });
-  const dsn = process.env.SENTRY_DSN;
-  if (!dsn) return;
-  void fetch("https://sentry.io/api/0/envelope/", { method: "HEAD" }).catch(() => undefined);
+  if (!sentryConfigured()) return;
+  Sentry.captureException(error, { extra: context });
 }
 
 export function captureMessage(message: string, context?: Record<string, unknown>) {
   logger.warn({ event: "message", message, ...context });
+  if (!sentryConfigured()) return;
+  Sentry.captureMessage(message, { extra: context });
 }
 
 export function monitoringStatus() {
