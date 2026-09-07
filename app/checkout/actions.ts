@@ -8,10 +8,12 @@ import { audit } from "@/lib/audit";
 import { faToday, normalizeDigits } from "@/lib/format";
 import type { CartItem } from "@/lib/cart";
 import { getSessionUser, hashPassword } from "@/lib/auth";
+import { buildLines, linesSubtotal } from "@/lib/checkout-lines";
 import { sendSms } from "@/lib/notify";
 import { isDemoPayment, requestPayment } from "@/lib/payment";
 import { finalizePaidOrder, releaseOrder } from "@/lib/order-payment";
-import { getClasses, getCourses, getEnrollments, getLearningPath, getLearningPathFinalPrice, getOrders, getPayments, getProducts, getSettings, getUserByPhone, getUsers, withStoreLock, writeDbAsync } from "@/lib/store";
+import { reserveOrderLines, writeOrderItems } from "@/lib/db/commerce";
+import { getEnrollments, getOrders, getPayments, getSettings, getUserByPhone, getUsers, syncCollections, withStoreLock, writeDbAsync } from "@/lib/store";
 import { rateLimit, LIMITS } from "@/lib/rate-limit";
 import type { OrderLine, PaymentRecord, ShippingInfo, User } from "@/lib/types";
 
@@ -27,51 +29,6 @@ export async function quoteShipping(methodId: string, subtotal: number): Promise
   const freeOver = m.freeOver || shop.freeShippingOver;
   const cost = freeOver > 0 && subtotal >= freeOver ? 0 : m.cost;
   return { cost, label: m.label };
-}
-
-/**
- * Turn the client cart into verified server-side order lines.
- * Prices are re-read from the store so a tampered cart can't set its own price.
- */
-function buildLines(items: CartItem[]): { lines: OrderLine[]; problems: string[] } {
-  const courses = getCourses();
-  const classes = getClasses();
-  const products = getProducts();
-  const lines: OrderLine[] = [];
-  const problems: string[] = [];
-  for (const i of items) {
-    if (i.kind === "course") {
-      const c = courses.find((x) => x.slug === i.slug);
-      if (c) lines.push({ kind: "course", slug: c.slug, title: c.title, price: c.price, qty: 1 });
-    } else if (i.kind === "class") {
-      const k = classes.find((x) => x.slug === i.slug);
-      if (!k) continue;
-      if (k.remaining <= 0) problems.push(`ظرفیت «${k.title}» تکمیل شده است`);
-      else lines.push({ kind: "class", slug: k.slug, title: k.title, price: k.price, qty: 1 });
-    } else if (i.kind === "learning_path") {
-      const lp = getLearningPath(i.slug);
-      if (!lp || !lp.active) {
-        problems.push(`مسیر «${i.title}» موجود نیست`);
-        continue;
-      }
-      // Server-side price calculation — client price is ignored
-      const serverPrice = getLearningPathFinalPrice(lp);
-      lines.push({ kind: "learning_path", slug: lp.slug, title: lp.title, price: serverPrice, qty: 1 });
-    } else if (i.kind === "product") {
-      const p = products.find((x) => x.slug === i.slug && x.active);
-      if (!p) {
-        problems.push(`«${i.title}» دیگر موجود نیست`);
-        continue;
-      }
-      const qty = Math.max(1, Math.min(Number(i.qty) || 1, 99));
-      if (p.kind === "physical" && !p.allowBackorder && p.stock < qty) {
-        problems.push(p.stock > 0 ? `از «${p.title}» فقط ${p.stock} عدد موجود است` : `«${p.title}» ناموجود است`);
-        continue;
-      }
-      lines.push({ kind: p.kind === "preorder" ? "preorder" : "product", slug: p.slug, title: p.title, price: p.price, qty });
-    }
-  }
-  return { lines, problems };
 }
 
 export async function startCheckout(fd: FormData) {
@@ -128,7 +85,7 @@ export async function startCheckout(fd: FormData) {
     }
   }
 
-  const subtotal = lines.reduce((s, l) => s + l.price * l.qty, 0);
+  const subtotal = linesSubtotal(lines);
   const coupon = String(fd.get("coupon") ?? "").trim().toUpperCase();
   const discount = coupon === "ASAD10" ? Math.round((subtotal * 10) / 100) : 0;
 
@@ -191,58 +148,66 @@ export async function startCheckout(fd: FormData) {
   const demo = isDemoPayment();
   const paymentId = `pay-${crypto.randomBytes(6).toString("hex")}`;
 
-  await withStoreLock(async () => {
+  // Stock and seats are held by conditional SQL UPDATEs inside one transaction:
+  // the database (not this process) decides who gets the last unit.
+  const reservation = await withStoreLock(async () => {
     const { lines: lockedLines, problems: lockedProblems } = buildLines(items);
     if (lockedProblems.length > 0 || lockedLines.length === 0) {
-      redirect(`/checkout?error=${encodeURIComponent(lockedProblems[0] ?? "سبد خرید معتبر نیست")}`);
+      return { failure: lockedProblems[0] ?? "سبد خرید معتبر نیست", lines: [] as OrderLine[] };
     }
-    const classes = getClasses().map((c) => {
-      const hit = lockedLines.find((l) => l.kind === "class" && l.slug === c.slug);
-      if (!hit) return c;
-      if (c.remaining <= 0) redirect(`/checkout?error=${encodeURIComponent(`ظرفیت «${c.title}» تکمیل شده است`)}`);
-      return { ...c, remaining: c.remaining - 1 };
-    });
-    const products = getProducts().map((p) => {
-      const hit = lockedLines.find((l) => l.kind === "product" && l.slug === p.slug);
-      if (!hit) return p;
-      if (p.kind === "physical" && !p.allowBackorder && p.stock < hit.qty) {
-        redirect(`/checkout?error=${encodeURIComponent(`موجودی «${p.title}» کافی نیست`)}`);
-      }
-      return { ...p, stock: Math.max(0, p.stock - hit.qty), sold: p.sold + hit.qty };
-    });
-    const paymentRow: PaymentRecord = {
-      id: paymentId,
-      orderId: id,
-      provider: demo ? "demo" : "zarinpal",
-      status: demo ? "paid" : "pending",
-      amount: final,
-      createdAt: new Date().toISOString(),
-      verifiedAt: demo ? new Date().toISOString() : undefined,
-    };
-    await writeDbAsync({
-      users: getUsers(),
-      classes,
-      products,
-      orders: [
-        {
-          id,
-          student: phone ? `${name} (${phone})` : name,
-          item: itemLabel,
-          amount: final,
-          status: demo ? "پرداخت شده" : "در انتظار پرداخت",
-          date: faToday(),
-          lines: lockedLines,
-          userId: ownerId,
-          phone: phone || user?.phone,
-          shipping,
-          discount: discount || undefined,
-          note: String(fd.get("note") ?? "").trim() || undefined,
-        },
-        ...getOrders(),
-      ],
-      payments: [paymentRow, ...getPayments()],
-    });
+    const held = await reserveOrderLines(lockedLines);
+    if (!held.ok) {
+      const label = held.title || held.slug;
+      return {
+        failure:
+          held.reason === "capacity"
+            ? `ظرفیت «${label}» تکمیل شده است`
+            : `موجودی «${label}» کافی نیست`,
+        lines: [] as OrderLine[],
+      };
+    }
+    return { failure: null, lines: lockedLines };
   });
+  if (reservation.failure) {
+    redirect(`/checkout?error=${encodeURIComponent(reservation.failure)}`);
+  }
+  const lockedLines = reservation.lines;
+
+  // Pull the database-authoritative stock/seats back into the document cache
+  // before the order is written, so a later cache flush cannot undo the hold.
+  await syncCollections(["products", "classes"]);
+
+  const paymentRow: PaymentRecord = {
+    id: paymentId,
+    orderId: id,
+    provider: demo ? "demo" : "zarinpal",
+    status: demo ? "paid" : "pending",
+    amount: final,
+    createdAt: new Date().toISOString(),
+    verifiedAt: demo ? new Date().toISOString() : undefined,
+  };
+  await writeDbAsync({
+    users: getUsers(),
+    orders: [
+      {
+        id,
+        student: phone ? `${name} (${phone})` : name,
+        item: itemLabel,
+        amount: final,
+        status: demo ? "پرداخت شده" : "در انتظار پرداخت",
+        date: faToday(),
+        lines: lockedLines,
+        userId: ownerId,
+        phone: phone || user?.phone,
+        shipping,
+        discount: discount || undefined,
+        note: String(fd.get("note") ?? "").trim() || undefined,
+      },
+      ...getOrders(),
+    ],
+    payments: [paymentRow, ...getPayments()],
+  });
+  await writeOrderItems(id, lockedLines);
 
   await audit({
     action: "order.create",

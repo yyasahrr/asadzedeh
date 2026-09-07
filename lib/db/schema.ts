@@ -67,6 +67,7 @@ export const classes = pgTable(
     title: text("title").notNull(),
     price: integer("price").notNull(),
     remaining: integer("remaining").notNull().default(0),
+    reservedSeats: integer("reserved_seats").notNull().default(0),
     capacity: integer("capacity").notNull().default(0),
     instructorSlug: text("instructor_slug"),
     payload: jsonb("payload").notNull(),
@@ -123,6 +124,8 @@ export const products = pgTable(
     price: integer("price").notNull(),
     stock: integer("stock").notNull().default(0),
     reservedStock: integer("reserved_stock").notNull().default(0),
+    allowBackorder: boolean("allow_backorder").notNull().default(false),
+    sold: integer("sold").notNull().default(0),
     kind: text("kind").notNull(),
     active: boolean("active").notNull().default(true),
     payload: jsonb("payload").notNull(),
@@ -142,6 +145,7 @@ export const orders = pgTable(
     currency: text("currency").notNull().default("TOMAN"),
     authority: text("authority"),
     refId: text("ref_id"),
+    releasedAt: ts("released_at"),
     payload: jsonb("payload").notNull(),
     createdAt: ts("created_at").notNull().defaultNow(),
     updatedAt: ts("updated_at").notNull().defaultNow(),
@@ -150,6 +154,7 @@ export const orders = pgTable(
     index("orders_user_idx").on(t.userId),
     index("orders_status_idx").on(t.status),
     index("orders_created_idx").on(t.createdAt),
+    index("orders_user_status_idx").on(t.userId, t.status),
     uniqueIndex("orders_authority_idx").on(t.authority),
   ],
 );
@@ -184,6 +189,8 @@ export const payments = pgTable(
   },
   (t) => [
     index("payments_order_idx").on(t.orderId),
+    index("payments_status_idx").on(t.status),
+    index("payments_created_idx").on(t.createdAt),
     uniqueIndex("payments_gateway_tx_idx").on(t.gatewayTransactionId),
     uniqueIndex("payments_authority_idx").on(t.authority),
   ],
@@ -231,7 +238,7 @@ export const certificates = pgTable(
     revokedAt: ts("revoked_at"),
     payload: jsonb("payload").notNull(),
   },
-  (t) => [index("certificates_user_idx").on(t.userId)],
+  (t) => [index("certificates_user_idx").on(t.userId), index("certificates_user_code_idx").on(t.userId, t.code)],
 );
 
 export const auditLogs = pgTable(
@@ -333,7 +340,10 @@ export const seoEntries = pgTable(
     payload: jsonb("payload").notNull(),
     updatedAt: ts("updated_at").notNull().defaultNow(),
   },
-  (t) => [uniqueIndex("seo_entries_entity_idx").on(t.entityType, t.entityId)],
+  (t) => [
+    uniqueIndex("seo_entries_entity_idx").on(t.entityType, t.entityId),
+    index("seo_entries_type_idx").on(t.entityType),
+  ],
 );
 
 export const seoRedirects = pgTable("seo_redirects", {

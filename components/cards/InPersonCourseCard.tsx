@@ -4,12 +4,14 @@ import { CalendarDays, Clock3, MapPin, UsersRound } from "lucide-react";
 import type { InPersonClass } from "@/lib/types";
 import { formatPriceCompact, toFa } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { availableSeats } from "@/lib/stock";
 
 /** Visually distinct from online cards: schedule-first layout with capacity meter. */
 export function InPersonCourseCard({ cls, className }: { cls: InPersonClass; className?: string }) {
-  const taken = cls.capacity - cls.remaining;
+  const seats = availableSeats(cls);
+  const taken = cls.capacity - seats;
   const pct = Math.round((taken / cls.capacity) * 100);
-  const urgent = cls.remaining <= 3;
+  const urgent = seats <= 3;
 
   return (
     <article
@@ -64,7 +66,7 @@ export function InPersonCourseCard({ cls, className }: { cls: InPersonClass; cla
         <div>
           <div className="mb-1.5 flex items-center justify-between text-xs font-bold">
             <span className={urgent ? "text-madder-700" : "text-ink-600"}>
-              {urgent ? `تنها ${toFa(cls.remaining)} ظرفیت باقی مانده!` : `${toFa(cls.remaining)} ظرفیت باقی مانده`}
+              {urgent ? `تنها ${toFa(seats)} ظرفیت باقی مانده!` : `${toFa(seats)} ظرفیت باقی مانده`}
             </span>
             <span className="text-ink-400">ظرفیت {toFa(cls.capacity)} نفر</span>
           </div>

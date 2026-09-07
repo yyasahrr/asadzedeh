@@ -6,6 +6,7 @@ import { faToday } from "@/lib/format";
 import {
   MFA_COOKIE,
   SESSION_COOKIE,
+  SESSION_TTL_MS,
   getSessionUser,
   hashPassword,
   isInstructor,
@@ -41,7 +42,18 @@ async function createSession(user: User, mfaVerified: boolean) {
     const t = s.lastSeen ? Date.parse(s.lastSeen) : NaN;
     return Number.isNaN(t) || Date.now() - t < SESSION_DAYS * 864e5;
   });
-  sessions.push({ token, userId: user.id, createdAt: faToday(), mfaVerified, ip, userAgent, lastSeen: new Date().toISOString() });
+  const issuedAt = Date.now();
+  sessions.push({
+    token,
+    userId: user.id,
+    createdAt: faToday(),
+    mfaVerified,
+    ip,
+    userAgent,
+    lastSeen: new Date(issuedAt).toISOString(),
+    // Enforced server-side in lib/auth.ts `sessionState`, not by the cookie.
+    expiresAt: new Date(issuedAt + SESSION_TTL_MS).toISOString(),
+  });
   writeDb({
     sessions,
     users: getUsers().map((u) =>

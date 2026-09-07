@@ -139,6 +139,8 @@ export interface InPersonClass {
   sessions: number;
   capacity: number;
   remaining: number;
+  /** Seats held by unpaid orders. Managed by the database, never by the client. */
+  reservedSeats?: number;
   location: string;
   price: number;
   image: string;
@@ -278,6 +280,8 @@ export interface Order {
   refId?: string;
   /** Set once reserved seats/stock have been returned after a failed payment. */
   releasedAt?: string;
+  /** Set once reserved seats/stock have been converted into real decrements. */
+  settledAt?: string;
   date?: string;
   /** Structured lines (new orders); legacy orders only have `item`. */
   lines?: OrderLine[];
@@ -347,6 +351,10 @@ export interface Session {
   userAgent?: string;
   /** ISO timestamp of last activity */
   lastSeen?: string;
+  /** ISO timestamp after which the server rejects this session. */
+  expiresAt?: string;
+  /** ISO timestamp when the session was revoked. */
+  revokedAt?: string;
 }
 
 export interface Comment {
@@ -410,6 +418,8 @@ export interface Product {
   stock: number;
   /** Allow ordering when out of stock (backorder) */
   allowBackorder: boolean;
+  /** Units held by unpaid orders. Managed by the database, never by the client. */
+  reservedStock?: number;
   /** Preorder: deposit percent and lead time */
   preorder?: { depositPercent: number; leadTimeDays: number; note: string };
   image: string;
