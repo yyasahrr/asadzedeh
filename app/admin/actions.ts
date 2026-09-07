@@ -43,6 +43,7 @@ import {
   getUsers,
   getUserByPhone,
   getVideos,
+  deleteStoreRow,
   resetDb,
   writeDb,
 } from "@/lib/store";
@@ -1102,7 +1103,11 @@ export async function issueCertificate(fd: FormData) {
 export async function deleteCertificate(fd: FormData) {
   const me = await staff("certificates");
   const code = str(fd, "code");
+  // Certificates are append-only at the SQL layer: persisting the collection no
+  // longer prunes rows, so a real deletion has to be issued explicitly. Writing
+  // only the filtered array would leave the row in PostgreSQL.
   writeDb({ certificates: getCertificates().filter((c) => c.code !== code) });
+  await deleteStoreRow("certificates", "code", code);
   await audit({ action: "certificate.delete", level: "warn", actor: actor(me), target: `certificate:${code}` });
   revalidatePath("/admin/certificates");
   redirect("/admin/certificates");

@@ -297,19 +297,38 @@ function json(value: unknown): string {
   return JSON.stringify(value);
 }
 
+/**
+ * Write rows to a table.
+ *
+ * `prune` deletes every row whose primary key is absent from `rows`. That is how
+ * the admin delete buttons work for content collections, but it is only safe for
+ * a single writer: two processes each holding their own in-memory array would
+ * delete each other's rows on every write.
+ *
+ * Append-only tables — orders, payments, enrolments, certificates, audit, tickets
+ * — must therefore pass `prune: false` and rely on row-level upserts only. None
+ * of them is ever legitimately emptied, so nothing depends on the prune there.
+ */
 async function replaceTable(
   table: string,
   pk: string,
   rows: { columns: string[]; values: unknown[] }[],
+  options: { prune?: boolean } = {},
 ) {
+  const prune = options.prune ?? true;
   const sql = await getSql();
   if (rows.length === 0) {
+    // With pruning off an empty array means "nothing to write", never
+    // "delete the table".
+    if (!prune) return;
     await sql.execute(`DELETE FROM ${table}`);
     return;
   }
-  const keys = rows.map((r) => r.values[0]);
-  const placeholders = keys.map((_, i) => `$${i + 1}`).join(",");
-  await sql.query(`DELETE FROM ${table} WHERE ${pk} NOT IN (${placeholders})`, keys);
+  if (prune) {
+    const keys = rows.map((r) => r.values[0]);
+    const placeholders = keys.map((_, i) => `$${i + 1}`).join(",");
+    await sql.query(`DELETE FROM ${table} WHERE ${pk} NOT IN (${placeholders})`, keys);
+  }
   for (const row of rows) {
     const cols = row.columns.join(", ");
     // jsonb columns must be bound as text and cast explicitly. Without the cast
@@ -435,6 +454,7 @@ async function persist(db: Db, keys?: (keyof Db)[]) {
         columns: ["id", "user_id", "status", "amount", "currency", "authority", "ref_id", "payload", "updated_at"],
         values: [o.id, o.userId ?? null, o.status, o.amount, CURRENCY, o.authority || null, o.refId ?? null, json(o), now],
       })),
+      { prune: false },
     );
   }
   if (has("enrollments")) {
@@ -445,6 +465,7 @@ async function persist(db: Db, keys?: (keyof Db)[]) {
         columns: ["id", "user_id", "course_slug", "order_id", "payload", "created_at"],
         values: [e.id, e.userId, e.courseSlug, e.orderId ?? null, json(e), now],
       })),
+      { prune: false },
     );
   }
   if (has("certificates")) {
@@ -455,6 +476,7 @@ async function persist(db: Db, keys?: (keyof Db)[]) {
         columns: ["code", "user_id", "student_name", "course_title", "instructor_name", "hours", "issued_at", "revoked_at", "payload"],
         values: [c.code, c.userId ?? null, c.student, c.course, c.instructorName ?? null, c.hours, c.issuedAt ?? now, c.revokedAt ?? null, json(c)],
       })),
+      { prune: false },
     );
   }
   if (has("audit")) {
@@ -465,6 +487,7 @@ async function persist(db: Db, keys?: (keyof Db)[]) {
         columns: ["id", "ts", "level", "action", "actor_id", "payload"],
         values: [a.id, a.ts, a.level, a.action, a.actorId ?? null, json(a)],
       })),
+      { prune: false },
     );
   }
   if (has("preorders")) {
@@ -485,6 +508,7 @@ async function persist(db: Db, keys?: (keyof Db)[]) {
         columns: ["id", "user_id", "status", "payload", "updated_at"],
         values: [t.id, t.userId ?? null, t.status, json(t), now],
       })),
+      { prune: false },
     );
   }
   if (has("courseRequests")) {
@@ -590,8 +614,20 @@ async function persist(db: Db, keys?: (keyof Db)[]) {
         columns: ["id", "order_id", "provider", "status", "amount", "gateway_transaction_id", "authority", "payload", "created_at", "verified_at"],
         values: [p.id, p.orderId, p.provider, p.status, p.amount, p.gatewayTransactionId || null, p.authority || null, json(p), p.createdAt, p.verifiedAt ?? null],
       })),
+      { prune: false },
     );
   }
+}
+
+/**
+ * Delete one row by primary key.
+ *
+ * Append-only tables no longer prune, so a genuine deletion has to be issued
+ * explicitly instead of being inferred from "the id is missing from my array".
+ */
+export async function deleteStoreRow(table: string, pk: string, value: string): Promise<void> {
+  const sql = await getSql();
+  await sql.query(`DELETE FROM ${table} WHERE ${pk} = $1`, [value]);
 }
 
 function parsePayload<T>(row: Record<string, unknown>, fallbackKey = "payload"): T {
