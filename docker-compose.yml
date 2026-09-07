@@ -1,13 +1,36 @@
+# DEVELOPMENT ONLY — do not use this file to run production.
+#
+# It exists so `npm run dev` has a PostgreSQL to talk to on a laptop. It is
+# deliberately missing everything production needs:
+#
+#   - the password is a checked-in placeholder, not a secret;
+#   - port 5432 is published to the host with no firewall;
+#   - there is no TLS, no backup, no resource limit and no log rotation;
+#   - `restart: unless-stopped` on a dev box just hides crashes.
+#
+# Production deployment is a managed or self-hosted PostgreSQL plus
+# `node server.mjs` behind the host's own process manager and reverse proxy.
+# See docs/DEPLOY.md and docs/DATABASE.md.
+#
+# Usage:
+#   docker compose up -d postgres
+#   export DATABASE_URL=postgres://asadzedeh:asadzedeh@127.0.0.1:5432/asadzedeh
+#   npm run db:migrate && npm run db:seed
+
 services:
   postgres:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_USER: asadzedeh
-      POSTGRES_PASSWORD: asadzedeh
-      POSTGRES_DB: asadzedeh
+      # Placeholder credentials. Override for anything beyond a local laptop.
+      POSTGRES_USER: ${POSTGRES_USER:-asadzedeh}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-asadzedeh}
+      POSTGRES_DB: ${POSTGRES_DB:-asadzedeh}
+      # Match production so Persian text and collation behave identically.
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8"
     ports:
-      - "5432:5432"
+      # Bind to loopback only: this port must not be reachable from the network.
+      - "127.0.0.1:5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:

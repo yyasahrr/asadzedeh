@@ -1,11 +1,10 @@
 "use server";
 
+import { logger } from "@/lib/logger";
 import { bool, num, numAllowZero, str } from "@/lib/validation/form";
 import { addStaffSchema, updateRoleSchema } from "@/lib/validation/admin";
 import { validate } from "@/lib/validation/schema";
 
-import fs from "node:fs";
-import path from "node:path";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { faToday, parsePrice, slugify } from "@/lib/format";
@@ -1234,24 +1233,52 @@ export async function uploadMedia(fd: FormData): Promise<{ ok: boolean; path?: s
   if (!file.type.startsWith("image/")) return { ok: false, error: "فقط تصویر مجاز است" };
   if (file.size > 5 * 1024 * 1024) return { ok: false, error: "حجم تصویر بیش از ۵ مگابایت است" };
   const buf = Buffer.from(await file.arrayBuffer());
-  const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
-  const { putObject, randomObjectKey } = await import("@/lib/storage");
+  const { putObject, randomObjectKey, extensionForContentType } = await import("@/lib/storage");
+
+  // The extension comes from the declared MIME type, not the client filename:
+  // a file called `invoice.html` sent as image/png must not be stored as HTML.
+  const ext = extensionForContentType(file.type || "", file.name);
+  if (!ext) return { ok: false, error: "نوع فایل پشتیبانی نمی‌شود" };
+
   const stored = await putObject(randomObjectKey("uploads", ext), buf, file.type || "image/jpeg");
-  await audit({ action: "media.upload", actor: actor(user!), detail: { key: stored.key, size: file.size } });
-  revalidatePath("/admin/media");
+
+  // The object is written before the audit row and the cache refresh. If either
+  // fails the upload must not be left behind as an orphan nobody can delete.
+  try {
+    await audit({ action: "media.upload", actor: actor(user!), detail: { key: stored.key, size: file.size } });
+    revalidatePath("/admin/media");
+  } catch (error) {
+    const { deleteObject } = await import("@/lib/storage");
+    await deleteObject(stored.key).catch((cleanupError) =>
+      logger.error({ event: "media.upload.rollback.failed", key: stored.key, err: String(cleanupError) }),
+    );
+    throw error;
+  }
+
   return { ok: true, path: stored.url };
 }
 
 export async function deleteMedia(fd: FormData) {
   const me = await staff("media");
   const p = str(fd, "path");
-  if (!p.startsWith("/uploads/") || p.includes("..")) return;
-  try {
-    fs.unlinkSync(path.join(process.cwd(), "public", p));
-  } catch {
-    /* already gone */
+  // Uploads are stored under the "uploads/" object prefix and served from
+  // /api/media/<key>. Deleting from public/ never matched where they live.
+  const key = p.startsWith("/api/media/")
+    ? decodeURIComponent(p.slice("/api/media/".length))
+    : p.replace(/^\//, "");
+  if (!key.startsWith("uploads/") || key.includes("..")) {
+    redirect("/admin/media?error=path");
   }
-  await audit({ action: "media.delete", level: "warn", actor: actor(me), detail: { path: p } });
+
+  const { deleteObject } = await import("@/lib/storage");
+  try {
+    await deleteObject(key);
+  } catch (error) {
+    logger.error({ event: "media.delete.failed", key, err: String(error) });
+    redirect("/admin/media?error=delete");
+  }
+
+  await audit({ action: "media.delete", level: "warn", actor: actor(me), detail: { key } });
   revalidatePath("/admin/media");
   redirect("/admin/media");
 }
