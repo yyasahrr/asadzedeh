@@ -1,8 +1,7 @@
 import { redirect } from "next/navigation";
 import { audit } from "@/lib/audit";
 import { verifyPayment } from "@/lib/payment";
-import { markOrderPaid, markPaymentPaid } from "@/lib/db/commerce";
-import { getOrder, getOrders, getPayments, syncCollections, writeDbAsync } from "@/lib/store";
+import { getOrder, getOrders, getPayments, writeDbAsync } from "@/lib/store";
 import { finalizePaidOrder, releaseOrder } from "@/lib/order-payment";
 import { isPaidStatus } from "@/lib/order-status";
 import { logger } from "@/lib/logger";
@@ -75,13 +74,15 @@ export async function GET(req: Request) {
       getPayments().find((p) => p.orderId === orderId && p.status !== "paid") ??
       getPayments().find((p) => p.orderId === orderId);
 
-    // Both transitions are conditional: `WHERE status <> 'paid'`.
-    const paymentFlipped = payment ? await markPaymentPaid(payment.id, v.refId, authority) : false;
-    const orderFlipped = await markOrderPaid(orderId, v.refId);
+    // One transaction: payment PAID → order PAID → stock settled → enrolments.
+    // Returns false when a previous callback already did the work.
+    const fulfilled = await finalizePaidOrder(orderId, {
+      paymentId: payment?.id,
+      refId: v.refId,
+      authority,
+    });
 
-    if (!paymentFlipped && !orderFlipped) {
-      // A callback that arrives twice, or a gateway transaction id we already
-      // recorded. Nothing to do — never re-enrol, never re-decrement stock.
+    if (!fulfilled) {
       logger.warn({ event: "payment.replay.ignored", orderId, authority });
       await audit({
         action: "order.security",
@@ -92,14 +93,11 @@ export async function GET(req: Request) {
       redirect(`/checkout/success?order=${orderId}`);
     }
 
-    await syncCollections(["orders", "payments"]);
-    logger.info({ event: "payment.verified", orderId, paymentId: payment?.id, refId: v.refId });
     await audit({
       action: "order.paid",
       target: `order:${orderId}`,
       detail: { refId: v.refId, amount: order.amount },
     });
-    await finalizePaidOrder(orderId);
     redirect(`/checkout/success?order=${orderId}`);
   }
 

@@ -1,43 +1,36 @@
 import { createServer } from "node:http";
 import { randomUUID } from "node:crypto";
-import fs from "node:fs";
-import path from "node:path";
 import next from "next";
+import postgres from "postgres";
 import { Server } from "socket.io";
 
 const SESSION_COOKIE = "az_session";
-const DB_PATH = path.join(process.cwd(), "data", "db.json");
-const WAL_PATH = path.join(process.cwd(), "data", ".store-wal.json");
-const REDIRECTS_PATH = path.join(process.cwd(), "data", "seo-redirects.json");
 const SUPPORT_ROLES = new Set(["super_admin", "admin", "manager", "support"]);
 const TICKET_STATUSES = new Set(["باز", "در حال بررسی", "پاسخ داده شده", "بسته شده"]);
 const dev = process.argv.includes("--dev");
 const hostname = process.env.HOSTNAME || "0.0.0.0";
 const port = Number.parseInt(process.env.PORT || "3000", 10);
 
-function storePath() {
-  if (fs.existsSync(WAL_PATH)) return WAL_PATH;
-  return DB_PATH;
+const DATABASE_URL = process.env.DATABASE_URL || "";
+if (!DATABASE_URL) {
+  console.error("FATAL: DATABASE_URL is required — the realtime layer reads and writes PostgreSQL directly.");
+  process.exit(1);
 }
 
-function readDb() {
-  return JSON.parse(fs.readFileSync(storePath(), "utf8"));
-}
+/**
+ * The socket layer talks to the same PostgreSQL the app uses. It must not keep a
+ * private copy of tickets or sessions on disk: two writers on one file is how
+ * chat history gets lost.
+ */
+const sql = postgres(DATABASE_URL, {
+  max: 10,
+  idle_timeout: 20,
+  connect_timeout: 10,
+  prepare: false,
+  onnotice: () => {},
+});
 
-function loadRedirects() {
-  try {
-    const rows = JSON.parse(fs.readFileSync(REDIRECTS_PATH, "utf8"));
-    return Array.isArray(rows) ? rows.filter((r) => r && r.enabled !== false && r.fromPath && r.toPath) : [];
-  } catch {
-    return [];
-  }
-}
-
-function writeDb(db) {
-  const temporaryPath = `${DB_PATH}.${process.pid}.socket.tmp`;
-  fs.writeFileSync(temporaryPath, JSON.stringify(db, null, 2), "utf8");
-  fs.renameSync(temporaryPath, DB_PATH);
-}
+/* ------------------------------------------------------------------ support */
 
 function readCookie(header, name) {
   if (!header) return null;
@@ -53,26 +46,85 @@ function readCookie(header, name) {
   return null;
 }
 
-function authenticate(cookieHeader) {
+async function authenticate(cookieHeader) {
   const token = readCookie(cookieHeader, SESSION_COOKIE);
   if (!token) return null;
-  const db = readDb();
-  const session = db.sessions.find((item) => item.token === token);
-  if (!session) return null;
-  const user = db.users.find((item) => item.id === session.userId);
-  if (!user) return null;
-  return { id: user.id, name: user.name, phone: user.phone, role: user.role };
+  const rows = await sql`
+    SELECT u.id, u.name, u.phone, u.role
+      FROM sessions s
+      JOIN users u ON u.id = s.user_id
+     WHERE s.token = ${token}
+       AND s.revoked_at IS NULL
+       AND s.expires_at IS NOT NULL
+       AND s.expires_at > now()
+     LIMIT 1`;
+  return rows[0] ?? null;
 }
 
-function getTicket(ticketId) {
-  return readDb().tickets.find((ticket) => ticket.id === ticketId);
+async function getTicket(ticketId) {
+  const rows = await sql`SELECT payload FROM tickets WHERE id = ${ticketId} LIMIT 1`;
+  return rows[0]?.payload ?? null;
 }
 
-function saveTicket(ticket) {
-  const db = readDb();
-  db.tickets = db.tickets.map((item) => (item.id === ticket.id ? ticket : item));
-  writeDb(db);
+/**
+ * Append one message and update the status in a single statement, so two
+ * simultaneous replies cannot overwrite each other.
+ */
+async function appendTicketMessage(ticketId, message, status) {
+  const rows = await sql`
+    UPDATE tickets
+       SET payload = jsonb_set(
+             jsonb_set(
+               payload,
+               '{messages}',
+               COALESCE(payload->'messages', '[]'::jsonb) || ${sql.json(message)}::jsonb,
+               true
+             ),
+             '{updatedAt}',
+             to_jsonb(${message.createdAt}::text),
+             true
+           ),
+           status = ${status},
+           updated_at = now()
+     WHERE id = ${ticketId}
+     RETURNING payload`;
+  const payload = rows[0]?.payload;
+  if (!payload) return null;
+  return { ...payload, status, updatedAt: message.createdAt };
 }
+
+/** Tickets written by the legacy JSON store may hold nested message arrays. */
+function flattenMessages(payload) {
+  const raw = payload?.messages;
+  const list = Array.isArray(raw) ? raw : [];
+  return list.flat(Infinity).filter((m) => m && typeof m === "object" && m.id);
+}
+
+async function createTicket(ticket) {
+  await sql`
+    INSERT INTO tickets (id, status, payload)
+    VALUES (${ticket.id}, ${ticket.status}, ${sql.json(ticket)})`;
+  return ticket;
+}
+
+/* ---------------------------------------------------------------- redirects */
+
+let redirectCache = { at: 0, rows: [] };
+const REDIRECT_TTL_MS = 30_000;
+
+async function refreshRedirects() {
+  if (Date.now() - redirectCache.at < REDIRECT_TTL_MS) return;
+  redirectCache.at = Date.now();
+  try {
+    const rows = await sql`
+      SELECT from_path, to_path, status_code FROM seo_redirects WHERE enabled = TRUE`;
+    redirectCache.rows = rows.filter((r) => r.from_path && r.to_path);
+  } catch {
+    /* keep serving the previous snapshot */
+  }
+}
+
+/* --------------------------------------------------------------- http layer */
 
 let handleRequest = null;
 const httpServer = createServer((request, response) => {
@@ -80,13 +132,14 @@ const httpServer = createServer((request, response) => {
     response.writeHead(503).end("Server is starting");
     return;
   }
+  void refreshRedirects();
   try {
     const url = new URL(request.url || "/", `http://${request.headers.host || "localhost"}`);
-    const pathname = url.pathname;
-    const match = loadRedirects().find((r) => r.fromPath === pathname);
-    if (match && request.method === "GET") {
-      const status = match.statusCode === 308 ? 308 : 301;
-      response.writeHead(status, { Location: match.toPath, "Cache-Control": "public, max-age=300" });
+    const match =
+      request.method === "GET" ? redirectCache.rows.find((r) => r.from_path === url.pathname) : null;
+    if (match) {
+      const status = match.status_code === 308 ? 308 : 301;
+      response.writeHead(status, { Location: match.to_path, "Cache-Control": "public, max-age=300" });
       response.end();
       return;
     }
@@ -99,6 +152,8 @@ const httpServer = createServer((request, response) => {
 const app = next({ dev, hostname, port, httpServer });
 handleRequest = app.getRequestHandler();
 await app.prepare();
+
+/* ---------------------------------------------------------------- socket.io */
 
 const io = new Server(httpServer, {
   path: "/socket.io",
@@ -117,14 +172,13 @@ const io = new Server(httpServer, {
 });
 
 io.use((socket, nextMiddleware) => {
-  try {
-    const user = authenticate(socket.request.headers.cookie);
-    if (!user) return nextMiddleware(new Error("unauthorized"));
-    socket.data.user = user;
-    nextMiddleware();
-  } catch {
-    nextMiddleware(new Error("authentication failed"));
-  }
+  authenticate(socket.request.headers.cookie)
+    .then((user) => {
+      if (!user) return nextMiddleware(new Error("unauthorized"));
+      socket.data.user = user;
+      nextMiddleware();
+    })
+    .catch(() => nextMiddleware(new Error("authentication failed")));
 });
 
 io.on("connection", (socket) => {
@@ -146,13 +200,19 @@ io.on("connection", (socket) => {
   };
 
   socket.on("ticket:join", (ticketId, ack) => {
-    const ticket = typeof ticketId === "string" ? getTicket(ticketId) : undefined;
-    if (!ticket || (!isSupport && ticket.userId !== user.id)) {
-      reply(ack, { ok: false, error: "forbidden" });
-      return;
-    }
-    void socket.join(`ticket:${ticket.id}`);
-    reply(ack, { ok: true, data: { messages: ticket.messages } });
+    void (async () => {
+      try {
+        const ticket = typeof ticketId === "string" ? await getTicket(ticketId) : null;
+        if (!ticket || (!isSupport && ticket.userId !== user.id)) {
+          reply(ack, { ok: false, error: "forbidden" });
+          return;
+        }
+        await socket.join(`ticket:${ticket.id}`);
+        reply(ack, { ok: true, data: { messages: flattenMessages(ticket) } });
+      } catch {
+        reply(ack, { ok: false, error: "unavailable" });
+      }
+    })();
   });
 
   socket.on("ticket:create", (rawText, ack) => {
@@ -166,60 +226,99 @@ io.on("connection", (socket) => {
       return;
     }
 
-    const now = new Date().toISOString();
-    const message = { id: randomUUID(), sender: user.name, senderRole: "student", text, createdAt: now };
-    const ticket = {
-      id: randomUUID(), subject: "پشتیبانی آنلاین", student: user.name,
-      userId: user.id, phone: user.phone, status: "باز", priority: "عادی",
-      category: "عمومی", messages: [message], createdAt: now, updatedAt: now,
-    };
-    const db = readDb();
-    db.tickets.unshift(ticket);
-    writeDb(db);
-
-    void socket.join(`ticket:${ticket.id}`);
-    io.to("support:staff").emit("ticket:created", ticket);
-    reply(ack, { ok: true, data: { ticketId: ticket.id, messages: ticket.messages } });
+    void (async () => {
+      try {
+        const now = new Date().toISOString();
+        const message = { id: randomUUID(), sender: user.name, senderRole: "student", text, createdAt: now };
+        const ticket = {
+          id: randomUUID(),
+          subject: "پشتیبانی آنلاین",
+          student: user.name,
+          userId: user.id,
+          phone: user.phone,
+          status: "باز",
+          priority: "عادی",
+          category: "عمومی",
+          messages: [message],
+          createdAt: now,
+          updatedAt: now,
+        };
+        await createTicket(ticket);
+        await socket.join(`ticket:${ticket.id}`);
+        io.to("support:staff").emit("ticket:created", ticket);
+        reply(ack, { ok: true, data: { ticketId: ticket.id, messages: ticket.messages } });
+      } catch {
+        reply(ack, { ok: false, error: "unavailable" });
+      }
+    })();
   });
 
   socket.on("ticket:message", (payload, ack) => {
     const ticketId = typeof payload?.ticketId === "string" ? payload.ticketId : "";
     const text = typeof payload?.text === "string" ? payload.text.trim().slice(0, 2000) : "";
     const requestedStatus = typeof payload?.status === "string" ? payload.status : "";
-    const ticket = getTicket(ticketId);
-    if (!ticket || !text || (isSupport ? ticket.status === "بسته شده" : ticket.userId !== user.id)) {
-      reply(ack, { ok: false, error: !text ? "text required" : "forbidden" });
-      return;
-    }
-    if (isRateLimited()) {
-      reply(ack, { ok: false, error: "rate limited" });
-      return;
-    }
 
-    const message = {
-      id: randomUUID(), sender: user.name, senderRole: isSupport ? "admin" : "student",
-      text, createdAt: new Date().toISOString(),
-    };
-    ticket.messages.push(message);
-    ticket.updatedAt = message.createdAt;
-    ticket.status = isSupport
-      ? (TICKET_STATUSES.has(requestedStatus) ? requestedStatus : "پاسخ داده شده")
-      : ticket.status === "بسته شده" ? "باز" : ticket.status;
-    saveTicket(ticket);
+    void (async () => {
+      try {
+        const ticket = ticketId ? await getTicket(ticketId) : null;
+        if (!ticket || !text || (isSupport ? ticket.status === "بسته شده" : ticket.userId !== user.id)) {
+          reply(ack, { ok: false, error: !text ? "text required" : "forbidden" });
+          return;
+        }
+        if (isRateLimited()) {
+          reply(ack, { ok: false, error: "rate limited" });
+          return;
+        }
 
-    io.to(`ticket:${ticket.id}`).emit("ticket:messages", ticket.messages);
-    io.to("support:staff").emit("ticket:updated", ticket);
-    reply(ack, { ok: true, data: { messages: ticket.messages } });
+        const message = {
+          id: randomUUID(),
+          sender: user.name,
+          senderRole: isSupport ? "admin" : "student",
+          text,
+          createdAt: new Date().toISOString(),
+        };
+        const status = isSupport
+          ? TICKET_STATUSES.has(requestedStatus)
+            ? requestedStatus
+            : "پاسخ داده شده"
+          : ticket.status === "بسته شده"
+            ? "باز"
+            : ticket.status;
+
+        const updated = await appendTicketMessage(ticketId, message, status);
+        if (!updated) {
+          reply(ack, { ok: false, error: "not found" });
+          return;
+        }
+        const messages = flattenMessages(updated);
+        io.to(`ticket:${ticketId}`).emit("ticket:messages", messages);
+        io.to("support:staff").emit("ticket:updated", { ...updated, messages });
+        reply(ack, { ok: true, data: { messages } });
+      } catch {
+        reply(ack, { ok: false, error: "unavailable" });
+      }
+    })();
   });
 });
+
+/* -------------------------------------------------------------- lifecycle */
 
 httpServer.listen(port, hostname, () => {
   console.log(`> Next.js + Socket.IO ready on http://${hostname}:${port}`);
 });
 
+let closing = false;
 function shutdown(signal) {
+  if (closing) return;
+  closing = true;
   console.log(`> ${signal} received, closing`);
-  httpServer.close(() => process.exit(0));
+
+  // Give the socket layer a moment to flush, then stop accepting everything.
+  io.close(() => {
+    httpServer.close(() => {
+      sql.end({ timeout: 5 }).finally(() => process.exit(0));
+    });
+  });
   setTimeout(() => process.exit(1), 10_000).unref();
 }
 process.on("SIGTERM", () => shutdown("SIGTERM"));

@@ -56,11 +56,11 @@ export { availableSeats, availableStock } from "./stock";
 /**
  * Domain store.
  * Getters stay synchronous (in-memory cache) so existing Server Components keep working.
- * PostgreSQL (or PGlite in development) is the source of truth; a WAL snapshot
- * covers crash windows before the async persist flush.
+ * PostgreSQL is the single authoritative store — there is no file-based snapshot
+ * behind it. The cache is loaded once at boot and every write goes to the
+ * database; nothing survives only in memory or only on disk.
  */
 
-const WAL_PATH = process.env.STORE_WAL_PATH || path.join(process.cwd(), "data", ".store-wal.json");
 const JSON_PATH = path.join(process.cwd(), "data", "db.json");
 
 export interface Db {
@@ -256,17 +256,6 @@ export async function withStoreLock<T>(fn: () => T | Promise<T>): Promise<T> {
     return await fn();
   } finally {
     release();
-  }
-}
-
-function writeWal(db: Db) {
-  try {
-    fs.mkdirSync(path.dirname(WAL_PATH), { recursive: true });
-    const tmp = `${WAL_PATH}.${process.pid}.tmp`;
-    fs.writeFileSync(tmp, JSON.stringify(db), "utf-8");
-    fs.renameSync(tmp, WAL_PATH);
-  } catch {
-    /* read-only fs */
   }
 }
 
@@ -652,11 +641,20 @@ export async function initStore(): Promise<void> {
   initPromise = (async () => {
     await runMigrations();
     let loaded = await loadFromSql();
+    // Re-apply anything written while the load was in flight.
+    const withPendingWrites = (base: Db): Db => {
+      if (cache && pendingWrites.size > 0) {
+        const merged = { ...base } as Record<string, unknown>;
+        const source = cache as unknown as Record<string, unknown>;
+        for (const key of pendingWrites) merged[key] = source[key];
+        return merged as unknown as Db;
+      }
+      return base;
+    };
     if (!loaded) {
       const legacy = readLegacyJson();
       loaded = legacy ?? (isProduction() ? { ...emptyDb(), settings: { ...defaultSettings, seo: defaultSeo() } } : seed());
-      cache = loaded;
-      writeWal(cache);
+      cache = withPendingWrites(loaded);
       await persist(cache);
       if (legacy) {
         logger.info({ event: "db.migrated_json", users: legacy.users.length, orders: legacy.orders.length });
@@ -669,9 +667,10 @@ export async function initStore(): Promise<void> {
         logger.info({ event: "db.seeded", production: isProduction() });
       }
     } else {
-      cache = loaded;
-      writeWal(cache);
+      cache = withPendingWrites(loaded);
+      if (pendingWrites.size > 0) await persist(cache);
     }
+    pendingWrites.clear();
     ready = true;
   })();
   try {
@@ -682,26 +681,41 @@ export async function initStore(): Promise<void> {
   }
 }
 
+/**
+ * Collections written to before `initStore()` finished loading from SQL.
+ *
+ * Boot is asynchronous but a caller may legitimately write first (the dev seed
+ * path, a test). Those writes must survive the load instead of being silently
+ * replaced by whatever was in the database a moment earlier.
+ */
+const pendingWrites = new Set<keyof Db>();
+
+/**
+ * Synchronous accessor for the in-memory cache.
+ *
+ * Only ever seeds when there is no cache at all. Re-seeding on every read would
+ * discard writes that have not been flushed yet, which is exactly the failure a
+ * write-ahead log used to paper over. Boot still loads the authoritative copy
+ * from PostgreSQL asynchronously; see `withPendingWrites` in `initStore()`.
+ */
 function ensureReady(): Db {
-  if (!ready) {
-    const wal = (() => {
-      try {
-        return JSON.parse(fs.readFileSync(WAL_PATH, "utf-8")) as Db;
-      } catch {
-        return readLegacyJson();
-      }
-    })();
-    if (wal) {
+  if (!cache) {
+    const legacy = readLegacyJson();
+    if (legacy) {
       cache = {
         ...seed(),
-        ...wal,
-        settings: mergeSettings(defaultSettings, wal.settings),
-        seoEntries: wal.seoEntries ?? [],
-        seoRedirects: wal.seoRedirects ?? [],
-        payments: wal.payments ?? [],
+        ...legacy,
+        settings: mergeSettings(defaultSettings, legacy.settings),
+        seoEntries: legacy.seoEntries ?? [],
+        seoRedirects: legacy.seoRedirects ?? [],
+        payments: legacy.payments ?? [],
       };
     } else if (!isProduction()) {
       cache = seed();
+    } else {
+      // Production never invents data. Serve the empty shell until the load
+      // from PostgreSQL completes.
+      cache = { ...emptyDb(), settings: { ...defaultSettings, seo: defaultSeo() } };
     }
     void initStore().catch((error) => logger.error({ event: "db.init.failed", err: String(error) }));
   }
@@ -709,6 +723,7 @@ function ensureReady(): Db {
 }
 
 function schedulePersist(keys: (keyof Db)[]) {
+  if (!ready) for (const key of keys) pendingWrites.add(key);
   persistChain = persistChain
     .then(() => persist(cache, keys))
     .catch((error) => {
@@ -772,13 +787,11 @@ export async function syncCollections(keys: (keyof Db)[]): Promise<void> {
     }
   }
   cache = next;
-  writeWal(cache);
 }
 
 export function writeDb(patch: Partial<Db>): Db {
   const current = ensureReady();
   cache = { ...current, ...patch };
-  writeWal(cache);
   schedulePersist(Object.keys(patch) as (keyof Db)[]);
   return cache;
 }
@@ -794,7 +807,6 @@ export function resetDb(): Db {
     throw new Error("resetDb is disabled in production");
   }
   cache = seed();
-  writeWal(cache);
   schedulePersist(Object.keys(cache) as (keyof Db)[]);
   return cache;
 }

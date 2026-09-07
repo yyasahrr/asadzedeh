@@ -1,5 +1,3 @@
-import os from "node:os";
-import path from "node:path";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 // Ephemeral database: never touch the developer's data/pglite directory.
@@ -7,7 +5,6 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 Object.assign(process.env, {
   NODE_ENV: "test",
   PGLITE_DIR: "memory",
-  STORE_WAL_PATH: path.join(os.tmpdir(), `asadzedeh-commerce-${process.pid}.json`),
   APP_SECRET: "test-secret-for-ci-only-0123456789",
 });
 

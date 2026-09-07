@@ -146,6 +146,7 @@ export const orders = pgTable(
     authority: text("authority"),
     refId: text("ref_id"),
     releasedAt: ts("released_at"),
+    settledAt: ts("settled_at"),
     payload: jsonb("payload").notNull(),
     createdAt: ts("created_at").notNull().defaultNow(),
     updatedAt: ts("updated_at").notNull().defaultNow(),
@@ -155,6 +156,7 @@ export const orders = pgTable(
     index("orders_status_idx").on(t.status),
     index("orders_created_idx").on(t.createdAt),
     index("orders_user_status_idx").on(t.userId, t.status),
+    index("orders_settled_idx").on(t.settledAt),
     uniqueIndex("orders_authority_idx").on(t.authority),
   ],
 );

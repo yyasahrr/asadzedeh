@@ -1,12 +1,9 @@
-import os from "node:os";
-import path from "node:path";
 import { beforeAll, describe, expect, it } from "vitest";
 
 // NODE_ENV is typed read-only in @types/node, so go through Object.assign.
 Object.assign(process.env, {
   NODE_ENV: "test",
   PGLITE_DIR: "memory",
-  STORE_WAL_PATH: path.join(os.tmpdir(), `asadzedeh-lines-${process.pid}.json`),
   APP_SECRET: "test-secret-for-ci-only-0123456789",
 });
 

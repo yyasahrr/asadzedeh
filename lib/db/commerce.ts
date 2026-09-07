@@ -251,6 +251,137 @@ export async function settleOrderLines(lines: ReservationLine[]): Promise<void> 
   });
 }
 
+
+/* ------------------------------------------------- transactional fulfilment */
+
+export interface FinalizeArgs {
+  orderId: string;
+  paymentId?: string;
+  /** Gateway reference (Zarinpal ref_id). Unique across payments. */
+  refId?: string;
+  authority?: string;
+  lines: ReservationLine[];
+  userId?: string | null;
+  /** Course slugs to enrol the buyer in (already resolved from lines/paths). */
+  courseSlugs?: string[];
+  /** Called for each enrolment row this transaction actually created. */
+  newEnrollmentId?: (courseSlug: string) => string;
+  today?: string;
+}
+
+export type FinalizeOutcome = "finalized" | "already-finalized" | "not-found";
+
+export interface FinalizeResult {
+  outcome: FinalizeOutcome;
+  /** Enrolment rows created by this transaction (empty on a replay). */
+  created: { id: string; courseSlug: string }[];
+}
+
+/**
+ * Everything that must happen when a payment is verified, in ONE transaction:
+ *
+ *   lock the order row  →  payment PAID  →  order PAID  →  settle stock/seats
+ *   →  create enrolments  →  mark the order settled
+ *
+ * Any failure rolls all of it back, so "payment PAID but enrolment missing" and
+ * "payment PAID but stock not decremented" are both unreachable.
+ *
+ * The order row is locked with `SELECT … FOR UPDATE` so two concurrent callbacks
+ * for the same order serialise instead of interleaving.
+ *
+ * Deliberately *not* inside the transaction: SMS delivery, `revalidatePath`,
+ * SpotPlayer licence creation and the hash-chained audit entry. Those are
+ * external or append-only side effects that must not roll business state back,
+ * and each is independently idempotent or safe to retry.
+ */
+export async function finalizePaidOrderTx(args: FinalizeArgs): Promise<FinalizeResult> {
+  const sql = await getSql();
+  const paidLabel = PAID_LABEL;
+
+  return sql.transaction(async (tx) => {
+    const locked = await tx.query<{ id: string; status: string; settled_at: string | null; released_at: string | null }>(
+      "SELECT id, status, settled_at, released_at FROM orders WHERE id = $1 FOR UPDATE",
+      [args.orderId],
+    );
+    if (locked.length === 0) return { outcome: "not-found" as const, created: [] };
+    // `settled_at` is the fulfilment marker, not `status`: an order can legitimately
+    // already read PAID (demo gateway) and still need its stock and enrolments.
+    // A released order is terminal and must never be fulfilled.
+    if (locked[0].settled_at || locked[0].released_at) {
+      return { outcome: "already-finalized" as const, created: [] };
+    }
+
+    if (args.paymentId) {
+      const verifiedAt = new Date().toISOString();
+      await tx.query(
+        `UPDATE payments
+            SET status = 'paid',
+                gateway_transaction_id = COALESCE($2, gateway_transaction_id),
+                authority = COALESCE($3, authority),
+                verified_at = $4,
+                payload = COALESCE(payload, '{}'::jsonb) || $5::jsonb
+          WHERE id = $1`,
+        [
+          args.paymentId,
+          args.refId ?? null,
+          args.authority ?? null,
+          verifiedAt,
+          JSON.stringify({ status: "paid", gatewayTransactionId: args.refId ?? null, verifiedAt }),
+        ],
+      );
+    }
+
+    await tx.query(
+      `UPDATE orders
+          SET status = $2, ref_id = COALESCE($3, ref_id), updated_at = now(),
+              payload = payload || $4::jsonb
+        WHERE id = $1`,
+      [args.orderId, paidLabel, args.refId ?? null, JSON.stringify({ status: paidLabel, refId: args.refId ?? null })],
+    );
+
+    // Inventory and seats: reservation → real decrement.
+    for (const line of args.lines) {
+      if (line.kind === "class") await settleClassSeat(tx, line.slug);
+    }
+    for (const { slug, qty } of reservableProducts(args.lines)) {
+      await settleProductStock(tx, slug, qty);
+    }
+
+    const created: { id: string; courseSlug: string }[] = [];
+    for (const courseSlug of args.courseSlugs ?? []) {
+      if (!args.userId) break;
+      const id = args.newEnrollmentId ? args.newEnrollmentId(courseSlug) : `en-${courseSlug}-${args.orderId}`;
+      const payload = {
+        id,
+        userId: args.userId,
+        courseSlug,
+        orderId: args.orderId,
+        createdAt: args.today ?? new Date().toISOString(),
+        completed: [],
+      };
+      const inserted = await tx.query<{ id: string }>(
+        `INSERT INTO enrollments (id, user_id, course_slug, order_id, payload)
+         VALUES ($1, $2, $3, $4, $5::jsonb)
+         ON CONFLICT (user_id, course_slug) DO NOTHING
+         RETURNING id`,
+        [id, args.userId, courseSlug, args.orderId, JSON.stringify(payload)],
+      );
+      if (inserted.length > 0) created.push({ id, courseSlug });
+    }
+
+    const settledAt = new Date().toISOString();
+    await tx.query(
+      `UPDATE orders
+          SET settled_at = $2, released_at = NULL, updated_at = now(),
+              payload = payload || $3::jsonb
+        WHERE id = $1`,
+      [args.orderId, settledAt, JSON.stringify({ settledAt })],
+    );
+
+    return { outcome: "finalized" as const, created };
+  });
+}
+
 /* --------------------------------------------------- payments / orders / ACL */
 
 function isUniqueViolation(error: unknown): boolean {
