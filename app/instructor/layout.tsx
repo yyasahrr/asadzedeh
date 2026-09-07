@@ -4,7 +4,7 @@ import { GraduationCap, LogOut, ShieldCheck } from "lucide-react";
 import { SideNav } from "@/components/dashboard/SideNav";
 import { LogoMark } from "@/components/Logo";
 import { getSessionUser, isStaff, needsMfa } from "@/lib/auth";
-import { getCourses, getInstructorByUser, getSubmissions } from "@/lib/store";
+import { getCourseRequests, getCourses, getInstructorByUser, getSubmissions } from "@/lib/store";
 import { toFa } from "@/lib/format";
 import { logout } from "@/app/auth/actions";
 
@@ -36,10 +36,12 @@ export default async function InstructorLayout({ children }: { children: React.R
   const myCourses = getCourses().filter((c) => c.instructorSlug === inst.slug);
   const titles = new Set(myCourses.flatMap((c) => [c.title, c.shortTitle]));
   const pending = getSubmissions().filter((s) => titles.has(s.course) && s.status === "در حال بررسی").length;
+  const pendingRequests = getCourseRequests().filter((r) => r.instructorUserId === user.id && r.status === "در انتظار بررسی").length;
 
   const items = [
     { href: "/instructor", label: "پیشخوان", icon: "dashboard" },
     { href: "/instructor/courses", label: "دوره‌های من", icon: "courses", badge: toFa(myCourses.length) },
+    { href: "/instructor/course-requests", label: "درخواست دوره جدید", icon: "courses", badge: pendingRequests ? toFa(pendingRequests) : undefined },
     { href: "/instructor/students", label: "هنرجویان و تمرین‌ها", icon: "students", badge: pending ? toFa(pending) : undefined },
     { href: "/instructor/earnings", label: "درآمد", icon: "payments" },
     { href: "/instructor/profile", label: "پروفایل عمومی", icon: "profile" },

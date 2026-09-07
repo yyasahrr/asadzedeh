@@ -1,6 +1,9 @@
 import type { SessionUser } from "./auth";
 import { can } from "./auth";
-import { getClasses, getCourses, getEnrollment, getInstructorByUser, getOrders } from "./store";
+import { audit } from "./audit";
+import { createSpotLicense } from "./spotplayer";
+import { faToday } from "./format";
+import { getClasses, getCourses, getCourse, getEnrollment, getEnrollments, getInstructorByUser, getLearningPath, getOrders, getUserById, writeDb } from "./store";
 import type { InPersonClass, Lesson, OnlineCourse, VideoAsset } from "./types";
 
 /**
@@ -124,4 +127,71 @@ export function isEnrolled(user: SessionUser | null, courseSlug: string): boolea
     if (inst && course?.instructorSlug === inst.slug) return true;
   }
   return !!getEnrollment(user.id, courseSlug);
+}
+
+/**
+ * Internal service: Create enrollments (and SpotPlayer licenses) for the course lines of a paid order.
+ * Also handles learning_path lines by enrolling in all courses within the path.
+ * This is NOT a public server action — it must only be called after payment verification.
+ * Idempotent: will not create duplicate enrollments.
+ */
+export async function grantAccessForOrder(orderId: string) {
+  const order = getOrders().find((o) => o.id === orderId);
+  if (!order?.userId || !order.lines) return;
+
+  // Verify order is actually paid
+  if (order.status !== "پرداخت شده") return;
+
+  const user = getUserById(order.userId);
+  if (!user) return;
+
+  const enrollments = getEnrollments();
+  const courseSlugsToEnroll: string[] = [];
+
+  for (const line of order.lines) {
+    if (line.kind === "course") {
+      courseSlugsToEnroll.push(line.slug);
+    } else if (line.kind === "learning_path") {
+      // Enroll in all courses within the learning path
+      const path = getLearningPath(line.slug);
+      if (path) {
+        for (const pc of path.pathCourses) {
+          if (!courseSlugsToEnroll.includes(pc.courseSlug)) {
+            courseSlugsToEnroll.push(pc.courseSlug);
+          }
+        }
+      }
+    }
+  }
+
+  for (const courseSlug of courseSlugsToEnroll) {
+    // Idempotency: skip if already enrolled
+    if (enrollments.some((e) => e.userId === user.id && e.courseSlug === courseSlug)) continue;
+
+    const course = getCourse(courseSlug);
+    const enrollment = {
+      id: `en-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
+      userId: user.id,
+      courseSlug,
+      orderId,
+      createdAt: faToday(),
+      completed: [] as string[],
+    };
+    enrollments.push(enrollment);
+    if (course?.protection?.spotPlayer) {
+      const r = await createSpotLicense({ name: user.name, phone: user.phone, courseIds: course.protection.spotPlayerCourseIds, payload: orderId });
+      if (r.ok) {
+        enrollments[enrollments.length - 1] = { ...enrollment, spotLicense: r.license };
+        await audit({ action: "spotplayer.license", actor: { id: user.id, name: user.name, role: user.role }, target: `course:${courseSlug}`, detail: { licenseId: r.license.id } });
+      } else {
+        await audit({ action: "spotplayer.error", level: "error", target: `course:${courseSlug}`, detail: { error: r.error, orderId } });
+      }
+    }
+  }
+  writeDb({
+    enrollments,
+    courses: getCourses().map((c) =>
+      courseSlugsToEnroll.includes(c.slug) ? { ...c, students: c.students + 1 } : c
+    ),
+  });
 }

@@ -60,6 +60,7 @@ export default async function ClassDetailPage({
   const { comment } = await searchParams;
   const cls = getClass(slug);
   if (!cls) notFound();
+  const effectiveFaqs = cls.faq?.length ? cls.faq : faqs;
 
   const user = await getSessionUser();
   const alreadyOwned = hasPaidClassAccess(user, slug);
@@ -87,7 +88,7 @@ export default async function ClassDetailPage({
   const faqLd = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: faqs.map((f) => ({
+    mainEntity: effectiveFaqs.map((f) => ({
       "@type": "Question",
       name: f.q,
       acceptedAnswer: { "@type": "Answer", text: f.a },

@@ -4,7 +4,7 @@ import { LogOut, ShieldAlert, ShieldCheck } from "lucide-react";
 import { SideNav } from "@/components/dashboard/SideNav";
 import { LogoMark } from "@/components/Logo";
 import { getSessionUser, can, isStaff, needsMfa, roleLabels, type Permission } from "@/lib/auth";
-import { getComments, getOrders, getPreorders, getSubmissions, getVideos } from "@/lib/store";
+import { getComments, getCourseRequests, getOrders, getPreorders, getSubmissions, getTickets, getVideos } from "@/lib/store";
 import { toFa } from "@/lib/format";
 import { logout } from "@/app/auth/actions";
 
@@ -41,9 +41,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const pendingOrders = getOrders().filter((o) => o.status === "در انتظار پرداخت").length;
   const processingVideos = getVideos().filter((v) => v.status === "processing").length;
   const openPreorders = getPreorders().filter((p) => p.status === "ثبت شده" || p.status === "در انتظار بیعانه").length;
+  const openTickets = getTickets().filter((t) => t.status === "باز" || t.status === "در حال بررسی").length;
+  const pendingCourseRequests = getCourseRequests().filter((r) => r.status === "در انتظار بررسی").length;
 
   const items = [
     { href: "/admin", label: "نمای کلی", icon: "dashboard" },
+    { href: "/admin/course-requests", label: "درخواست‌های دوره", icon: "courses", perm: "courses", badge: pendingCourseRequests ? toFa(pendingCourseRequests) : undefined },
     { href: "/admin/courses", label: "دوره‌ها", icon: "courses", perm: "courses" },
     { href: "/admin/classes", label: "کلاس‌های حضوری", icon: "classes", perm: "classes" },
     { href: "/admin/videos", label: "ویدیوها و امنیت پخش", icon: "videos", perm: "videos", badge: processingVideos ? toFa(processingVideos) : undefined },
@@ -56,7 +59,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     { href: "/admin/comments", label: "نظرات", icon: "comments", perm: "comments", badge: pendingComments ? toFa(pendingComments) : undefined },
     { href: "/admin/students", label: "هنرجویان", icon: "students", perm: "students" },
     { href: "/admin/enrollments", label: "اعضای دوره‌ها", icon: "enrollments", perm: "orders" },
+    { href: "/admin/learning-paths", label: "مسیرهای آموزشی", icon: "paths", perm: "courses" },
     { href: "/admin/orders", label: "سفارش‌ها", icon: "orders", perm: "orders", badge: pendingOrders ? toFa(pendingOrders) : undefined },
+    { href: "/admin/support", label: "تیکت‌های پشتیبانی", icon: "support", perm: "orders", badge: openTickets ? toFa(openTickets) : undefined },
     { href: "/admin/submissions", label: "تمرین‌ها", icon: "assignments", perm: "submissions", badge: pendingSubs ? toFa(pendingSubs) : undefined },
     { href: "/admin/certificates", label: "گواهی‌ها", icon: "certificates", perm: "certificates" },
     { href: "/admin/notify", label: "پیامک و ایمیل", icon: "notify", perm: "notify" },
@@ -65,6 +70,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     { href: "/admin/users", label: "کاربران و دسترسی", icon: "profile", perm: "users" },
     { href: "/admin/security", label: "امنیت پنل", icon: "security", perm: "security" },
     { href: "/admin/settings", label: "تنظیمات", icon: "settings", perm: "settings" },
+    { href: "/admin/workshop", label: "نقشه کارگاه", icon: "map", perm: "settings" },
   ].filter((i) => !i.perm || can(user, i.perm as Permission));
 
   return (

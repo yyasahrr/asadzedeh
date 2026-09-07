@@ -1,16 +1,18 @@
 import type { Metadata } from "next";
-import { AlertTriangle, CheckCircle2, Mail, MessageSquareText } from "lucide-react";
+import { AlertTriangle, CheckCircle2, FileText, Mail, MessageSquareText } from "lucide-react";
 import { getSettings } from "@/lib/store";
 import { getSessionUser, can } from "@/lib/auth";
 import { Denied } from "@/components/admin/Denied";
 import { FieldLabel, Input, Select } from "@/components/ui/Input";
-import { resetDemoData, saveEmailSettings, saveSmsSettings } from "../actions";
+import { resetDemoData, saveEmailSettings, saveLegalSettings, saveSmsSettings } from "../actions";
+import { LegalSettingsManager } from "@/components/admin/LegalSettingsManager";
 
 export const metadata: Metadata = { title: "تنظیمات" };
 
 const savedMessages: Record<string, string> = {
   sms: "تنظیمات پیامک ذخیره شد.",
   email: "تنظیمات ایمیل ذخیره شد.",
+  legal: "تنظیمات صفحات حقوقی ذخیره شد.",
   reset: "داده نمایشی ریست شد و به حالت اولیه برگشت.",
 };
 
@@ -91,6 +93,22 @@ export default async function SettingsPage({
         </div>
         <button type="submit" className="mt-4 inline-flex h-11 cursor-pointer items-center rounded-xl bg-navy-800 px-8 font-bold text-white transition-colors hover:bg-navy-700">
           ذخیره تنظیمات ایمیل
+        </button>
+      </form>
+
+      <form action={saveLegalSettings} className="rounded-2xl bg-card p-6 shadow-card ring-1 ring-ink-900/5">
+        <h2 className="flex items-center gap-2 font-extrabold text-navy-900">
+          <FileText className="h-5 w-5 text-moss-600" />
+          صفحات حقوقی
+        </h2>
+        <p className="mt-2 text-sm text-ink-600">
+          محتوای صفحات قوانین و مقررات، حریم خصوصی و قوانین استفاده را اینجا ویرایش کنید.
+        </p>
+        <div className="mt-4">
+          <LegalSettingsManager initialPages={settings.legal?.pages ?? []} />
+        </div>
+        <button type="submit" className="mt-4 inline-flex h-11 cursor-pointer items-center rounded-xl bg-navy-800 px-8 font-bold text-white transition-colors hover:bg-navy-700">
+          ذخیره تنظیمات صفحات حقوقی
         </button>
       </form>
 

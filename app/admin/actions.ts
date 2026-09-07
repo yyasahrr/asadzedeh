@@ -4,12 +4,13 @@ import fs from "node:fs";
 import path from "node:path";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { faToday, parsePrice } from "@/lib/format";
+import { faToday, parsePrice, slugify } from "@/lib/format";
 import { can, getSessionUser, hashPassword, type Permission, type SessionUser } from "@/lib/auth";
 import { audit } from "@/lib/audit";
 import { sendEmail, sendSms } from "@/lib/notify";
 import { deleteVideoFiles, resetFfmpegCache, transcodeToHls } from "@/lib/video";
-import { createSpotLicense } from "@/lib/spotplayer";
+import { clampText } from "@/lib/validation";
+import { grantAccessForOrder } from "@/lib/access";
 import {
   getArticle,
   getArticles,
@@ -20,9 +21,10 @@ import {
   getComments,
   getCourse,
   getCourses,
-  getEnrollments,
   getInstructor,
   getInstructors,
+  getLearningPath,
+  getLearningPaths,
   getOrders,
   getPreorders,
   getProduct,
@@ -43,6 +45,7 @@ import type {
   Chapter,
   CourseProtection,
   Instructor,
+  LearningPath,
   Lesson,
   LessonAttachment,
   PreorderStatus,
@@ -107,17 +110,17 @@ function newSlug(prefix: string): string {
   return `${prefix}-${Date.now().toString(36)}`;
 }
 
-function slugify(input: string, prefix: string): string {
+function slugifyLocal(input: string, prefix: string): string {
   const s = input
     .toLowerCase()
     .replace(/[^a-z0-9\u0600-\u06FF]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .slice(0, 60);
-  return /^[a-z0-9-]+$/.test(s) && s.length >= 3 ? s : newSlug(prefix);
+  return /^[a-z0-9\u0600-\u06FF-]+$/.test(s) && s.length >= 3 ? s : `${prefix}-${Date.now().toString(36)}`;
 }
 
 function revalidateAll() {
-  ["/", "/courses", "/classes", "/blog", "/paths", "/instructors", "/shop", "/admin", "/dashboard", "/instructor"].forEach((p) =>
+  ["/", "/courses", "/classes", "/blog", "/paths", "/instructors", "/shop", "/admin", "/admin/learning-paths", "/dashboard", "/instructor"].forEach((p) =>
     revalidatePath(p, "page")
   );
 }
@@ -724,13 +727,13 @@ export async function createInstructor(fd: FormData) {
   const name = str(fd, "name");
   if (!name) return;
   const instructors = getInstructors();
-  const slug = uniqueSlug(slugify(str(fd, "slug") || name, "inst"), (s) => instructors.some((i) => i.slug === s));
+  const slug = uniqueSlug(slugifyLocal(str(fd, "slug") || name, "inst"), (s) => instructors.some((i) => i.slug === s));
   const phone = str(fd, "phone");
   const password = str(fd, "password");
   let userId: string | undefined;
 
   // Optionally create a login account with the "instructor" role.
-  if (phone && password.length >= 6) {
+  if (phone && password.length >= 10) {
     const existing = getUserByPhone(phone);
     if (existing) {
       if (existing.role === "student") {
@@ -785,7 +788,7 @@ export async function updateInstructor(fd: FormData) {
     if (existing) {
       userId = existing.id;
       if (existing.role === "student") writeDb({ users: getUsers().map((u) => (u.id === existing.id ? { ...u, role: "instructor" } : u)) });
-    } else if (password.length >= 6) {
+    } else if (password.length >= 10) {
       const users = getUsers();
       userId = `u-${Date.now().toString(36)}`;
       users.push({ id: userId, name: str(fd, "name") || prev.name, phone, passwordHash: hashPassword(password), role: "instructor", createdAt: faToday() });
@@ -891,7 +894,7 @@ export async function createProduct(fd: FormData) {
   const data = parseProduct(fd);
   if (!data.title) return;
   const products = getProducts();
-  const slug = uniqueSlug(slugify(str(fd, "slug") || data.title, "p"), (s) => products.some((p) => p.slug === s));
+  const slug = uniqueSlug(slugifyLocal(str(fd, "slug") || data.title, "p"), (s) => products.some((p) => p.slug === s));
   products.unshift({ ...data, slug, createdAt: faToday(), sold: 0 });
   writeDb({ products });
   await audit({ action: "product.create", actor: actor(me), target: `product:${slug}`, detail: { title: data.title, price: data.price, stock: data.stock } });
@@ -948,7 +951,7 @@ export async function saveShopSettings(fd: FormData) {
   const newLabel = str(fd, "new_label");
   if (newLabel) {
     methods.push({
-      id: slugify(str(fd, "new_id") || newLabel, "ship"),
+      id: slugifyLocal(str(fd, "new_id") || newLabel, "ship"),
       label: newLabel,
       description: str(fd, "new_desc"),
       cost: numAllowZero(fd, "new_cost", 0),
@@ -1071,41 +1074,11 @@ export async function updateOrderStatus(fd: FormData) {
 }
 
 /** Create enrollments (and SpotPlayer licenses) for the course lines of a paid order. */
-export async function grantAccessForOrder(orderId: string) {
-  const order = getOrders().find((o) => o.id === orderId);
-  if (!order?.userId || !order.lines) return;
-  const user = getUserById(order.userId);
-  if (!user) return;
-  const enrollments = getEnrollments();
-  for (const line of order.lines) {
-    if (line.kind !== "course") continue;
-    if (enrollments.some((e) => e.userId === user.id && e.courseSlug === line.slug)) continue;
-    const course = getCourse(line.slug);
-    const enrollment = {
-      id: `en-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
-      userId: user.id,
-      courseSlug: line.slug,
-      orderId,
-      createdAt: faToday(),
-      completed: [] as string[],
-    };
-    enrollments.push(enrollment);
-    if (course?.protection?.spotPlayer) {
-      const r = await createSpotLicense({ name: user.name, phone: user.phone, courseIds: course.protection.spotPlayerCourseIds, payload: orderId });
-      if (r.ok) {
-        enrollments[enrollments.length - 1] = { ...enrollment, spotLicense: r.license };
-        await audit({ action: "spotplayer.license", actor: { id: user.id, name: user.name, role: user.role }, target: `course:${line.slug}`, detail: { licenseId: r.license.id } });
-      } else {
-        await audit({ action: "spotplayer.error", level: "error", target: `course:${line.slug}`, detail: { error: r.error, orderId } });
-      }
-    }
-  }
-  writeDb({
-    enrollments,
-    courses: getCourses().map((c) =>
-      order.lines!.some((l) => l.kind === "course" && l.slug === c.slug) ? { ...c, students: c.students + 1 } : c
-    ),
-  });
+export async function grantAccessForOrderAction(orderId: string) {
+  await staff("orders");
+  await grantAccessForOrder(orderId);
+  revalidatePath("/admin/orders");
+  revalidatePath("/admin/enrollments");
 }
 
 /* ---------- certificates ---------- */
@@ -1222,6 +1195,21 @@ export async function deleteComment(fd: FormData) {
   const id = str(fd, "id");
   writeDb({ comments: getComments().filter((c) => c.id !== id) });
   await audit({ action: "content.update", level: "warn", actor: actor(me), target: `comment:${id}`, detail: { deleted: true } });
+  revalidateAll();
+  redirect("/admin/comments");
+}
+
+export async function replyComment(fd: FormData) {
+  const me = await staff("comments");
+  const id = str(fd, "id");
+  const reply = clampText(str(fd, "reply"), 1000);
+  if (!reply) redirect("/admin/comments?error=" + encodeURIComponent("پاسخ خالی است"));
+  writeDb({
+    comments: getComments().map((c) =>
+      c.id === id ? { ...c, reply, replyDate: faToday() } : c
+    ),
+  });
+  await audit({ action: "content.update", actor: actor(me), target: `comment:${id}`, detail: { replied: true } });
   revalidateAll();
   redirect("/admin/comments");
 }
@@ -1344,7 +1332,7 @@ export async function addStaff(fd: FormData) {
   const phone = str(fd, "phone");
   const password = str(fd, "password");
   const role = str(fd, "role") as "manager" | "editor" | "support" | "instructor";
-  if (!name || !phone || password.length < 6 || !["manager", "editor", "support", "instructor"].includes(role)) return;
+  if (!name || !phone || password.length < 10 || !["manager", "editor", "support", "instructor"].includes(role)) return;
   if (getUserByPhone(phone)) redirect("/admin/users?error=dup");
   const users = getUsers();
   const id = `u-${Date.now().toString(36)}`;
@@ -1498,6 +1486,30 @@ export async function saveEmailSettings(fd: FormData) {
   redirect("/admin/settings?saved=email");
 }
 
+export async function saveLegalSettings(fd: FormData) {
+  const me = await staff("settings");
+  const s = getSettings();
+  const slugs = ["terms", "privacy", "rules"];
+  const pages = slugs.map((slug) => ({
+    slug,
+    title: str(fd, `legal-${slug}-title`) || (slug === "terms" ? "قوانین و مقررات" : slug === "privacy" ? "حریم خصوصی" : "قوانین استفاده"),
+    content: str(fd, `legal-${slug}-content`),
+    lastUpdated: faToday(),
+  }));
+  writeDb({
+    settings: {
+      ...s,
+      legal: { pages },
+    },
+  });
+  await audit({ action: "settings.update", actor: actor(me), detail: { section: "legal" } });
+  revalidatePath("/admin/settings");
+  revalidatePath("/terms");
+  revalidatePath("/privacy");
+  revalidatePath("/rules");
+  redirect("/admin/settings?saved=legal");
+}
+
 export async function savePaymentSettings(fd: FormData) {
   const me = await staff("payments");
   const s = getSettings();
@@ -1547,4 +1559,114 @@ export async function resetDemoData() {
   resetDb();
   revalidateAll();
   redirect("/admin/settings?saved=reset");
+}
+
+/* ---------- learning paths ---------- */
+
+function parsePathCourses(fd: FormData): { courseSlug: string; order: number; note?: string }[] {
+  const raw = str(fd, "pathCourses");
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) {
+      throw new Error("pathCourses باید یک آرایه باشد");
+    }
+    return parsed
+      .map((item, index) => ({
+        courseSlug: typeof item?.courseSlug === "string" ? item.courseSlug.trim() : "",
+        order: typeof item?.order === "number" ? item.order : index + 1,
+        note: typeof item?.note === "string" ? item.note.slice(0, 200) : undefined,
+      }))
+      .filter((item) => item.courseSlug.length > 0);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "ساختار دوره‌های مسیر نامعتبر است";
+    redirect("/admin/learning-paths/new?error=" + encodeURIComponent(message));
+  }
+}
+
+export async function createLearningPath(fd: FormData) {
+  const me = await staff("courses");
+  const title = str(fd, "title");
+  if (!title) redirect("/admin/learning-paths/new");
+  const slug = str(fd, "slug") || slugify(title);
+  if (!slug) redirect("/admin/learning-paths/new?error=" + encodeURIComponent("عنوان باید شامل حرف یا عدد باشد"));
+  if (getLearningPath(slug)) redirect(`/admin/learning-paths/new?error=${encodeURIComponent("slug تکراری است")}`);
+  const pathCourses = parsePathCourses(fd);
+  const pricingMode = (str(fd, "pricingMode") || "FIXED") as "FIXED" | "PERCENTAGE";
+  const path: LearningPath = {
+    id: `lp-${Date.now().toString(36)}`,
+    slug,
+    title,
+    shortDescription: str(fd, "shortDescription") || undefined,
+    description: str(fd, "description"),
+    image: str(fd, "image") || undefined,
+    icon: str(fd, "icon") || "📚",
+    accent: (str(fd, "accent") as LearningPath["accent"]) || "navy",
+    level: (str(fd, "level") as LearningPath["level"]) || undefined,
+    duration: str(fd, "duration"),
+    steps: pathCourses.length,
+    courses: pathCourses.length,
+    pathCourses,
+    active: bool(fd, "active"),
+    status: (str(fd, "status") || "published") as "draft" | "published",
+    featured: bool(fd, "featured"),
+    pricingMode,
+    fixedPrice: pricingMode === "FIXED" ? numAllowZero(fd, "fixedPrice", 0) || undefined : undefined,
+    discountPercentage: pricingMode === "PERCENTAGE" ? numAllowZero(fd, "discountPercentage", 0) || undefined : undefined,
+    createdAt: faToday(),
+    updatedAt: faToday(),
+  };
+  writeDb({ learningPaths: [...getLearningPaths(), path] });
+  await audit({ action: "learningPath.create", actor: actor(me), target: `learningPath:${slug}`, detail: { title } });
+  revalidateAll();
+  redirect("/admin/learning-paths");
+}
+
+export async function updateLearningPath(fd: FormData) {
+  const me = await staff("courses");
+  const slug = str(fd, "slug");
+  if (!slug) return;
+  const title = str(fd, "title");
+  const pathCourses = parsePathCourses(fd);
+  const pricingMode = (str(fd, "pricingMode") || "FIXED") as "FIXED" | "PERCENTAGE";
+  writeDb({
+    learningPaths: getLearningPaths().map((p) =>
+      p.slug === slug
+        ? {
+            ...p,
+            title: title || p.title,
+            shortDescription: str(fd, "shortDescription") || p.shortDescription,
+            description: str(fd, "description") || p.description,
+            image: str(fd, "image") || p.image,
+            icon: str(fd, "icon") || p.icon,
+            accent: (str(fd, "accent") as LearningPath["accent"]) || p.accent,
+            level: (str(fd, "level") as LearningPath["level"]) || p.level,
+            duration: str(fd, "duration") || p.duration,
+            steps: pathCourses.length,
+            courses: pathCourses.length,
+            pathCourses,
+            active: bool(fd, "active"),
+            status: (str(fd, "status") || p.status || "published") as "draft" | "published",
+            featured: bool(fd, "featured"),
+            pricingMode,
+            fixedPrice: pricingMode === "FIXED" ? numAllowZero(fd, "fixedPrice", 0) || undefined : undefined,
+            discountPercentage: pricingMode === "PERCENTAGE" ? numAllowZero(fd, "discountPercentage", 0) || undefined : undefined,
+            updatedAt: faToday(),
+          }
+        : p
+    ),
+  });
+  await audit({ action: "learningPath.update", actor: actor(me), target: `learningPath:${slug}`, detail: { title } });
+  revalidateAll();
+  redirect("/admin/learning-paths");
+}
+
+export async function deleteLearningPath(fd: FormData) {
+  const me = await staff("courses");
+  const slug = str(fd, "slug");
+  if (!slug) return;
+  writeDb({ learningPaths: getLearningPaths().filter((p) => p.slug !== slug) });
+  await audit({ action: "learningPath.delete", level: "warn", actor: actor(me), target: `learningPath:${slug}` });
+  revalidateAll();
+  redirect("/admin/learning-paths");
 }

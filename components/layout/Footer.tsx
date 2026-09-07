@@ -131,9 +131,9 @@ export async function Footer() {
         <div className="mt-8 flex flex-col items-center justify-between gap-3 border-t border-white/10 pt-6 text-xs text-white/50 sm:flex-row">
           <p>© ۱۴۰۵ {site.siteName} — تمام حقوق محفوظ است.</p>
           <div className="flex items-center gap-4">
-            <Link href="#" className="transition-colors hover:text-white">قوانین و مقررات</Link>
-            <Link href="#" className="transition-colors hover:text-white">حریم خصوصی</Link>
-            <Link href="#" className="transition-colors hover:text-white">پشتیبانی</Link>
+            <Link href="/terms" className="transition-colors hover:text-white">قوانین و مقررات</Link>
+            <Link href="/privacy" className="transition-colors hover:text-white">حریم خصوصی</Link>
+            <Link href="/support" className="transition-colors hover:text-white">پشتیبانی</Link>
           </div>
         </div>
       </div>

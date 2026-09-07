@@ -13,9 +13,11 @@ import {
   FileText,
   GraduationCap,
   Hammer,
+  Headphones,
   Images,
   LayoutDashboard,
   LayoutTemplate,
+  MapPinned,
   MessageSquareText,
   Package,
   ReceiptText,
@@ -55,6 +57,8 @@ const iconMap: Record<string, LucideIcon> = {
   audit: ScrollText,
   security: ShieldCheck,
   earnings: Wallet,
+  support: Headphones,
+  map: MapPinned,
 };
 
 export interface NavItem {

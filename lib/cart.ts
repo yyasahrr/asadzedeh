@@ -1,6 +1,6 @@
 /** Client-side cart (localStorage). Emits `az:cart` event on change. */
 
-export type CartKind = "course" | "class" | "product";
+export type CartKind = "course" | "class" | "product" | "learning_path";
 
 export interface CartItem {
   kind: CartKind;
@@ -9,7 +9,7 @@ export interface CartItem {
   price: number;
   image: string;
   meta?: string;
-  /** Quantity (products only; courses/classes are always 1). */
+  /** Quantity (products only; courses/classes/paths are always 1). */
   qty?: number;
   /** Max purchasable quantity (stock) for products. */
   maxQty?: number;

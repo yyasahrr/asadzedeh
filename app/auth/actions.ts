@@ -17,6 +17,7 @@ import {
 } from "@/lib/auth";
 import { audit, requestContext } from "@/lib/audit";
 import { openSecret, verifyTotp } from "@/lib/totp";
+import { safeNextPath } from "@/lib/auth-navigation";
 import { getSettings, getUserById, getUserByPhone, getUsers, getSessions, writeDb } from "@/lib/store";
 import type { User } from "@/lib/types";
 
@@ -66,7 +67,7 @@ export async function register(fd: FormData) {
   const name = String(fd.get("name") ?? "").trim();
   const phone = normalizePhone(String(fd.get("phone") ?? ""));
   const password = String(fd.get("password") ?? "");
-  if (!name || !/^09\d{9}$/.test(phone) || password.length < 6) {
+  if (!name || !/^09\d{9}$/.test(phone) || password.length < 10) {
     redirect("/auth?tab=register&error=validation");
   }
   if (getUserByPhone(phone)) {
@@ -135,7 +136,7 @@ export async function login(fd: FormData) {
 
   await createSession(user, false);
   await audit({ action: "auth.login", actor: { id: user.id, name: user.name, role: user.role } });
-  redirect(next && next.startsWith("/") ? next : homeFor(user));
+  redirect(safeNextPath(next, homeFor(user)));
 }
 
 /** Step 2: TOTP or recovery code. */
@@ -176,7 +177,7 @@ export async function verifyMfa(fd: FormData) {
   await createSession(user, true);
   await audit({ action: "auth.2fa.verified", level: "security", actor: { id: user.id, name: user.name, role: user.role } });
   await audit({ action: "auth.login", actor: { id: user.id, name: user.name, role: user.role } });
-  redirect(payload.next && payload.next.startsWith("/") ? payload.next : homeFor(user));
+  redirect(safeNextPath(payload.next, homeFor(user)));
 }
 
 /** Re-verify TOTP for an already logged-in staff session (e.g. enabled 2FA after login). */

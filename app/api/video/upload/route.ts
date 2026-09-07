@@ -75,11 +75,22 @@ export async function POST(req: Request) {
     const body = (await req.json()) as { uploadId?: string; total?: number; name?: string; type?: string; title?: string };
     const uploadId = String(body.uploadId ?? "");
     const total = Number(body.total ?? 0);
-    if (!/^v-[a-z0-9-]+$/i.test(uploadId) || !total) return json({ error: "پارامتر نامعتبر" }, 400);
+    const maxChunks = Math.ceil(MAX_VIDEO_BYTES / CHUNK_SIZE);
+    if (
+      !/^v-[a-z0-9-]+$/i.test(uploadId) ||
+      !Number.isInteger(total) ||
+      total < 1 ||
+      total > maxChunks
+    ) {
+      return json({ error: "پارامتر نامعتبر" }, 400);
+    }
     for (let i = 0; i < total; i++) {
       if (!fs.existsSync(chunkPath(uploadId, i))) return json({ error: `قطعه ${i + 1} دریافت نشده؛ دوباره تلاش کنید`, missing: i }, 409);
     }
-    const ext = path.extname(String(body.name ?? "video.mp4")).slice(1) || "mp4";
+    const ext = path.extname(String(body.name ?? "video.mp4")).slice(1).toLowerCase() || "mp4";
+    if (!["mp4", "mov", "webm", "mkv", "avi", "m4v"].includes(ext)) {
+      return json({ error: "پسوند ویدیو پشتیبانی نمی‌شود" }, 400);
+    }
     const { rel, size } = assembleChunks(uploadId, total, ext);
     const durationSec = await probeDuration(videoAbsPath(rel));
     const video: VideoAsset = {

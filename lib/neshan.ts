@@ -1,4 +1,5 @@
 import "server-only";
+import { getSettings } from "./store";
 
 export const WORKSHOP_ADDRESS =
   "ارومیه، خیابان امام، خیابان عطایی، کوی دی (نجارخانه)، آموزشگاه اسدزاده";
@@ -7,7 +8,7 @@ export interface WorkshopMapLocation {
   lat: number;
   lng: number;
   address: string;
-  source: "neshan" | "environment";
+  source: "neshan" | "environment" | "settings";
 }
 
 interface NeshanSearchResponse {
@@ -26,6 +27,17 @@ function environmentLocation(): WorkshopMapLocation | null {
 }
 
 export async function getWorkshopMapLocation(): Promise<WorkshopMapLocation | null> {
+  const settings = getSettings();
+  const workshop = settings.site.workshop;
+  if (workshop && Number.isFinite(workshop.lat) && Number.isFinite(workshop.lng) && workshop.lat !== 0 && workshop.lng !== 0) {
+    return {
+      lat: workshop.lat,
+      lng: workshop.lng,
+      address: workshop.address || WORKSHOP_ADDRESS,
+      source: "settings",
+    };
+  }
+
   const serviceKey = process.env.NESHAN_SERVICE_API_KEY;
   if (!serviceKey) return environmentLocation();
 

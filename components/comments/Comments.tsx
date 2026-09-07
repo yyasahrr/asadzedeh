@@ -1,4 +1,4 @@
-import { CheckCircle2, MessageCircleQuestion } from "lucide-react";
+import { CheckCircle2, MessageCircleQuestion, Reply } from "lucide-react";
 import { getApprovedComments } from "@/lib/store";
 import { submitComment } from "@/app/actions";
 import { FieldLabel, Input, Textarea } from "../ui/Input";
@@ -35,11 +35,22 @@ export function Comments({
       ) : (
         <ul className="mt-4 space-y-3">
           {comments.map((c) => (
-            <li key={c.id} className="rounded-xl bg-sand-50 px-4 py-3.5 ring-1 ring-ink-900/5">
-              <p className="text-sm font-extrabold text-navy-900">
-                {c.name} <span className="ms-2 font-semibold text-ink-400">{c.date}</span>
-              </p>
-              <p className="mt-1.5 text-[15px] leading-8 text-ink-700">{c.text}</p>
+            <li key={c.id} className="space-y-2">
+              <div className="rounded-xl bg-sand-50 px-4 py-3.5 ring-1 ring-ink-900/5">
+                <p className="text-sm font-extrabold text-navy-900">
+                  {c.name} <span className="ms-2 font-semibold text-ink-400">{c.date}</span>
+                </p>
+                <p className="mt-1.5 text-[15px] leading-8 text-ink-700">{c.text}</p>
+              </div>
+              {c.reply && (
+                <div className="mr-6 rounded-xl bg-teal-50 px-4 py-3 ring-1 ring-teal-600/15">
+                  <p className="flex items-center gap-1.5 text-xs font-bold text-teal-700">
+                    <Reply className="h-3.5 w-3.5" /> پاسخ مدیریت
+                    {c.replyDate && <span className="font-normal text-ink-400">{c.replyDate}</span>}
+                  </p>
+                  <p className="mt-1.5 text-sm leading-7 text-ink-700">{c.reply}</p>
+                </div>
+              )}
             </li>
           ))}
         </ul>

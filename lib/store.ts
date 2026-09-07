@@ -5,9 +5,11 @@ import type {
   AuditEntry,
   Certificate,
   Comment,
+  CourseRequest,
   Enrollment,
   InPersonClass,
   Instructor,
+  LearningPath,
   NotifyLog,
   OnlineCourse,
   Order,
@@ -18,6 +20,7 @@ import type {
   Student,
   Subscriber,
   Submission,
+  Ticket,
   User,
   VideoAsset,
 } from "./types";
@@ -25,6 +28,7 @@ import {
   articles as seedArticles,
   inPersonClasses as seedClasses,
   instructors as seedInstructors,
+  learningPaths as seedLearningPaths,
   onlineCourses as seedCourses,
 } from "./data";
 import {
@@ -67,6 +71,9 @@ export interface Db {
   products: Product[];
   preorders: Preorder[];
   audit: AuditEntry[];
+  learningPaths: LearningPath[];
+  tickets: Ticket[];
+  courseRequests: CourseRequest[];
 }
 
 /**
@@ -121,7 +128,30 @@ function seed(): Db {
     products: seedProducts,
     preorders: [],
     audit: [],
+    learningPaths: seedLearningPaths,
+    tickets: [],
+    courseRequests: [],
   };
+}
+
+function normalizeLearningPath(path: LearningPath): LearningPath {
+  return {
+    ...path,
+    id: path.id || `lp-${path.slug}`,
+    pathCourses: Array.isArray(path.pathCourses) ? path.pathCourses : [],
+    active: typeof path.active === "boolean" ? path.active : true,
+    status: path.status || "published",
+    pricingMode: path.pricingMode || "FIXED",
+    fixedPrice: path.fixedPrice,
+    discountPercentage: path.discountPercentage,
+    createdAt: typeof path.createdAt === "string" && path.createdAt.length > 0 ? path.createdAt : new Date().toISOString(),
+    steps: Array.isArray(path.pathCourses) ? path.pathCourses.length : 0,
+    courses: Array.isArray(path.pathCourses) ? path.pathCourses.length : 0,
+  };
+}
+
+function normalizeLearningPaths(paths: LearningPath[]): LearningPath[] {
+  return paths.map(normalizeLearningPath);
 }
 
 /** Deep-merge settings so newly added setting groups get defaults on old DB files. */
@@ -140,8 +170,9 @@ function mergeSettings(base: Settings, parsed: Partial<Settings> | undefined): S
   return out as unknown as Settings;
 }
 
-/** Make sure seed users that were added later (e.g. instructor demo) exist. */
+/** Ensure seed users exist only in development. Production should use a separate admin creation process. */
 function ensureSeedUsers(users: User[]): User[] {
+  if (process.env.NODE_ENV === "production") return users;
   const known = new Set(users.map((u) => u.id));
   const missing = seedUsers.filter((u) => !known.has(u.id) && !users.some((x) => x.phone === u.phone));
   return missing.length > 0 ? [...users, ...missing] : users;
@@ -157,6 +188,7 @@ function readDb(): Db {
       ...parsed,
       users: ensureSeedUsers(parsed.users ?? base.users),
       settings: mergeSettings(base.settings, parsed.settings),
+      learningPaths: normalizeLearningPaths(parsed.learningPaths ?? base.learningPaths),
     };
   } catch {
     const db = seed();
@@ -258,6 +290,54 @@ export const getPreorder = (id: string): Preorder | undefined =>
 
 /* ---------- Audit ---------- */
 export const getAudit = (): AuditEntry[] => readDb().audit;
+
+/* ---------- Learning Paths ---------- */
+export const getLearningPaths = (): LearningPath[] => readDb().learningPaths;
+export const getLearningPath = (slug: string): LearningPath | undefined =>
+  readDb().learningPaths.find((p) => p.slug === slug);
+export const getActiveLearningPaths = (): LearningPath[] =>
+  readDb().learningPaths.filter((p) => p.active);
+
+/** Calculate the total price of all courses in a learning path */
+export function getLearningPathCoursesTotal(path: LearningPath): number {
+  const courses = getCourses();
+  return path.pathCourses.reduce((sum, pc) => {
+    const course = courses.find((c) => c.slug === pc.courseSlug);
+    return sum + (course?.price ?? 0);
+  }, 0);
+}
+
+/** Calculate the final price of a learning path based on its pricing mode */
+export function getLearningPathFinalPrice(path: LearningPath): number {
+  const total = getLearningPathCoursesTotal(path);
+  if (path.pricingMode === "FIXED" && path.fixedPrice != null) {
+    return Math.max(0, Math.min(path.fixedPrice, total));
+  }
+  if (path.pricingMode === "PERCENTAGE" && path.discountPercentage != null) {
+    const pct = Math.max(0, Math.min(path.discountPercentage, 100));
+    return Math.round(total * (1 - pct / 100));
+  }
+  return total;
+}
+
+/** Calculate discount amount for a learning path */
+export function getLearningPathDiscount(path: LearningPath): number {
+  return Math.max(0, getLearningPathCoursesTotal(path) - getLearningPathFinalPrice(path));
+}
+
+/* ---------- Tickets ---------- */
+export const getTickets = (): Ticket[] => readDb().tickets;
+export const getTicket = (id: string): Ticket | undefined =>
+  readDb().tickets.find((t) => t.id === id);
+export const getTicketsByUser = (userId: string): Ticket[] =>
+  readDb().tickets.filter((t) => t.userId === userId);
+
+/* ---------- Course Requests ---------- */
+export const getCourseRequests = (): CourseRequest[] => readDb().courseRequests;
+export const getCourseRequest = (id: string): CourseRequest | undefined =>
+  readDb().courseRequests.find((r) => r.id === id);
+export const getCourseRequestsByInstructor = (instructorUserId: string): CourseRequest[] =>
+  readDb().courseRequests.filter((r) => r.instructorUserId === instructorUserId);
 
 /* ---------- Misc ---------- */
 export const getSubscribers = (): Subscriber[] => readDb().subscribers;

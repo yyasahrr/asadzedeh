@@ -1,5 +1,6 @@
 "use server";
 
+import crypto from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { audit } from "@/lib/audit";
@@ -8,13 +9,12 @@ import type { CartItem } from "@/lib/cart";
 import { getSessionUser, hashPassword } from "@/lib/auth";
 import { sendSms } from "@/lib/notify";
 import { requestPayment } from "@/lib/payment";
-import { getClasses, getCourses, getEnrollments, getOrders, getProducts, getSettings, getUserByPhone, getUsers, writeDb } from "@/lib/store";
+import { finalizePaidOrder, releaseOrder } from "@/lib/order-payment";
+import { getClasses, getCourses, getEnrollments, getLearningPath, getLearningPathFinalPrice, getOrders, getProducts, getSettings, getUserByPhone, getUsers, writeDb } from "@/lib/store";
 import type { OrderLine, ShippingInfo, User } from "@/lib/types";
-import { grantAccessForOrder } from "@/app/admin/actions";
 
 function nextOrderId(): string {
-  const nums = getOrders().map((o) => Number(o.id.replace(/[^0-9]/g, "")) || 0);
-  return `AZ-${Math.max(9041, ...nums) + 1}`;
+  return `AZ-${crypto.randomBytes(8).toString("hex").toUpperCase()}`;
 }
 
 /** Compute shipping cost for a set of product lines with a chosen method (server-side truth). */
@@ -46,6 +46,15 @@ function buildLines(items: CartItem[]): { lines: OrderLine[]; problems: string[]
       if (!k) continue;
       if (k.remaining <= 0) problems.push(`ظرفیت «${k.title}» تکمیل شده است`);
       else lines.push({ kind: "class", slug: k.slug, title: k.title, price: k.price, qty: 1 });
+    } else if (i.kind === "learning_path") {
+      const lp = getLearningPath(i.slug);
+      if (!lp || !lp.active) {
+        problems.push(`مسیر «${i.title}» موجود نیست`);
+        continue;
+      }
+      // Server-side price calculation — client price is ignored
+      const serverPrice = getLearningPathFinalPrice(lp);
+      lines.push({ kind: "learning_path", slug: lp.slug, title: lp.title, price: serverPrice, qty: 1 });
     } else if (i.kind === "product") {
       const p = products.find((x) => x.slug === i.slug && x.active);
       if (!p) {
@@ -97,10 +106,18 @@ export async function startCheckout(fd: FormData) {
       }
       if (l.kind === "class") {
         const alreadyBought = allOrders.some(
-          (o) => o.id !== id && o.status === "پرداخت شده" && (o.userId === checkUserId || (checkPhone && o.phone === checkPhone)) && (o.lines ?? []).some((ol) => ol.kind === "class" && ol.slug === l.slug)
+          (o) => o.status === "پرداخت شده" && (o.userId === checkUserId || (checkPhone && o.phone === checkPhone)) && (o.lines ?? []).some((ol) => ol.kind === "class" && ol.slug === l.slug)
         );
         if (alreadyBought) {
           redirect(`/checkout?error=${encodeURIComponent(`شما قبلاً کلاس «${l.title}» را خریداری کرده‌اید`)}`);
+        }
+      }
+      if (l.kind === "learning_path") {
+        const alreadyBought = allOrders.some(
+          (o) => o.status === "پرداخت شده" && (o.userId === checkUserId || (checkPhone && o.phone === checkPhone)) && (o.lines ?? []).some((ol) => ol.kind === "learning_path" && ol.slug === l.slug)
+        );
+        if (alreadyBought) {
+          redirect(`/checkout?error=${encodeURIComponent(`شما قبلاً مسیر «${l.title}» را خریداری کرده‌اید`)}`);
         }
       }
     }
@@ -145,7 +162,7 @@ export async function startCheckout(fd: FormData) {
     if (existing) {
       ownerId = existing.id;
     } else {
-      provisionedPassword = Math.random().toString(36).slice(2, 8) + Math.floor(Math.random() * 90 + 10);
+      provisionedPassword = crypto.randomBytes(8).toString("base64url").slice(0, 12);
       const created: User = {
         id: `u-${Date.now().toString(36)}`,
         name,
@@ -222,38 +239,6 @@ export async function startCheckout(fd: FormData) {
   }
   writeDb({ orders: getOrders().map((o) => (o.id === id ? { ...o, authority: r.authority } : o)) });
   redirect(r.payUrl);
-}
-
-/** Post-payment side effects: enrollments, SpotPlayer licenses, SMS. Idempotent. */
-export async function finalizePaidOrder(orderId: string) {
-  const order = getOrders().find((o) => o.id === orderId);
-  if (!order) return;
-  await grantAccessForOrder(orderId);
-  const phone = order.phone;
-  if (phone) {
-    const hasCourse = order.lines?.some((l) => l.kind === "course");
-    const hasProduct = order.lines?.some((l) => l.kind === "product" || l.kind === "preorder");
-    const parts = [`اسدزاده: سفارش ${orderId} ثبت شد.`];
-    if (hasCourse) parts.push("دوره‌ها در پنل هنرجو فعال است.");
-    if (hasProduct) parts.push(`کالاها با ${order.shipping?.method ?? "روش انتخابی"} ارسال می‌شود.`);
-    await sendSms([phone], parts.join(" "));
-  }
-  revalidatePath("/dashboard");
-  revalidatePath("/dashboard/courses");
-  revalidatePath("/dashboard/orders");
-}
-
-/** Give reserved stock/seats back when a payment fails or is cancelled. */
-export async function releaseOrder(orderId: string) {
-  const order = getOrders().find((o) => o.id === orderId);
-  if (!order?.lines || order.status === "پرداخت شده") return;
-  writeDb({
-    classes: getClasses().map((c) => (order.lines!.some((l) => l.kind === "class" && l.slug === c.slug) ? { ...c, remaining: c.remaining + 1 } : c)),
-    products: getProducts().map((p) => {
-      const hit = order.lines!.find((l) => l.kind === "product" && l.slug === p.slug);
-      return hit ? { ...p, stock: p.stock + hit.qty, sold: Math.max(0, p.sold - hit.qty) } : p;
-    }),
-  });
 }
 
 /**

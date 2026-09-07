@@ -39,18 +39,31 @@ export async function touchLesson(courseSlug: string, lessonId: string) {
 
 const clean = (fd: FormData, key: string, max = 200) => String(fd.get(key) ?? "").trim().slice(0, max);
 
-/** Student profile: name / email / city / bio (phone is the login id and cannot be changed here). */
+/** Student profile: name / email / province / city / age / gender / bio (phone is the login id and cannot be changed here). */
 export async function updateProfile(fd: FormData) {
   const me = await getMe();
   if (!me) redirect("/auth?next=/dashboard/profile");
   const name = clean(fd, "name", 80);
   const email = clean(fd, "email", 120);
+  const province = clean(fd, "province", 60);
   const city = clean(fd, "city", 60);
+  const ageStr = clean(fd, "age", 4);
+  const gender = clean(fd, "gender", 10) as "male" | "female" | "other" | "";
   const bio = clean(fd, "bio", 400);
   if (name.length < 2) redirect("/dashboard/profile?error=name");
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) redirect("/dashboard/profile?error=email");
+  const age = ageStr ? Number(ageStr) : undefined;
   writeDb({
-    users: getUsers().map((u) => (u.id === me.id ? { ...u, name, email: email || undefined, city: city || undefined, bio: bio || undefined } : u)),
+    users: getUsers().map((u) => (u.id === me.id ? {
+      ...u,
+      name,
+      email: email || undefined,
+      province: province || undefined,
+      city: city || undefined,
+      age: age && age >= 10 && age <= 100 ? age : undefined,
+      gender: gender || undefined,
+      bio: bio || undefined,
+    } : u)),
   });
   await audit({ action: "profile.update", actor: { id: me.id, name, role: me.role }, target: `user:${me.id}` });
   revalidatePath("/dashboard", "layout");

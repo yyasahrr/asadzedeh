@@ -31,6 +31,8 @@ export interface OnlineCourse {
   lessons?: Lesson[];
   /** Per-course video protection profile. */
   protection?: CourseProtection;
+  /** سؤالات پرتکرار اختصاصی این دوره */
+  faq?: { q: string; a: string }[];
 }
 
 /** Teaser video: either a self-hosted upload or an external embed (Aparat/YouTube/…). */
@@ -148,17 +150,49 @@ export interface InPersonClass {
   chapters?: Chapter[];
   /** فصل‌ها، درس‌ها و محتوای تکمیلی کلاس حضوری. */
   lessons?: Lesson[];
+  /** سؤالات پرتکرار اختصاصی این کلاس */
+  faq?: { q: string; a: string }[];
 }
 
+export interface LearningPathCourse {
+  courseSlug: string;
+  order: number;
+  note?: string;
+}
+
+export type PricingMode = "FIXED" | "PERCENTAGE";
+
 export interface LearningPath {
+  id: string;
   slug: string;
   title: string;
+  shortDescription?: string;
   description: string;
-  steps: number;
-  duration: string;
-  courses: number;
+  image?: string;
   icon: string;
+  level?: Level;
   accent: "navy" | "teal" | "madder" | "ochre" | "moss";
+  /** مدت زمان کل مسیر */
+  duration: string;
+  /** تعداد مراحل */
+  steps: number;
+  /** تعداد دوره‌ها */
+  courses: number;
+  /** دوره‌های این مسیر به ترتیب */
+  pathCourses: LearningPathCourse[];
+  active: boolean;
+  /** وضعیت انتشار */
+  status?: "draft" | "published";
+  /** Featured on homepage */
+  featured?: boolean;
+  /** نوع قیمت‌گذاری */
+  pricingMode: PricingMode;
+  /** قیمت ثابت bundle (وقتی pricingMode = FIXED) */
+  fixedPrice?: number;
+  /** درصد تخفیف (وقتی pricingMode = PERCENTAGE) */
+  discountPercentage?: number;
+  createdAt: string;
+  updatedAt?: string;
 }
 
 export interface Instructor {
@@ -212,7 +246,7 @@ export interface Student {
 }
 
 export interface OrderLine {
-  kind: "course" | "class" | "product" | "preorder";
+  kind: "course" | "class" | "product" | "preorder" | "learning_path";
   slug: string;
   title: string;
   price: number;
@@ -242,6 +276,8 @@ export interface Order {
   status: string;
   authority?: string;
   refId?: string;
+  /** Set once reserved seats/stock have been returned after a failed payment. */
+  releasedAt?: string;
   date?: string;
   /** Structured lines (new orders); legacy orders only have `item`. */
   lines?: OrderLine[];
@@ -289,7 +325,10 @@ export interface User {
   lastLoginAt?: string;
   lastLoginIp?: string;
   /** Optional profile fields (student dashboard). */
+  province?: string;
   city?: string;
+  age?: number;
+  gender?: "male" | "female" | "other";
   bio?: string;
 }
 
@@ -313,6 +352,9 @@ export interface Comment {
   text: string;
   date: string;
   status: "pending" | "approved";
+  /** Admin reply text */
+  reply?: string;
+  replyDate?: string;
 }
 
 export interface Submission {
@@ -320,6 +362,7 @@ export interface Submission {
   assignment: string;
   course: string;
   student: string;
+  userId?: string;
   file: string;
   date: string;
   status: "در حال بررسی" | "تأیید شده" | "نیاز به اصلاح";
@@ -421,6 +464,80 @@ export interface Preorder {
   timeline: { date: string; status: PreorderStatus; note?: string }[];
 }
 
+/* ---------- Support tickets ---------- */
+
+export interface TicketMessage {
+  id: string;
+  sender: string;
+  senderRole: "student" | "admin";
+  text: string;
+  createdAt: string;
+}
+
+export interface Ticket {
+  id: string;
+  subject: string;
+  student: string;
+  userId?: string;
+  phone?: string;
+  status: "باز" | "در حال بررسی" | "پاسخ داده شده" | "بسته شده";
+  priority: "عادی" | "مهم" | "فوری";
+  category: "عمومی" | "فنی" | "مالی" | "آموزشی";
+  messages: TicketMessage[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+/* ---------- Course requests (instructor submission for review) ---------- */
+
+export type CourseRequestStatus = "پیش‌نویس" | "در انتظار بررسی" | "تأیید شده" | "رد شده";
+
+export interface CourseRequestChapter {
+  id: string;
+  title: string;
+  order: number;
+}
+
+export interface CourseRequestLesson {
+  id: string;
+  title: string;
+  chapterId: string;
+  order: number;
+  durationMin: number;
+  free: boolean;
+  description?: string;
+}
+
+export interface CourseRequest {
+  id: string;
+  title: string;
+  shortTitle: string;
+  category: string;
+  instructorSlug: string;
+  instructorName: string;
+  instructorUserId: string;
+  level: Level;
+  sessions: number;
+  hours: number;
+  price: number;
+  oldPrice?: number;
+  image: string;
+  excerpt: string;
+  outcomes: string[];
+  syllabus: { title: string; lessons: string[] }[];
+  badge?: string;
+  trailer?: Trailer;
+  chapters?: CourseRequestChapter[];
+  lessons?: CourseRequestLesson[];
+  faq?: { q: string; a: string }[];
+  status: CourseRequestStatus;
+  rejectionReason?: string;
+  reviewedBy?: string;
+  reviewedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 /* ---------- Audit log ---------- */
 
 export type AuditLevel = "info" | "warn" | "error" | "security";
@@ -469,6 +586,12 @@ export interface SiteSettings {
   footerAbout: string;
   socials: { instagram: string; telegram: string };
   aboutIntro: string[];
+  workshop: {
+    lat: number;
+    lng: number;
+    address: string;
+    mapProvider: "neshan" | "openstreetmap";
+  };
 }
 
 export interface SmsSettings {
@@ -552,6 +675,17 @@ export interface ShopSettings {
   preorderIntro: string;
 }
 
+export interface LegalPage {
+  slug: string;
+  title: string;
+  content: string;
+  lastUpdated?: string;
+}
+
+export interface LegalSettings {
+  pages: LegalPage[];
+}
+
 export interface Settings {
   site: SiteSettings;
   sms: SmsSettings;
@@ -562,4 +696,5 @@ export interface Settings {
   spotplayer: SpotPlayerSettings;
   instagram: InstagramSettings;
   shop: ShopSettings;
+  legal: LegalSettings;
 }

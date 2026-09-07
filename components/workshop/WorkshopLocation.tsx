@@ -1,9 +1,12 @@
 import { ExternalLink, Landmark, MapPin, Navigation } from "lucide-react";
 import { getWorkshopMapLocation, WORKSHOP_ADDRESS } from "@/lib/neshan";
+import { getSettings } from "@/lib/store";
 import { NeshanMap } from "./NeshanMap";
 
 export async function WorkshopLocation() {
   const location = await getWorkshopMapLocation();
+  const settings = getSettings();
+  const provider = settings.site.workshop?.mapProvider || "neshan";
   const lat = location?.lat ?? 37.5527;
   const lng = location?.lng ?? 45.0761;
   const displayedAddress = location?.address ?? WORKSHOP_ADDRESS;
@@ -23,6 +26,11 @@ export async function WorkshopLocation() {
               {location?.source === "neshan" ? (
                 <span className="rounded-md bg-teal-600/25 px-2 py-1 text-[10px] font-bold text-teal-100">
                   دریافت‌شده از نشان
+                </span>
+              ) : null}
+              {location?.source === "settings" ? (
+                <span className="rounded-md bg-teal-600/25 px-2 py-1 text-[10px] font-bold text-teal-100">
+                  تنظیمات پنل
                 </span>
               ) : null}
             </div>
@@ -56,13 +64,21 @@ export async function WorkshopLocation() {
             rel="noreferrer"
             className="mt-5 inline-flex min-h-10 items-center justify-center gap-2 rounded-lg bg-sand-100 px-4 py-2 text-sm font-bold text-navy-900 transition-colors hover:bg-sand-200 focus-visible:outline-none"
           >
-            باز کردن در مسیریاب نشان
+            باز کردن در مسیریاب
             <ExternalLink className="h-4 w-4" />
           </a>
         </div>
 
         <div className="relative overflow-hidden">
-          {location ? (
+          {provider === "openstreetmap" ? (
+            <iframe
+              title="نقشه OpenStreetMap"
+              src={`https://www.openstreetmap.org/export/embed.html?bbox=${lng - 0.01}%2C${lat - 0.01}%2C${lng + 0.01}%2C${lat + 0.01}&layer=mapnik&marker=${lat}%2C${lng}`}
+              className="h-80 w-full border-0"
+              loading="lazy"
+              sandbox="allow-scripts allow-same-origin allow-popups"
+            />
+          ) : location ? (
             <NeshanMap
               lat={location.lat}
               lng={location.lng}

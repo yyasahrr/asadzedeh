@@ -12,23 +12,26 @@ interface Props {
 
 export function NeshanMap({ lat, lng, mapKey }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<InstanceType<typeof import("@neshan-maps-platform/mapbox-gl")["Map"]> | null>(null);
+  const markerRef = useRef<InstanceType<typeof import("@neshan-maps-platform/mapbox-gl")["Marker"]> | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
 
   useEffect(() => {
     if (!mapKey || !containerRef.current) return;
 
     let disposed = false;
-    let map: InstanceType<typeof import("@neshan-maps-platform/mapbox-gl")["Map"]> | null = null;
+    const initLat = lat;
+    const initLng = lng;
 
     void import("@neshan-maps-platform/mapbox-gl")
       .then((neshan) => {
         if (disposed || !containerRef.current) return;
 
-        map = new neshan.Map({
+        const map = new neshan.Map({
           container: containerRef.current,
           mapKey,
           mapType: "neshanVector",
-          center: [lng, lat],
+          center: [initLng, initLat],
           zoom: 16,
           pitch: 0,
           poi: true,
@@ -37,10 +40,14 @@ export function NeshanMap({ lat, lng, mapKey }: Props) {
         });
 
         map.addControl(new neshan.NavigationControl({ showCompass: false }), "top-left");
-        new neshan.Marker({ color: "#9d382c" })
-          .setLngLat([lng, lat])
+
+        const marker = new neshan.Marker({ color: "#9d382c" })
+          .setLngLat([initLng, initLat])
           .setPopup(new neshan.Popup({ offset: 24 }).setText("کارگاه اسدزاده"))
           .addTo(map);
+
+        markerRef.current = marker;
+        mapRef.current = map;
 
         map.once("load", () => {
           if (!disposed) setStatus("ready");
@@ -55,9 +62,23 @@ export function NeshanMap({ lat, lng, mapKey }: Props) {
 
     return () => {
       disposed = true;
-      map?.remove();
+      mapRef.current?.remove();
+      mapRef.current = null;
+      markerRef.current = null;
     };
-  }, [lat, lng, mapKey]);
+    // We intentionally omit lat/lng from deps to avoid re-creating the map on every position update.
+    // Position updates are handled by a separate effect below.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mapKey]);
+
+  useEffect(() => {
+    if (!mapRef.current || !markerRef.current) return;
+    const current = markerRef.current.getLngLat();
+    if (Math.abs(current.lat - lat) > 0.0001 || Math.abs(current.lng - lng) > 0.0001) {
+      markerRef.current.setLngLat([lng, lat]);
+      mapRef.current.setCenter([lng, lat]);
+    }
+  }, [lat, lng]);
 
   if (!mapKey) {
     return (

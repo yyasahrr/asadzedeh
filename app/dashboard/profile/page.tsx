@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CheckCircle2, KeyRound, ShieldCheck, XCircle } from "lucide-react";
-import { FieldLabel, Input, Textarea } from "@/components/ui/Input";
+import { FieldLabel, Input, Select, Textarea } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { getSessionUser } from "@/lib/auth";
 import { changePassword, updateProfile } from "../actions";
+import { ProvinceCitySelect } from "@/components/dashboard/ProvinceCitySelect";
+import { genderOptions } from "@/lib/iran-locations";
 
 export const metadata: Metadata = { title: "پروفایل" };
 export const dynamic = "force-dynamic";
@@ -62,8 +64,20 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
           <Input id="p-email" name="email" type="email" defaultValue={user.email ?? ""} dir="ltr" className="text-left" placeholder="you@example.com" />
         </div>
         <div>
-          <FieldLabel htmlFor="p-city">شهر</FieldLabel>
-          <Input id="p-city" name="city" defaultValue={user.city ?? ""} />
+          <FieldLabel htmlFor="p-age">سن</FieldLabel>
+          <Input id="p-age" name="age" type="number" min={10} max={100} defaultValue={user.age ?? ""} placeholder="مثلاً ۲۸" />
+        </div>
+        <div>
+          <FieldLabel htmlFor="p-gender">جنسیت</FieldLabel>
+          <Select id="p-gender" name="gender" defaultValue={user.gender ?? ""}>
+            <option value="">انتخاب کنید</option>
+            {genderOptions.map((g) => (
+              <option key={g.value} value={g.value}>{g.label}</option>
+            ))}
+          </Select>
+        </div>
+        <div className="sm:col-span-2">
+          <ProvinceCitySelect initialProvince={user.province} initialCity={user.city} />
         </div>
         <div className="sm:col-span-2">
           <FieldLabel htmlFor="p-bio">درباره من (نمایش در گواهی‌ها)</FieldLabel>

@@ -82,7 +82,7 @@ export function AuthTabs({ initialTab, error, next }: { initialTab: "login" | "r
       )}
 
       <p className="mt-4 text-center text-xs leading-6 text-ink-500">
-        با ورود یا ثبت‌نام، <Link href="#" className="font-bold text-navy-800">قوانین و مقررات</Link> اسدزاده را می‌پذیرید.
+        با ورود یا ثبت‌نام، <Link href="/terms" className="font-bold text-navy-800">قوانین و مقررات</Link> اسدزاده را می‌پذیرید.
       </p>
 
       <details className="mt-5 rounded-xl bg-sand-100 p-4 text-[13px] leading-7 text-ink-600">

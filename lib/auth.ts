@@ -103,7 +103,8 @@ export type Permission =
   | "shop"
   | "preorders"
   | "audit"
-  | "security";
+  | "security"
+  | "support";
 
 const ROLE_PERMS: Record<Role, Permission[]> = {
   admin: [
@@ -111,14 +112,16 @@ const ROLE_PERMS: Record<Role, Permission[]> = {
     "students", "orders", "submissions", "certificates",
     "users", "notify", "payments", "settings",
     "videos", "instructors", "shop", "preorders", "audit", "security",
+    "support",
   ],
   manager: [
     "courses", "classes", "blog", "content", "media", "comments",
     "students", "orders", "submissions", "certificates", "notify", "payments",
     "videos", "instructors", "shop", "preorders", "audit",
+    "support",
   ],
   editor: ["blog", "content", "media", "comments", "courses", "classes", "videos", "shop"],
-  support: ["students", "orders", "submissions", "certificates", "comments", "preorders"],
+  support: ["students", "orders", "submissions", "certificates", "comments", "preorders", "support"],
   /** Instructors use their own panel (/instructor); no admin permissions. */
   instructor: [],
   student: [],
@@ -140,8 +143,13 @@ export const roleLabels: Record<Role, string> = {
 
 /* ---------- signed URLs for protected video delivery ---------- */
 
-const SIGN_SECRET = () =>
-  process.env.APP_SECRET || process.env.VIDEO_SIGNING_SECRET || "asadzedeh-dev-signing-secret-change-me";
+const SIGN_SECRET = () => {
+  const secret = process.env.APP_SECRET || process.env.VIDEO_SIGNING_SECRET;
+  if (!secret && process.env.NODE_ENV === "production") {
+    throw new Error("APP_SECRET is required in production. Generate one with: openssl rand -hex 32");
+  }
+  return secret || "asadzedeh-dev-signing-secret-change-me";
+};
 
 export function signPayload(payload: Record<string, string | number>): string {
   const body = Buffer.from(JSON.stringify(payload)).toString("base64url");

@@ -11,6 +11,7 @@ const items = [
   { href: "/dashboard/assignments", label: "تمرین‌ها", icon: "assignments" },
   { href: "/dashboard/certificates", label: "گواهی‌ها", icon: "certificates" },
   { href: "/dashboard/orders", label: "سفارش‌ها", icon: "orders" },
+  { href: "/support", label: "پشتیبانی", icon: "support" },
   { href: "/dashboard/profile", label: "پروفایل", icon: "profile" },
 ];
 

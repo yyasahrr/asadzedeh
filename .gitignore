@@ -50,3 +50,6 @@ public/uploads/
 
 # Protected video vault (served only through /api/video/*, never public)
 data/videos/
+
+# Generated audit and deployment artifacts
+outputs/

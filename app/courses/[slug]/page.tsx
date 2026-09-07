@@ -71,6 +71,7 @@ export default async function CourseDetailPage({
   const { comment } = await searchParams;
   const course = getCourse(slug);
   if (!course) notFound();
+  const effectiveFaqs = course.faq?.length ? course.faq : faqs;
 
   const user = await getSessionUser();
   const enrolled = isEnrolled(user, course.slug);
@@ -101,7 +102,7 @@ export default async function CourseDetailPage({
   const faqLd = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: faqs.map((f) => ({
+    mainEntity: effectiveFaqs.map((f) => ({
       "@type": "Question",
       name: f.q,
       acceptedAnswer: { "@type": "Answer", text: f.a },
@@ -148,8 +149,8 @@ export default async function CourseDetailPage({
           <section className="rounded-xl bg-card p-4 ring-1 ring-ink-900/5" aria-labelledby="outcomes">
             <h2 id="outcomes" className="text-lg font-black text-navy-900">در پایان این دوره می‌توانید:</h2>
             <ul className="mt-4 grid gap-3 sm:grid-cols-2">
-              {course.outcomes.map((o) => (
-                <li key={o} className="flex items-start gap-2 text-[15px] leading-7 text-ink-700">
+              {course.outcomes.map((o, i) => (
+                <li key={o || `o-${i}`} className="flex items-start gap-2 text-[15px] leading-7 text-ink-700">
                   <CheckCircle2 className="mt-1 h-5 w-5 shrink-0 text-teal-600" />
                   {o}
                 </li>
@@ -173,7 +174,7 @@ export default async function CourseDetailPage({
                     const items = lessons.filter((l) => l.chapterId === ch);
                     const chTitle = chapterById.get(ch) ?? ch;
                     return (
-                      <details key={ch} open={i === 0} className="group overflow-hidden rounded-xl bg-card ring-1 ring-ink-900/5 open:ring-teal-600/30">
+                      <details key={ch || `ch-${i}`} open={i === 0} className="group overflow-hidden rounded-xl bg-card ring-1 ring-ink-900/5 open:ring-teal-600/30">
                         <summary className="flex items-center justify-between gap-3 p-4 font-extrabold text-navy-900">
                           <span className="flex items-center gap-3">
                             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-sand-100 text-sm font-black text-navy-800">{toFa(i + 1)}</span>
@@ -218,7 +219,7 @@ export default async function CourseDetailPage({
                   })
                 : course.syllabus.map((ch, i) => (
                 <details
-                  key={ch.title}
+                  key={ch.title || `ch-${i}`}
                   open={i === 0}
                   className="group overflow-hidden rounded-xl bg-card ring-1 ring-ink-900/5 open:ring-teal-600/30"
                 >
@@ -236,7 +237,7 @@ export default async function CourseDetailPage({
                   </summary>
                   <ul className="space-y-1 border-t border-dashed border-ink-900/10 px-5 py-4">
                     {ch.lessons.map((l, j) => (
-                      <li key={l} className="flex items-center justify-between gap-3 py-2 text-[15px] text-ink-700">
+                      <li key={l || `l-${i}-${j}`} className="flex items-center justify-between gap-3 py-2 text-[15px] text-ink-700">
                         <span className="flex items-center gap-2.5">
                           <PlayCircle className="h-4 w-4 shrink-0 text-ochre-600" />
                           {l}
@@ -275,8 +276,8 @@ export default async function CourseDetailPage({
           <section aria-labelledby="faq">
             <h2 id="faq" className="text-lg font-black text-navy-900">سؤالات پرتکرار</h2>
             <div className="mt-2 space-y-2">
-              {faqs.map((f) => (
-                <details key={f.q} className="group rounded-xl bg-card px-5 py-3.5 ring-1 ring-ink-900/5">
+              {effectiveFaqs.map((f, i) => (
+                <details key={f.q || `faq-${i}`} className="group rounded-xl bg-card px-5 py-3.5 ring-1 ring-ink-900/5">
                   <summary className="flex items-center justify-between gap-3 font-extrabold text-navy-900">
                     {f.q}
                     <Plus className="h-5 w-5 shrink-0 text-ink-400 group-open:hidden" />

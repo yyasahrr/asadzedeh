@@ -24,10 +24,8 @@ function loadFonts() {
 const NAVY = "#193B5C";
 const MADDER = "#9D382C";
 const OCHRE = "#C08A3E";
-const TEAL = "#1A7A6D";
 const INK = "#3A3D3A";
 const PAPER = "#FBF5E9";
-const SAND_LIGHT = "#F5EFE0";
 
 export interface EnrollmentCardData {
   studentName: string;

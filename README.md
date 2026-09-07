@@ -40,6 +40,23 @@ npm run build    # بررسی تولید
 
 متغیرهای محیطی مهم در `.env.example`: `APP_SECRET` (الزامی در production)، `FFMPEG_PATH` و `SPOTPLAYER_API_KEY` (اختیاری).
 
+## استقرار روی cPanel (Node.js Application)
+
+1. در cPanel از **Setup Node.js App**، نسخه Node `20.x` یا بالاتر را انتخاب کنید و ریشه برنامه را روی پوشه پروژه بگذارید.
+2. فایل‌های پروژه را بدون `node_modules` و بدون `.env` آپلود کنید؛ سپس در **Terminal** همان برنامه اجرا کنید:
+
+   ```bash
+   npm ci
+   npm run build
+   ```
+
+3. متغیرهای `.env.example` را در بخش Environment Variables cPanel ثبت کنید. در production مقدار تصادفی و ثابت برای `APP_SECRET` الزامی است.
+4. Startup file را `server.mjs` و Application startup command را `npm start` بگذارید. پورت را cPanel از متغیر `PORT` تزریق می‌کند؛ آن را دستی hardcode نکنید.
+5. پوشه‌های `data/`, `data/videos/`, `data/lesson-files/` و `public/uploads/` باید برای کاربر برنامه قابل نوشتن باشند. فایل `data/db.json` در اولین اجرا ساخته می‌شود.
+6. پس از تغییر کد، `npm run build` را دوباره اجرا و برنامه Node.js را از cPanel با **Restart** راه‌اندازی کنید. دامنه را با SSL به برنامه متصل کنید.
+
+> این پروژه به Node.js نیاز دارد و روی هاست cPanel صرفاً PHP اجرا نمی‌شود. اگر سرویس Node.js یا فضای کافی برای ویدیوهای حجیم در دسترس نیست، باید هاست/فضای ذخیره‌سازی جداگانه تهیه شود.
+
 ## ساختار
 
 ```

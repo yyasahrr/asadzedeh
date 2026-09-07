@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Check } from "lucide-react";
+import { Check, Reply } from "lucide-react";
 import { getComments, getCourse, getClass } from "@/lib/store";
 import { getSessionUser, can } from "@/lib/auth";
 import { Denied } from "@/components/admin/Denied";
 import { DeleteButton } from "@/components/admin/DeleteButton";
-import { approveComment, deleteComment } from "../actions";
+import { approveComment, deleteComment, replyComment } from "../actions";
 
 export const metadata: Metadata = { title: "نظرات" };
 
@@ -33,6 +33,17 @@ export default async function AdminCommentsPage() {
         </Link>
       </div>
       <p className="mt-2 text-[15px] leading-8 text-ink-700">{c.text}</p>
+
+      {c.reply && (
+        <div className="mt-3 rounded-xl bg-teal-50 px-4 py-3 ring-1 ring-teal-600/15">
+          <p className="flex items-center gap-1.5 text-xs font-bold text-teal-700">
+            <Reply className="h-3.5 w-3.5" /> پاسخ شما
+            {c.replyDate && <span className="font-normal text-ink-400">{c.replyDate}</span>}
+          </p>
+          <p className="mt-1 text-sm text-ink-700">{c.reply}</p>
+        </div>
+      )}
+
       <div className="mt-3 flex items-center gap-2 border-t border-dashed border-ink-900/10 pt-3">
         {c.status === "pending" && (
           <form action={approveComment}>
@@ -42,6 +53,28 @@ export default async function AdminCommentsPage() {
               تأیید و انتشار
             </button>
           </form>
+        )}
+        {!c.reply && (
+          <details className="group">
+            <summary className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-lg bg-navy-50 px-4 text-[13px] font-bold text-navy-800 transition-colors hover:bg-navy-100">
+              <Reply className="h-4 w-4" /> پاسخ
+            </summary>
+            <form action={replyComment} className="mt-2 flex gap-2">
+              <input type="hidden" name="id" value={c.id} />
+              <label htmlFor={`reply-${c.id}`} className="sr-only">پاسخ</label>
+              <input
+                id={`reply-${c.id}`}
+                name="reply"
+                required
+                maxLength={1000}
+                placeholder="پاسخ خود را بنویسید..."
+                className="h-9 flex-1 rounded-lg border border-ink-900/10 bg-white px-3 text-[13px] focus:border-teal-600 focus:outline-none"
+              />
+              <button type="submit" className="inline-flex h-9 cursor-pointer items-center rounded-lg bg-teal-600 px-3 text-[13px] font-bold text-white transition-colors hover:bg-teal-700">
+                ثبت
+              </button>
+            </form>
+          </details>
         )}
         <DeleteButton action={deleteComment} hidden={{ name: "id", value: c.id }} label="نظر" />
       </div>

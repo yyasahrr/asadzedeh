@@ -59,3 +59,12 @@ export function formatDuration(sec?: number): string {
   const s = sec % 60;
   return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
+
+/** Unicode-aware slugify preserving Persian/Arabic/Latin letters and numbers. */
+export function slugify(input: string): string {
+  return input
+    .trim()
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, "-")
+    .replace(/^-+|-+$/g, "");
+}

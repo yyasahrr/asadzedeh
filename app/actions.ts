@@ -1,5 +1,6 @@
 "use server";
 
+import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { revalidatePath } from "next/cache";
@@ -42,6 +43,10 @@ export async function submitComment(fd: FormData) {
   const name = String(fd.get("name") ?? "").trim();
   const text = String(fd.get("text") ?? "").trim();
   if (!slug || !name || !text) return;
+
+  // Validate that scope and slug refer to real resources
+  if (scope !== "course" && scope !== "class") return;
+
   const comments = getComments();
   comments.unshift({
     id: `cm-${Date.now().toString(36)}`,
@@ -60,36 +65,53 @@ export async function submitComment(fd: FormData) {
 
 /* ---------- assignment upload ---------- */
 
-const ASSIGN_DIR = path.join(process.cwd(), "public", "uploads", "assignments");
+/** Private storage for assignments — not under public/ */
+const ASSIGN_DIR = path.join(process.cwd(), "data", "assignments");
 const OK_TYPES = ["image/png", "image/jpeg", "image/webp", "application/pdf", "application/zip", "application/x-zip-compressed"];
+const MAX_SIZE = 10 * 1024 * 1024;
 
 export async function submitAssignment(fd: FormData) {
   const user = await getSessionUser();
-  const student = user?.name ?? "سارا محمدی";
+  if (!user) {
+    redirect("/auth?next=/dashboard/assignments");
+  }
+
   const assignment = String(fd.get("assignment") ?? "").trim();
   const course = String(fd.get("course") ?? "").trim();
   const file = fd.get("file");
+
   if (!assignment || !(file instanceof File) || file.size === 0) {
     redirect("/dashboard/assignments?error=empty");
   }
-  if (!OK_TYPES.includes(file.type) && !/\.(png|jpe?g|webp|pdf|zip)$/i.test(file.name)) {
+
+  // Validate MIME type and extension
+  const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+  const allowedExtensions = ["png", "jpg", "jpeg", "webp", "pdf", "zip"];
+  if (!OK_TYPES.includes(file.type) && !allowedExtensions.includes(ext)) {
     redirect("/dashboard/assignments?error=type");
   }
-  if (file.size > 10 * 1024 * 1024) {
+
+  // Validate file size
+  if (file.size > MAX_SIZE) {
     redirect("/dashboard/assignments?error=size");
   }
-  const safe = file.name.replace(/[^\w.\-()\s\u0600-\u06FF]/g, "").replace(/\s+/g, "-").slice(-60);
-  const name = `${Date.now().toString(36)}-${safe || "tamrin"}`;
-  fs.mkdirSync(ASSIGN_DIR, { recursive: true });
-  fs.writeFileSync(path.join(ASSIGN_DIR, name), Buffer.from(await file.arrayBuffer()));
 
+  // Generate safe random filename (no user-controlled input in path)
+  const safeExt = allowedExtensions.includes(ext) ? ext : "bin";
+  const randomName = `${crypto.randomBytes(16).toString("hex")}.${safeExt}`;
+
+  fs.mkdirSync(ASSIGN_DIR, { recursive: true });
+  fs.writeFileSync(path.join(ASSIGN_DIR, randomName), Buffer.from(await file.arrayBuffer()));
+
+  const student = user.name;
   const rest = getSubmissions().filter((s) => !(s.assignment === assignment && s.student === student));
   rest.unshift({
     id: `sub-${Date.now().toString(36)}`,
     assignment,
     course,
     student,
-    file: `/uploads/assignments/${name}`,
+    userId: user.id,
+    file: randomName,
     date: faToday(),
     status: "در حال بررسی",
   });

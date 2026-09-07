@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Search, UsersRound } from "lucide-react";
-import { getClasses, getCourses, getOrders } from "@/lib/store";
+import { getClasses, getOrders } from "@/lib/store";
 import { formatPrice, toFa } from "@/lib/format";
 import { TableShell, Td } from "@/components/admin/TableShell";
 import { Denied } from "@/components/admin/Denied";
@@ -34,10 +34,6 @@ export default async function AdminEnrollmentsPage({
   const { type = "all", q = "" } = await searchParams;
   const orders = getOrders();
   const classes = getClasses();
-  const courses = getCourses();
-
-  const classBySlug = new Map(classes.map((c) => [c.slug, c]));
-  const courseBySlug = new Map(courses.map((c) => [c.slug, c]));
 
   const rows: EnrollmentRow[] = [];
 
@@ -109,8 +105,7 @@ export default async function AdminEnrollmentsPage({
         <div className="rounded-2xl bg-card p-4 shadow-card ring-1 ring-ink-900/5">
           <h2 className="mb-3 text-sm font-black text-navy-900">وضعیت ظرفیت کلاس‌ها</h2>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {classes.map((c) => {
-              const enrolled = classEnrollments.get(c.slug) ?? 0;
+             {classes.map((c) => {
               const taken = c.capacity - c.remaining;
               return (
                 <div key={c.slug} className="rounded-xl bg-sand-50 p-3">
