@@ -475,6 +475,104 @@ export async function insertEnrollmentIfAbsent(
 }
 
 /** Normalised order lines for the relational `order_items` table. */
+/** Order states that mean the buyer already paid — never sweep their reservations. */
+const PAID_STATUSES = [
+  ORDER_LABEL.PAID,
+  ORDER_LABEL.PROCESSING,
+  ORDER_LABEL.SHIPPED,
+  ORDER_LABEL.DELIVERED,
+];
+
+export interface ExpiredReservation {
+  orderId: string;
+  lines: number;
+}
+
+/**
+ * Release stock and seats held by orders that were never paid.
+ *
+ * A shopper who abandons the gateway leaves a reservation behind. Nothing else
+ * reclaims it, so the unit stays unsellable forever — the mirror image of
+ * overselling. This sweeps them.
+ *
+ * Concurrency safety:
+ *   - `FOR UPDATE SKIP LOCKED` so two sweepers (or a sweeper and a payment
+ *     callback) never process the same order;
+ *   - the `released_at IS NULL AND settled_at IS NULL` guard plus the paid-status
+ *     exclusion, so a callback that lands mid-sweep cannot have its order swept;
+ *   - release and the `released_at` marker are written in the *same* transaction,
+ *     so stock can never be returned twice;
+ *   - the release statements themselves are `GREATEST(0, …)`, so a stray release
+ *     cannot drive a counter negative.
+ *
+ * Returns the orders that were released.
+ */
+export async function releaseExpiredReservations(
+  options: { ttlMinutes?: number; limit?: number } = {},
+): Promise<ExpiredReservation[]> {
+  const ttlMinutes = options.ttlMinutes ?? 30;
+  const limit = options.limit ?? 100;
+  if (ttlMinutes <= 0) return [];
+
+  const sql = await getSql();
+  const released: ExpiredReservation[] = [];
+
+  await sql.transaction(async (tx) => {
+    const expired = await tx.query<{ id: string }>(
+      `SELECT id FROM orders
+        WHERE released_at IS NULL
+          AND settled_at IS NULL
+          AND status <> ALL($1)
+          AND created_at < now() - make_interval(mins => $2)
+        ORDER BY created_at
+        LIMIT $3
+        FOR UPDATE SKIP LOCKED`,
+      [PAID_STATUSES, ttlMinutes, limit],
+    );
+
+    for (const { id } of expired) {
+      const items = await tx.query<{ kind: string; slug: string; title: string; qty: number }>(
+        "SELECT kind, slug, title, qty FROM order_items WHERE order_id = $1",
+        [id],
+      );
+
+      const lines = items.map((i) => ({
+        kind: i.kind as ReservationLine["kind"],
+        slug: i.slug,
+        title: i.title,
+        qty: Number(i.qty) || 1,
+      }));
+
+      for (const line of lines) {
+        if (line.kind === "class") await releaseClassSeat(tx, line.slug);
+      }
+      for (const { slug, qty } of reservableProducts(lines)) {
+        if (!lines.some((l) => l.kind === "product" && l.slug === slug)) continue;
+        await releaseProductReservation(tx, slug, qty);
+      }
+
+      const stamp = new Date().toISOString();
+      await tx.query(
+        "UPDATE orders SET released_at = $2, updated_at = now() WHERE id = $1 AND released_at IS NULL",
+        [id, stamp],
+      );
+      await patch(tx, "orders", "id", id, { releasedAt: stamp });
+
+      released.push({ orderId: id, lines: lines.length });
+    }
+  });
+
+  if (released.length > 0) {
+    logger.info({
+      event: "inventory.reservations.expired",
+      count: released.length,
+      ttlMinutes,
+      orderIds: released.map((r) => r.orderId),
+    });
+  }
+  return released;
+}
+
 export async function writeOrderItems(orderId: string, lines: OrderLine[]): Promise<void> {
   if (lines.length === 0) return;
   const sql = await getSql();
