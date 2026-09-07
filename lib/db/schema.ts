@@ -382,8 +382,13 @@ export const passwordResets = pgTable(
     tokenHash: text("token_hash").notNull(),
     expiresAt: ts("expires_at").notNull(),
     usedAt: ts("used_at"),
+    /** Wrong guesses against this code. Bounds brute force inside its validity window. */
+    attempts: integer("attempts").notNull().default(0),
   },
-  (t) => [index("password_resets_user_idx").on(t.userId)],
+  (t) => [
+    index("password_resets_user_idx").on(t.userId),
+    index("password_resets_lookup_idx").on(t.userId, t.usedAt, t.expiresAt),
+  ],
 );
 
 export const kvMeta = pgTable("kv_meta", {

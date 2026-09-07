@@ -75,6 +75,19 @@ export const mfaSchema = z.object({
   next: zNextPath,
 });
 
+/** Eight digits, matching what lib/password-reset.ts issues. */
+export const zResetCode = z.preprocess(
+  (v) => String(v ?? "").replace(/\\D/g, ""),
+  z.string().regex(/^\\d{8}$/, "کد بازیابی باید ۸ رقم باشد"),
+);
+
+export const resetPasswordSchema = z.object({
+  phone: zPhoneNumber,
+  code: zResetCode,
+  password: zPassword,
+});
+
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type MfaInput = z.infer<typeof mfaSchema>;
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;

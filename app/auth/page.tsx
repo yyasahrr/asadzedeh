@@ -9,9 +9,9 @@ export const metadata: Metadata = { title: "ورود | ثبت‌نام" };
 export default async function AuthPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string; error?: string; next?: string }>;
+  searchParams: Promise<{ tab?: string; error?: string; next?: string; sent?: string; reset?: string }>;
 }) {
-  const { tab, error, next } = await searchParams;
+  const { tab, error, next, sent, reset } = await searchParams;
   return (
     <>
       <PageHero
@@ -30,7 +30,12 @@ export default async function AuthPage({
           </div>
           <div className="p-6 sm:p-10">
             <Logo className="mb-6" />
-            <AuthTabs initialTab={tab === "register" ? "register" : "login"} error={error} next={next} />
+            <AuthTabs
+              initialTab={tab === "register" ? "register" : tab === "reset" ? "reset" : "login"}
+              error={error}
+              notice={sent ? "sent" : reset ? "reset" : undefined}
+              next={next}
+            />
           </div>
         </div>
       </div>

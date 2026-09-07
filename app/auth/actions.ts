@@ -21,6 +21,9 @@ import { openSecret, verifyTotp } from "@/lib/totp";
 import { loginSchema, mfaSchema, registerSchema, zTotpCode } from "@/lib/validation/auth";
 import { validate } from "@/lib/validation/schema";
 import { safeNextPath } from "@/lib/auth-navigation";
+import { normalizeDigits } from "@/lib/format";
+import { requestPasswordReset, resetPasswordWithCode } from "@/lib/password-reset";
+import { resetPasswordSchema } from "@/lib/validation/auth";
 import { getSettings, getUserById, getUserByPhone, getUsers, getSessions, writeDb } from "@/lib/store";
 import { rateLimit, LIMITS } from "@/lib/rate-limit";
 import type { User } from "@/lib/types";
@@ -238,4 +241,70 @@ export async function logout() {
   jar.delete(MFA_COOKIE);
   if (me) await audit({ action: "auth.logout", actor: { id: me.id, name: me.name, role: me.role } });
   redirect("/");
+}
+
+/* ------------------------------------------------------- password reset */
+
+/**
+ * Request a reset code.
+ *
+ * Always redirects to the same place with the same message, whether or not the
+ * number is registered — otherwise this endpoint becomes a user-enumeration
+ * oracle.
+ */
+export async function requestPasswordResetAction(fd: FormData) {
+  const phone = normalizeDigits(String(fd.get("phone") ?? "").trim());
+  const limited = rateLimit(`pwreset:req:${phone || "anon"}`, 3, 15 * 60_000);
+  if (!limited.ok) redirect("/auth?tab=reset&error=locked");
+
+  await requestPasswordReset(phone, (p) => {
+    const u = getUserByPhone(p);
+    return u ? { id: u.id, name: u.name } : undefined;
+  });
+
+  await audit({ action: "auth.password_reset.requested", level: "security" });
+  redirect("/auth?tab=reset&sent=1");
+}
+
+/** Consume a reset code and set a new password. */
+export async function resetPasswordAction(fd: FormData) {
+  const phone = normalizeDigits(String(fd.get("phone") ?? "").trim());
+  const limited = rateLimit(`pwreset:use:${phone || "anon"}`, LIMITS.login.limit, LIMITS.login.windowMs);
+  if (!limited.ok) redirect("/auth?tab=reset&error=locked");
+
+  const parsed = validate(resetPasswordSchema, {
+    phone: fd.get("phone"),
+    code: fd.get("code"),
+    password: fd.get("password"),
+  });
+  if (!parsed.ok) redirect("/auth?tab=reset&error=validation");
+
+  const result = await resetPasswordWithCode(parsed.data.phone, parsed.data.code, parsed.data.password, {
+    resolveUser: (p) => {
+      const u = getUserByPhone(p);
+      return u ? { id: u.id } : undefined;
+    },
+    setPassword: async (userId, password) => {
+      writeDb({
+        users: getUsers().map((u) => (u.id === userId ? { ...u, passwordHash: hashPassword(password) } : u)),
+      });
+    },
+    revokeOtherSessions: async (userId) => {
+      // A password change means every existing session is suspect.
+      const stamp = new Date().toISOString();
+      writeDb({
+        sessions: getSessions().map((s) =>
+          s.userId === userId ? { ...s, revokedAt: stamp } : s,
+        ),
+      });
+    },
+  });
+
+  if (!result.ok) {
+    await audit({ action: "auth.password_reset.failed", level: "security", detail: { reason: result.reason } });
+    redirect(`/auth?tab=reset&error=${result.reason}`);
+  }
+
+  await audit({ action: "auth.password_reset.completed", level: "security" });
+  redirect("/auth?tab=login&reset=1");
 }
