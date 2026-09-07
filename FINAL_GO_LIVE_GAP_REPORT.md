@@ -20,7 +20,7 @@ storage.
 |---|---|
 | `npm run lint` | 0 errors, 0 warnings |
 | `npm run typecheck` | 0 errors (`tsc --noEmit`) |
-| `npx vitest run` | **205 passed, 25 files** |
+| `npx vitest run` | **221 passed, 26 files** |
 | `npm run build` | compiled successfully, 49 static pages |
 | `npm run seo:audit` | `PASS`, 0 ERROR / 0 WARN |
 | `npx tsx scripts/smoke.ts` | **36/36** against real PostgreSQL 18.4 |
@@ -176,6 +176,22 @@ default 10; `RESERVATION_TTL_MINUTES`, default 30).
 dropping the paid-status exclusion fails exactly the 2 paid-order tests; dropping
 the `released_at` guard fails exactly the idempotency and limit tests.
 
+### No password reset flow — **FIXED**
+The `password_resets` table had existed since migration 0000 with nothing behind
+it; a user who lost their password needed an admin to intervene.
+
+Now implemented as an 8-digit SMS code — the account identifier is a mobile
+number and SMS is the only channel every user has. That choice creates a
+brute-force surface a magic link would not, so the mitigations are the substance
+of the fix: the code is stored as a SHA-256 hash, expires after 15 minutes in SQL
+rather than in application code, is single-use via
+`UPDATE … WHERE used_at IS NULL RETURNING` in one statement, and has a bounded
+wrong-guess budget (`drizzle/0004`) that is refused against even the correct code
+once spent. A successful reset revokes every session for that user, and an
+unknown number is indistinguishable from a known one so the endpoint is not a
+user-enumeration oracle.
+**Evidence:** `password-reset.pg.test.ts` (16).
+
 ### The smoke test did not run in CI — **FIXED**
 It was what found three production defects, but only ran when someone remembered
 to run it. `ci/ci.yml` now has a `smoke` job: PostgreSQL service container,
@@ -249,5 +265,4 @@ None of these is a correctness defect that this repository can close.
 | SMS provider API key | **BLOCKED BY EXTERNAL CONFIGURATION** | Boundary implemented. |
 | SMTP credentials | **BLOCKED BY EXTERNAL CONFIGURATION** | Boundary implemented. |
 | Sentry DSN | **BLOCKED BY EXTERNAL CONFIGURATION** | SDK and scrubber are installed and tested; only the DSN is missing. |
-| Password reset flow | **NOT IMPLEMENTED** | The `password_resets` table exists and is empty, but no action or route uses it. Users who lose their password need an admin to reset it. Not a Go-Live blocker for a small catalogue, but it should be on the roadmap. |
 | `npm audit` | 4 moderate, dev-only | All reachable only through `drizzle-kit` (a build tool, not shipped). The published "fix" downgrades `drizzle-kit` to 0.18.1. **Risk accepted deliberately** — do not run `npm audit fix --force`. |
