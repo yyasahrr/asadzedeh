@@ -152,3 +152,52 @@ No PostgreSQL, no ORM, no Zod, no structured logger, no Sentry, no object storag
 - **Money:** Integer **Toman**. `currency = TOMAN`. Zarinpal still multiplies by 10 for Rial at the gateway boundary only.  
 - **Time:** New columns `timestamptz` UTC. Jalali only in UI via `fa-IR`.  
 - **Redis:** Not added. In-process rate limiter for V1.
+
+---
+
+# Pass 2 — 2026-09-07 (verification-driven audit)
+
+The audit above produced the PostgreSQL/Drizzle migration and the hardened
+commerce surface. This pass re-audited that work by **running** it. Every
+finding below was confirmed by a command, not by reading code.
+
+## Confirmed broken before this pass
+
+| ID | Sev | File | Reason | Impact | Fix applied |
+|---|---|---|---|---|---|
+| P1 | CRITICAL | `package.json` | `npm ci` failed: `vitest@5` requires `@types/node ^22 \|\| >=24`, root pinned `^20`. CI's very first step could not run. | CI never executed; "CI passes" was unverifiable | `@types/node` → `^22`, `engines.node` → `>=22.0.0`, CI Node 22. `npm ci` now succeeds |
+| P2 | HIGH | all 5 `scripts/*.ts` | Top-level `await` under tsx with CJS output → `Top-level await is currently not supported with the "cjs" output format` | `seo:audit`, `db:migrate`, `db:seed`, `db:migrate-json`, `db:bootstrap-admin` all crashed | `"type": "module"` in `package.json`. All five verified running |
+| P3 | CRITICAL | `app/api/payment/callback/route.ts`, `lib/order-payment.ts` | Reservation was released/settled by rewriting in-memory arrays; `orders.releasedAt` was the only guard, and stock was decremented at order creation, not at payment | Oversell across processes; capacity consumed by unpaid orders | New `lib/db/commerce.ts`: conditional `UPDATE … WHERE` + `orders.settled_at`/`released_at` |
+| P4 | CRITICAL | `lib/db/commerce.ts` (new) | **Found by test**: returning a failure object from inside `sql.transaction()` **commits** the partial hold | A rejected order left a seat permanently reserved | Rejections now `throw` inside the transaction; `commerce.integration.test.ts` asserts `reserved_seats = 0` afterwards |
+| P5 | CRITICAL | `lib/auth.ts` | `getSessionUser()` accepted any existing session row. No `expiresAt`, no `revokedAt`, no check at all. The `sessions.expires_at` column was always written as `NULL` | Stolen cookies valid forever; revocation not enforced | `sessionState()` / `isSessionActive()`; `Session.expiresAt`/`revokedAt`; `createSession` sets expiry; `persist` stores it. 7 tests |
+| P6 | HIGH | `app/verify/[code]/page.tsx` | No rate limiting — public certificate codes enumerable without bound | PII enumeration | Per-IP `LIMITS.certVerify` throttle + `force-dynamic`. Verified live: 3 lookups OK, then throttled |
+| P7 | HIGH | `lib/db/client.ts` | Module-level executor singleton; Next.js bundles the module into several server chunks, so several copies each opened their own connection | For PGlite the second instance dies ("Connection closed") | Handle moved to `globalThis` (true per-process singleton) |
+| P8 | MEDIUM | `app/checkout/actions.ts` | `buildLines` lived inside a `"use server"` file → untestable | Price-tampering regression had no test | Extracted to `lib/checkout-lines.ts`; 9 tests |
+| P9 | MEDIUM | `components/shop/ProductBuyBox.tsx`, `app/shop/[slug]/page.tsx`, `app/classes/[slug]/page.tsx` | UI showed `stock`/`remaining`, ignoring reservations | Sold-out items still shown as available | New `lib/stock.ts` (`availableStock`/`availableSeats`), used on all three surfaces. 7 tests |
+| P10 | LOW | `.gitignore` | `data/pglite/`, WAL, `data/seo-redirects.json`, Playwright output not ignored | Local databases commitable | Added |
+
+## Verified working, previously only asserted
+
+| Claim | How it was verified this pass |
+|---|---|
+| Server Actions reject foreign origins | POST with `Origin: http://evil.example` → `x-forwarded-host … does not match origin … Aborting the action.` → `Invalid Server Actions request` |
+| Production fails fast without `DATABASE_URL` | Built output booted with `NODE_ENV=production` → `Production refused to start. Missing required environment: DATABASE_URL, NEXT_PUBLIC_APP_URL` |
+| `/admin` is not readable anonymously | Live request returns the login gate (`این بخش مخصوص همکاران است`), no admin rows, no sidebar |
+| Security headers | Live response carries CSP (with `frame-ancestors`, `object-src 'none'`), `nosniff`, `Referrer-Policy`, `Permissions-Policy` |
+| `seo:audit` is not a rubber stamp | Scratch DB: clean → `0 ERROR, 0 WARN`; one course's `excerpt`/`image` blanked → `WARN /courses/carpet-weaving-foundations Missing description` + `Missing OG image` |
+| Migrations apply cleanly | `0000_init.sql` + `0001_commerce_atomicity.sql` applied on three separate fresh databases |
+| No production vulnerabilities | `npm audit --omit=dev` → `found 0 vulnerabilities` |
+
+## Still open after this pass
+
+| ID | Sev | File | Status |
+|---|---|---|---|
+| O1 | HIGH | `lib/store.ts` | `replaceTable` still does `DELETE … WHERE pk NOT IN (…)` per collection. Correct for one Node process; two processes can delete each other's rows. Commerce columns are exempt. |
+| O2 | HIGH | `server.mjs` | Socket.IO ticket handlers still read/write `data/db.json`/WAL, not PostgreSQL. Chat messages written there are not read back by the Next store. Not fixed this pass — deliberately, rather than ship an untested rewrite. |
+| O3 | HIGH | `app/auth/actions.ts` | **No password reset flow exists.** `password_resets` is an empty table with no action or route behind it. Gap H4 from pass 1 is still open. |
+| O4 | HIGH | `e2e/` | Playwright suite written and typechecked, **never executed**: `npx playwright install` cannot reach `cdn.playwright.dev` from this sandbox (`Client network socket disconnected`). |
+| O5 | MEDIUM | `lib/monitoring.ts` | `monitoringStatus()` reports Sentry "configured" from `SENTRY_DSN` and sends a `HEAD` to sentry.io. It never transmits an error. The SDK is not a dependency. |
+| O6 | MEDIUM | `lib/rate-limit.ts` | In-process limiter. Correct for one Node process; wrong behind a load balancer. |
+| O7 | MEDIUM | `app/admin/actions.ts` | Still 1.6k lines; Phase 20's split into `app/admin/actions/*.ts` was not done. |
+| O8 | MEDIUM | — | No IDOR/ownership regression tests (instructor editing another instructor's course, user reading another user's order/address). |
+| O9 | LOW | `lib/store.ts:687` | Turbopack warning: dynamic `fs.readFileSync(WAL_PATH)` traces the whole project into the server output. Pre-existing (same expression at `HEAD`), not fixed. |

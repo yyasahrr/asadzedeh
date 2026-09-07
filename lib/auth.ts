@@ -50,13 +50,42 @@ export function toSafeUser(user: User, session?: Session | null): SessionUser {
   };
 }
 
+/** Hard ceiling for any session, in milliseconds. */
+export const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+
+/**
+ * Server-side session validity.
+ *
+ * A session is rejected when it is revoked, when it has passed `expiresAt`, or
+ * when no expiry can be established at all. Browser cookie expiry is never
+ * relied on — every protected request goes through this.
+ */
+export function sessionState(
+  session: Session | undefined | null,
+  now: number = Date.now(),
+): "active" | "unknown" | "revoked" | "expired" {
+  if (!session) return "unknown";
+  if (session.revokedAt) return "revoked";
+  const expiresAt =
+    session.expiresAt ??
+    (session.lastSeen ? new Date(Date.parse(session.lastSeen) + SESSION_TTL_MS).toISOString() : undefined);
+  if (!expiresAt) return "expired";
+  const ts = Date.parse(expiresAt);
+  if (Number.isNaN(ts) || ts <= now) return "expired";
+  return "active";
+}
+
+export function isSessionActive(session: Session | undefined | null, now?: number): boolean {
+  return sessionState(session, now) === "active";
+}
+
 export async function getSessionUser(): Promise<SessionUser | null> {
   const jar = await cookies();
   const token = jar.get(SESSION_COOKIE)?.value;
   if (!token) return null;
   const session = getSession(token);
-  if (!session) return null;
-  const user = getUserById(session.userId);
+  if (!isSessionActive(session)) return null;
+  const user = getUserById(session!.userId);
   if (!user) return null;
   return toSafeUser(user, session);
 }

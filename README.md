@@ -9,20 +9,41 @@
 ## شروع
 
 ```bash
-npm install --legacy-peer-deps
+npm ci           # package-lock.json is authoritative — npm ci, not npm install
 cp .env.example .env.local
 npm run dev      # http://localhost:3000
 npm run build    # بررسی تولید
 ```
 
-Production data lives in **PostgreSQL** (`DATABASE_URL`). Development without Postgres uses PGlite under `data/pglite`. See `docs/DEPLOY.md`, `docs/ENV.md`, `docs/BACKUP.md`, `docs/SECURITY.md`, `docs/SEO.md`.
+داده‌های production در **PostgreSQL** (`DATABASE_URL`) نگه‌داری می‌شود. در توسعه، اگر
+`DATABASE_URL` تنظیم نشده باشد، یک پایگاه‌داده محلی PGlite زیر `data/pglite` ساخته می‌شود.
+در production نبودِ `DATABASE_URL` باعث **توقف اجرای برنامه** می‌شود (fail fast).
+
+| اسکریپت | کار |
+|---|---|
+| `npm run dev` / `npm start` | سرور توسعه / production (`server.mjs` = Next.js + Socket.IO) |
+| `npm run build` | ساخت production |
+| `npm run lint` / `npm run typecheck` | ESLint / `tsc --noEmit` |
+| `npm test` | تست واحد + یکپارچگی (Vitest، روی PGlite درون‌حافظه‌ای) |
+| `npm run test:e2e` | تست End-to-End (Playwright؛ ابتدا `npm run test:e2e:install`) |
+| `npm run db:migrate` | اعمال مهاجرت‌های `drizzle/*.sql` |
+| `npm run db:seed` | داده نمونه (فقط توسعه) |
+| `npm run db:bootstrap-admin` | ساخت نخستین مدیر ارشد |
+| `npm run db:migrate-json` | انتقال `data/db.json` قدیمی به PostgreSQL |
+| `npm run db:generate` / `db:push` | تولید/اعمال اسکیمای Drizzle |
+| `npm run seo:audit` | ممیزی سئو (PASS / WARN / ERROR) |
+
+CI: فایل `ci/ci.yml` را به `.github/workflows/ci.yml` منتقل کنید.
+
+مستندات: `docs/DEPLOY.md` · `docs/ENV.md` · `docs/DATABASE.md` · `docs/PAYMENT.md` · `docs/BACKUP.md` · `docs/SECURITY.md` · `docs/SEO.md`.
 
 ## پنل مدیریت واقعی + گواهی PDF
 
 - **مدیریت دوره‌ها و کلاس‌ها**: افزودن، ویرایش و حذف کامل از `/admin` با Server Action؛
   تغییرات بلافاصله روی سایت دیده می‌شود. هنرجویان، وضعیت سفارش‌ها و صدور گواهی هم واقعی است.
-- **ذخیره‌سازی**: فایل `data/db.json` (خودکار از `lib/data.ts` مقداردهی اولیه می‌شود و در گیت نیست).
-  برای production کافی است توابع `lib/store.ts` را با دیتابیس واقعی جایگزین کنید.
+- **ذخیره‌سازی**: PostgreSQL با لایه Drizzle (`lib/db/schema.ts`، مهاجرت‌ها در `drizzle/`).
+  `lib/store.ts` کش اسنادی روی همان جداول است. `data/db.json` دیگر پایگاه‌داده اجرایی نیست و
+  فقط به‌عنوان ورودی یک‌بارمصرفِ `npm run db:migrate-json` باقی مانده است.
 - **گواهی پایان دوره**: طرح A4 افقی با مهر آموزشگاه، امضا و کد یکتا؛
   هنرجو از پنل خودش PDF می‌گیرد و اصالت هر گواهی در `/verify/[code]` قابل استعلام است.
 
@@ -45,7 +66,7 @@ Production data lives in **PostgreSQL** (`DATABASE_URL`). Development without Po
 
 ## استقرار روی cPanel (Node.js Application)
 
-1. در cPanel از **Setup Node.js App**، نسخه Node `20.x` یا بالاتر را انتخاب کنید و ریشه برنامه را روی پوشه پروژه بگذارید.
+1. در cPanel از **Setup Node.js App**، نسخه Node `22.x` یا بالاتر را انتخاب کنید و ریشه برنامه را روی پوشه پروژه بگذارید.
 2. فایل‌های پروژه را بدون `node_modules` و بدون `.env` آپلود کنید؛ سپس در **Terminal** همان برنامه اجرا کنید:
 
    ```bash
@@ -55,7 +76,8 @@ Production data lives in **PostgreSQL** (`DATABASE_URL`). Development without Po
 
 3. متغیرهای `.env.example` را در بخش Environment Variables cPanel ثبت کنید. در production مقدار تصادفی و ثابت برای `APP_SECRET` الزامی است.
 4. Startup file را `server.mjs` و Application startup command را `npm start` بگذارید. پورت را cPanel از متغیر `PORT` تزریق می‌کند؛ آن را دستی hardcode نکنید.
-5. پوشه‌های `data/`, `data/videos/`, `data/lesson-files/` و `public/uploads/` باید برای کاربر برنامه قابل نوشتن باشند. فایل `data/db.json` در اولین اجرا ساخته می‌شود.
+5. پوشه‌های `data/videos/` و `data/lesson-files/` باید برای کاربر برنامه قابل نوشتن باشند.
+   داده‌های اصلی در PostgreSQL است؛ پیش از اولین اجرا `npm run db:migrate` را بزنید.
 6. پس از تغییر کد، `npm run build` را دوباره اجرا و برنامه Node.js را از cPanel با **Restart** راه‌اندازی کنید. دامنه را با SSL به برنامه متصل کنید.
 
 > این پروژه به Node.js نیاز دارد و روی هاست cPanel صرفاً PHP اجرا نمی‌شود. اگر سرویس Node.js یا فضای کافی برای ویدیوهای حجیم در دسترس نیست، باید هاست/فضای ذخیره‌سازی جداگانه تهیه شود.
@@ -86,7 +108,11 @@ components/
   dashboard/ admin/     # اجزای پنل‌ها
 lib/
   data.ts               # داده نمایشی فارسی
-  store.ts              # لایه داده (data/db.json)
+  db/schema.ts          # اسکیمای Drizzle (جداول، کلیدها، ایندکس‌ها)
+  db/commerce.ts        # رزرو موجودی/ظرفیت و گذار پرداخت با SQL اتمیک
+  store.ts              # لایه داده (کش اسنادی روی PostgreSQL)
+  checkout-lines.ts     # ساخت خطوط سفارش؛ قیمت فقط از سمت سرور
+  stock.ts              # موجودی/ظرفیت قابل فروش (منهای رزروها)
   auth.ts / totp.ts     # نشست، نقش‌ها، امضای توکن، TOTP
   access.ts             # چه کسی چه ویدیویی را می‌بیند
   video.ts              # مخزن ویدیو، ffmpeg (اختیاری)، واترمارک

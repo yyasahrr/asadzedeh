@@ -14,6 +14,7 @@ import { WorkshopLocation } from "@/components/workshop/WorkshopLocation";
 import { TrailerBlock } from "@/components/video/TrailerBlock";
 import { hasPaidClassAccess } from "@/lib/access";
 import { getSessionUser } from "@/lib/auth";
+import { availableSeats } from "@/lib/stock";
 
 export function generateStaticParams() {
   return getClasses().map((c) => ({ slug: c.slug }));
@@ -67,7 +68,9 @@ export default async function ClassDetailPage({
 
   const related = getClasses().filter((c) => c.slug !== cls.slug).slice(0, 2);
   const siteUrl = getSettings().site.siteUrl.replace(/\/$/, "");
-  const urgent = cls.remaining <= 3;
+  // Seats a shopper can still take: open seats minus unpaid reservations.
+  const seats = availableSeats(cls);
+  const urgent = seats <= 3;
   const lessons = [...(cls.lessons ?? [])].sort((a, b) => a.order - b.order);
   const chapters = Array.from(new Set(lessons.map((lesson) => lesson.chapterId)));
   const chapterById = new Map((cls.chapters ?? []).map((ch) => [ch.id, ch.title]));
@@ -234,11 +237,11 @@ export default async function ClassDetailPage({
             <div className="pattern-strip" aria-hidden />
             <div className="p-6">
               <p className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${urgent ? "bg-madder-700" : "bg-teal-600"}`}>
-                {cls.remaining <= 0
+                {seats <= 0
                   ? "ظرفیت تکمیل شد"
                   : urgent
-                    ? `تنها ${toFa(cls.remaining)} ظرفیت باقی مانده`
-                    : `${toFa(cls.remaining)} ظرفیت باقی مانده از ${toFa(cls.capacity)}`}
+                    ? `تنها ${toFa(seats)} ظرفیت باقی مانده`
+                    : `${toFa(seats)} ظرفیت باقی مانده از ${toFa(cls.capacity)}`}
               </p>
               <div className="mt-3 text-2xl font-black">{formatPriceCompact(cls.price)}</div>
               <p className="mt-1 text-xs text-white/60">امکان پرداخت در دو قسط</p>
@@ -247,7 +250,7 @@ export default async function ClassDetailPage({
                   <Link href={`/dashboard/classes/${cls.slug}`} className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-teal-600 text-sm font-bold text-white hover:bg-teal-700">
                     <BookOpen className="h-4 w-4" /> شما قبلاً ثبت‌نام کرده‌اید — ورود به کلاس
                   </Link>
-                ) : cls.remaining <= 0 ? (
+                ) : seats <= 0 ? (
                   <Button href="/classes" variant="sand" size="lg" className="w-full">مشاهده کلاس‌های دیگر</Button>
                 ) : (
                   <AddToCartButton

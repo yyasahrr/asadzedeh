@@ -50,6 +50,8 @@ import { runMigrations } from "./db/migrate";
 import { isProduction } from "./env";
 import { logger } from "./logger";
 import { CURRENCY } from "./money";
+// Re-exported so server code can keep importing them from the store.
+export { availableSeats, availableStock } from "./stock";
 
 /**
  * Domain store.
@@ -58,7 +60,7 @@ import { CURRENCY } from "./money";
  * covers crash windows before the async persist flush.
  */
 
-const WAL_PATH = path.join(process.cwd(), "data", ".store-wal.json");
+const WAL_PATH = process.env.STORE_WAL_PATH || path.join(process.cwd(), "data", ".store-wal.json");
 const JSON_PATH = path.join(process.cwd(), "data", "db.json");
 
 export interface Db {
@@ -320,7 +322,7 @@ async function persist(db: Db, keys?: (keyof Db)[]) {
       "token",
       db.sessions.map((s) => ({
         columns: ["token", "user_id", "payload", "created_at", "last_seen", "expires_at"],
-        values: [s.token, s.userId, json(s), now, s.lastSeen ?? null, null],
+        values: [s.token, s.userId, json(s), now, s.lastSeen ?? null, s.expiresAt ?? null],
       })),
     );
   }
@@ -389,8 +391,10 @@ async function persist(db: Db, keys?: (keyof Db)[]) {
       "products",
       "slug",
       db.products.map((p) => ({
-        columns: ["slug", "title", "price", "stock", "reserved_stock", "kind", "active", "payload", "updated_at"],
-        values: [p.slug, p.title, p.price, p.stock, 0, p.kind, p.active, json(p), now],
+        // reserved_stock is owned by lib/db/commerce.ts (atomic reservations) and is
+        // deliberately not written here so a cache flush can never erase a hold.
+        columns: ["slug", "title", "price", "stock", "sold", "allow_backorder", "kind", "active", "payload", "updated_at"],
+        values: [p.slug, p.title, p.price, p.stock, p.sold ?? 0, p.allowBackorder ?? false, p.kind, p.active, json(p), now],
       })),
     );
   }
@@ -715,6 +719,60 @@ function schedulePersist(keys: (keyof Db)[]) {
 export async function flushStore(): Promise<void> {
   await initStore();
   await persistChain;
+}
+
+/**
+ * Re-read the listed collections from SQL into the in-memory cache.
+ *
+ * `lib/db/commerce.ts` mutates stock/seats directly in the database so that
+ * concurrency is settled by row locks rather than by an in-process mutex. This
+ * pulls those authoritative values back into the document cache immediately
+ * afterwards, so the cache and the relational columns can never drift apart.
+ */
+export async function syncCollections(keys: (keyof Db)[]): Promise<void> {
+  await initStore();
+  await persistChain;
+  const sql = await getSql();
+  const read = async <T>(table: string): Promise<T[]> => {
+    const rows = await sql.query<Record<string, unknown>>(`SELECT payload FROM ${table}`);
+    return rows.map((r) => parsePayload<T>(r));
+  };
+  const next: Db = { ...cache };
+  for (const key of keys) {
+    switch (key) {
+      case "products":
+        next.products = await read<Product>("products");
+        break;
+      case "classes":
+        next.classes = await read<InPersonClass>("classes");
+        break;
+      case "orders":
+        next.orders = await read<Order>("orders");
+        break;
+      case "payments":
+        next.payments = await read<PaymentRecord>("payments");
+        break;
+      case "enrollments":
+        next.enrollments = await read<Enrollment>("enrollments");
+        break;
+      case "courses":
+        next.courses = await read<OnlineCourse>("courses");
+        break;
+      case "certificates":
+        next.certificates = await read<Certificate>("certificates");
+        break;
+      case "users":
+        next.users = ensureSeedUsers(await read<User>("users"));
+        break;
+      case "sessions":
+        next.sessions = await read<Session>("sessions");
+        break;
+      default:
+        break;
+    }
+  }
+  cache = next;
+  writeWal(cache);
 }
 
 export function writeDb(patch: Partial<Db>): Db {

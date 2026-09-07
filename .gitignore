@@ -53,3 +53,15 @@ data/videos/
 
 # Generated audit and deployment artifacts
 outputs/
+
+# Local development database (PGlite fallback) and store write-ahead log
+data/pglite*/
+
+data/.store-wal*.json
+data/seo-redirects.json
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/

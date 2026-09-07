@@ -5,12 +5,13 @@ import Link from "next/link";
 import { Check, Minus, Plus, ShoppingBag } from "lucide-react";
 import { addToCart } from "@/lib/cart";
 import { formatPrice, toFa } from "@/lib/format";
+import { availableStock } from "@/lib/stock";
 import type { Product } from "@/lib/types";
 
 /** Add-to-cart box for physical products with a quantity stepper and stock awareness. */
 export function ProductBuyBox({ product, disabled }: { product: Product; disabled?: boolean }) {
   const p = product;
-  const max = p.allowBackorder ? 99 : p.stock;
+  const max = availableStock(p);
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
   const out = max <= 0;
@@ -59,7 +60,7 @@ export function ProductBuyBox({ product, disabled }: { product: Product; disable
         </button>
       )}
       <p className="text-center text-xs text-ink-500">
-        {p.stock > 0 ? `${toFa(p.stock)} عدد در انبار` : "سفارش با تأخیر ارسال (پیش‌خرید)"}
+        {max > 0 ? `${toFa(max)} عدد در انبار` : "سفارش با تأخیر ارسال (پیش‌خرید)"}
         {p.sku && <span dir="ltr" className="ms-2 text-ink-400">SKU: {p.sku}</span>}
       </p>
     </div>

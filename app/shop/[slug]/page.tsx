@@ -12,6 +12,7 @@ import { FieldLabel, Input, Textarea } from "@/components/ui/Input";
 import { getSessionUser } from "@/lib/auth";
 import { formatPrice, toFa } from "@/lib/format";
 import { getActiveProducts, getProduct, getSettings } from "@/lib/store";
+import { availableStock } from "@/lib/stock";
 
 export const dynamic = "force-dynamic";
 
@@ -58,7 +59,7 @@ export default async function ProductPage({ params, searchParams }: { params: Pr
           <div className="space-y-5">
             <div className="flex flex-wrap items-center gap-2">
               <Badge tone="navy">{p.category}</Badge>
-              {p.kind === "preorder" ? <Badge tone="ochre"><Hammer className="h-3 w-3" /> ساخت سفارشی در کارگاه</Badge> : p.stock > 0 ? <Badge tone="teal">موجود</Badge> : <Badge tone="madder">ناموجود</Badge>}
+              {p.kind === "preorder" ? <Badge tone="ochre"><Hammer className="h-3 w-3" /> ساخت سفارشی در کارگاه</Badge> : availableStock(p) > 0 ? <Badge tone="teal">موجود</Badge> : <Badge tone="madder">ناموجود</Badge>}
             </div>
             <p className="text-base leading-8 text-ink-700">{p.excerpt}</p>
 

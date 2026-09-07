@@ -2,6 +2,7 @@ import type { SessionUser } from "./auth";
 import { can } from "./auth";
 import { audit } from "./audit";
 import { createSpotLicense } from "./spotplayer";
+import { insertEnrollmentIfAbsent } from "./db/commerce";
 import { faToday } from "./format";
 import { getClasses, getCourses, getCourse, getEnrollment, getEnrollments, getInstructorByUser, getLearningPath, getOrders, getUserById, writeDb } from "./store";
 import type { InPersonClass, Lesson, OnlineCourse, VideoAsset } from "./types";
@@ -164,10 +165,9 @@ export async function grantAccessForOrder(orderId: string) {
     }
   }
 
-  for (const courseSlug of courseSlugsToEnroll) {
-    // Idempotency: skip if already enrolled
-    if (enrollments.some((e) => e.userId === user.id && e.courseSlug === courseSlug)) continue;
+  const newlyEnrolled: string[] = [];
 
+  for (const courseSlug of courseSlugsToEnroll) {
     const course = getCourse(courseSlug);
     const enrollment = {
       id: `en-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
@@ -177,6 +177,11 @@ export async function grantAccessForOrder(orderId: string) {
       createdAt: faToday(),
       completed: [] as string[],
     };
+    // Database-level idempotency: UNIQUE (user_id, course_slug).
+    const created = await insertEnrollmentIfAbsent(enrollment.id, user.id, courseSlug, orderId, enrollment);
+    if (!created) continue;
+
+    newlyEnrolled.push(courseSlug);
     enrollments.push(enrollment);
     if (course?.protection?.spotPlayer) {
       const r = await createSpotLicense({ name: user.name, phone: user.phone, courseIds: course.protection.spotPlayerCourseIds, payload: orderId });
@@ -188,10 +193,13 @@ export async function grantAccessForOrder(orderId: string) {
       }
     }
   }
+
+  if (newlyEnrolled.length === 0) return;
+
   writeDb({
     enrollments,
     courses: getCourses().map((c) =>
-      courseSlugsToEnroll.includes(c.slug) ? { ...c, students: c.students + 1 } : c
+      newlyEnrolled.includes(c.slug) ? { ...c, students: c.students + 1 } : c
     ),
   });
 }
