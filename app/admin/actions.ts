@@ -1589,7 +1589,7 @@ export async function resetDemoData() {
   const me = await staff("settings");
   if (!isSuperAdmin(me) || isProduction()) redirect("/admin");
   await audit({ action: "db.reset", level: "warn", actor: actor(me) });
-  resetDb();
+  await resetDb();
   revalidateAll();
   redirect("/admin/settings?saved=reset");
 }

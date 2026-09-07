@@ -136,6 +136,22 @@ describe("append-only tables survive a concurrent writer", () => {
     expect(rows.map((r) => r.code)).toEqual(["AZ-T-2"]);
   });
 
+  it("a full reset does clear the append-only tables explicitly", async () => {
+    // resetDb() no longer relies on the prune, so it has to DELETE these itself
+    // or a dev "reset demo data" would leave the old orders behind.
+    await insertOrder("ord-STALE", 4242);
+    let rows = await sql.query<{ id: string }>("SELECT id FROM orders WHERE id = 'ord-STALE'");
+    expect(rows).toHaveLength(1);
+
+    await store.resetDb();
+
+    rows = await sql.query<{ id: string }>("SELECT id FROM orders WHERE id = 'ord-STALE'");
+    expect(rows).toHaveLength(0);
+    // And the seeded catalogue is back.
+    const courses = await sql.query<{ n: string }>("SELECT count(*)::text AS n FROM courses");
+    expect(Number(courses[0].n)).toBeGreaterThan(0);
+  });
+
   it("still prunes content collections, which admin deletes depend on", async () => {
     const course = (slug: string) =>
       sql.query(

@@ -880,12 +880,27 @@ export async function writeDbAsync(patch: Partial<Db>): Promise<Db> {
   return db;
 }
 
-export function resetDb(): Db {
+/**
+ * Tables that persist() no longer prunes.
+ *
+ * They are append-only in normal operation, so a write must never delete rows
+ * another process may have added. The one legitimate exception is a full reset,
+ * which has to clear them explicitly — filtering the in-memory array is no
+ * longer enough to make a row disappear.
+ */
+const APPEND_ONLY_TABLES = ["orders", "payments", "enrollments", "certificates", "audit_logs", "tickets"] as const;
+
+export async function resetDb(): Promise<Db> {
   if (isProduction()) {
     throw new Error("resetDb is disabled in production");
   }
+  const sql = await getSql();
+  for (const table of APPEND_ONLY_TABLES) {
+    await sql.execute(`DELETE FROM ${table}`);
+  }
   state.cache = seed();
   schedulePersist(Object.keys(state.cache) as (keyof Db)[]);
+  await state.persistChain;
   return state.cache;
 }
 
