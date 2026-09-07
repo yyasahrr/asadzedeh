@@ -48,6 +48,9 @@ export default async function AdminSecurityPage({
                 <span className="text-xs leading-6 text-ink-600">
                   مدیر، ویراستار و پشتیبانی بدون فعال‌کردن Google Authenticator نمی‌توانند وارد پنل شوند (ابتدا به صفحه فعال‌سازی هدایت می‌شوند).
                 </span>
+                <span className="mt-1 block text-xs leading-6 text-ink-500">
+                  در محیط عملیاتی این گزینه همیشه فعال است و خاموش‌کردن آن اثری ندارد؛ این کلید فقط برای محیط توسعه و آزمایشی است.
+                </span>
               </span>
             </label>
             <div>

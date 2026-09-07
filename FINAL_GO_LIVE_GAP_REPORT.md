@@ -20,7 +20,7 @@ storage.
 |---|---|
 | `npm run lint` | 0 errors, 0 warnings |
 | `npm run typecheck` | 0 errors (`tsc --noEmit`) |
-| `npx vitest run` | **221 passed, 26 files** |
+| `npx vitest run` | **230 passed, 27 files** |
 | `npm run build` | compiled successfully, 49 static pages |
 | `npm run seo:audit` | `PASS`, 0 ERROR / 0 WARN |
 | `npx tsx scripts/smoke.ts` | **36/36** against real PostgreSQL 18.4 |

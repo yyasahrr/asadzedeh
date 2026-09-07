@@ -5,7 +5,7 @@ behind the mark. Nothing is marked DONE on the strength of code being written �
 only on a test that ran or a command that produced the stated output.
 
 Verification run for this checklist: `lint` 0/0 · `typecheck` 0 errors ·
-`vitest run` **221 passed / 26 files** · `build` compiled (49 static pages) ·
+`vitest run` **230 passed / 27 files** · `build` compiled (49 static pages) ·
 `seo:audit` PASS · `smoke` **36/36** against real PostgreSQL 18.4.
 
 ---
@@ -21,7 +21,7 @@ These are the conditions that must hold. If any fails, the answer is NOT READY.
 | Callback cannot duplicate effects | **DONE** | 5 parallel callbacks → 1; shared `gateway_transaction_id` → 1. `UPDATE … WHERE status <> 'paid'` + UNIQUE constraint. |
 | Checkout does not trust client price | **DONE** | `buildLines()` re-reads every price. `checkout-lines.test.ts`: a cart posting `price: 1` is charged the catalogue price (15 tests). |
 | Critical writes do not depend on JSON/WAL | **DONE** | WAL removed. `server.mjs` refuses to boot without `DATABASE_URL`. No `STORE_WAL_PATH` anywhere in the tree. |
-| Admin 2FA | **DONE, but see note** | TOTP + recovery codes implemented and tested. **`security.requireStaff2fa` is `false` in the seed.** Set it to `true` in production before Go-Live — see [Configuration](#configuration-required-before-go-live). |
+| Admin 2FA | **DONE** | TOTP + recovery codes implemented and tested. Enforced in code for production: `staffMfaRequired()` returns `true` when `NODE_ENV=production` regardless of the stored setting, so a deployment cannot run with staff 2FA off. `staff-mfa-policy.test.ts` (9). |
 | Production does not support demo payment | **DONE** | `demoPaymentAllowed()` returns false in production unless `ALLOW_DEMO_PAYMENT=true`. Smoke test asserts `demoPayment=true` only because it runs against a non-production host. |
 | Production secrets not exposed | **DONE** | `sentry-scrub.test.ts` (10) asserts password, session token, cookies, 2FA secret, recovery code, `Authorization` and SMTP/SMS/payment secrets are stripped. Smoke test scans `/`, `/courses`, `/api/health`, `/auth` for secret leakage. No `NEXT_PUBLIC_*` secret. |
 | Authorization regression tests pass | **DONE** | `authorization.test.ts` 23/23 — action-level, not page-level. |
@@ -136,8 +136,9 @@ as operational targets. Removed the reference to the deleted WAL file.
 
 These are operator actions, not code changes.
 
-1. **Set `security.requireStaff2fa` to `true`.** It ships `false`. Without it,
-   admin 2FA is implemented but not enforced.
+1. ~~Set `security.requireStaff2fa` to `true`.~~ **No longer an operator action** —
+   production enforces staff 2FA in code. The setting only affects development
+   and staging.
 2. **Set `DATABASE_URL`** to the production PostgreSQL. The server exits without it.
 3. **Set `NEXT_PUBLIC_APP_URL`** — required for the canonical base and payment callbacks.
 4. **Set `APP_SECRET`** to a real random value.
@@ -152,7 +153,7 @@ These are operator actions, not code changes.
 
 **NOT READY** — solely because Playwright E2E has never executed in a browser.
 
-Everything the repository can verify on its own passes: 221 tests, a 36-check
+Everything the repository can verify on its own passes: 230 tests, a 36-check
 smoke test against real PostgreSQL, a verified restore path, clean lint,
 typecheck and build. The moment the E2E suite runs green in CI, and the
 configuration list above is completed, the verdict becomes READY.

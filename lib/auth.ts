@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import { cookies } from "next/headers";
 import type { Role, Session, User } from "./types";
+import { isProduction } from "./env";
 import { getSession, getSettings, getUserById } from "./store";
 
 export const SESSION_COOKIE = "az_session";
@@ -99,15 +100,32 @@ export function isInstructor(user: SessionUser | null): boolean {
 }
 
 /**
+ * Whether the site policy requires 2FA for staff.
+ *
+ * In production this is always true. The admin-toggleable setting is a
+ * convenience for staging and local development; letting a production deployment
+ * run with staff 2FA switched off would mean a single leaked password hands over
+ * the admin panel. Same reasoning as `demoPaymentAllowed()`: the unsafe mode is
+ * opt-in outside production and unavailable inside it.
+ */
+export function staffMfaRequired(): boolean {
+  if (isProduction()) return true;
+  return getSettings().security.requireStaff2fa;
+}
+
+/**
  * Staff need a verified second factor when:
  *  - they have TOTP enabled on their account, or
  *  - the site policy requires 2FA for all staff (then they must enrol).
+ *
+ * Instructors are exempt from the *enrolment* requirement — they are content
+ * authors rather than administrators — but an instructor who has enabled TOTP is
+ * still held to it.
  */
 export function needsMfa(user: SessionUser | null): "none" | "verify" | "enrol" {
   if (!user || !isStaff(user)) return "none";
   if (user.totpEnabled) return user.mfaVerified ? "none" : "verify";
-  const policy = getSettings().security.requireStaff2fa;
-  return policy && user.role !== "instructor" ? "enrol" : "none";
+  return staffMfaRequired() && user.role !== "instructor" ? "enrol" : "none";
 }
 
 /* ---------- permissions ---------- */

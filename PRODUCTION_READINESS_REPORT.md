@@ -22,7 +22,7 @@ outside this repository.
 |---|---|
 | `npm run lint` | 0 errors, 0 warnings |
 | `npm run typecheck` | 0 errors (`tsc --noEmit`, includes `e2e/` and `playwright.config.ts`) |
-| `npm test` | **221 passed / 26 files** (was 78 / 14 at the last report) |
+| `npm test` | **230 passed / 27 files** (was 78 / 14 at the last report) |
 | `npm run build` | `✓ Compiled successfully`, 49 static pages |
 | `npm run seo:audit` | `PASS` — 0 ERROR, 0 WARN (exit-code behaviour measured, see SEO) |
 | `npm run smoke` | **36/36** against real PostgreSQL 18.4 on a production build |
@@ -75,8 +75,12 @@ Phone + password, hashed sessions, TOTP 2FA with `XXXX-XXXX` recovery codes.
 Session validity distinguishes `unknown | revoked | expired | active`
 (`session-state.test.ts`, 7).
 
-**Action required before Go-Live:** `security.requireStaff2fa` ships `false`.
-Set it to `true` or admin 2FA is implemented but not enforced.
+**Production enforcement:** `staffMfaRequired()` returns `true` whenever
+`NODE_ENV=production`, regardless of the stored `security.requireStaff2fa`
+setting, so a production deployment cannot run with staff 2FA switched off. The
+setting remains toggleable for development and staging. Instructors are exempt
+from *compulsory* enrolment but are still held to TOTP they enable themselves.
+`staff-mfa-policy.test.ts` (9).
 
 Password reset is implemented: an 8-digit SMS code, stored hashed, single-use,
 15-minute expiry, with a bounded wrong-guess budget. A successful reset revokes
@@ -214,7 +218,7 @@ non-production host.
 
 ## Testing — PARTIAL
 
-`npm test` → **221 passed / 26 files**.
+`npm test` → **230 passed / 27 files**.
 
 | File | Tests | Covers |
 |---|---|---|
@@ -233,6 +237,7 @@ non-production host.
 | `concurrent-writers.pg.test.ts` | 7 | append-only tables survive a second writer |
 | `reservation-expiry.pg.test.ts` | 9 | expired reservations reclaimed; paid orders never swept |
 | `password-reset.pg.test.ts` | 16 | hashed single-use codes, expiry, attempt budget, atomic consumption |
+| `staff-mfa-policy.test.ts` | 9 | staff 2FA forced in production regardless of setting |
 | `auth.test.ts` | 6 | hashing and login |
 | `auth-navigation.test.ts` | 5 | redirect handling |
 | `order-status.test.ts` | 4 | order state transitions |
@@ -246,7 +251,7 @@ non-production host.
 | `rate-limit.test.ts` | 1 | limiter |
 
 Four suites (`commerce.pg`, `backup-verify.pg`, `concurrent-writers.pg`,
-`payload-encoding.pg` — 36 of the 221 tests) are **not** excluded from a bare
+`payload-encoding.pg` — 36 of the 230 tests) are **not** excluded from a bare
 `npm test`: `vitest.config.ts` includes `**/*.test.ts` with no filter, and each
 of those files boots its own throwaway PostgreSQL cluster from the
 `embedded-postgres` dev dependency. So a plain `npm test` does exercise real
@@ -278,7 +283,6 @@ non-zero on any SEO ERROR.
 
 1. **Playwright E2E has never run.** The only item keeping the verdict off READY.
 2. **Six integrations are unconfigured** — Zarinpal, S3, SpotPlayer, SMS, SMTP, Sentry DSN.
-3. **`security.requireStaff2fa` is `false`** in the shipped seed.
 
 ---
 
@@ -309,7 +313,7 @@ here.
 1. the Playwright suite has passed once in a browser;
 2. Zarinpal credentials are configured and a live payment has been verified
    end-to-end;
-3. `security.requireStaff2fa` is `true` and seeded admin credentials are changed;
+3. seeded admin credentials are changed;
 4. a restore has been rehearsed with `npm run backup:verify`;
 5. an RPO is chosen and the dump schedule or WAL archiving that achieves it is
    actually running.
