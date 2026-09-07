@@ -1,5 +1,7 @@
 "use server";
 
+import { bool, num, str } from "@/lib/validation/form";
+
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { audit } from "@/lib/audit";
@@ -7,17 +9,6 @@ import { getSessionUser, type SessionUser } from "@/lib/auth";
 import { getCourseRequest, getCourseRequests, getInstructorByUser, writeDb } from "@/lib/store";
 import type { CourseRequest, CourseRequestChapter, CourseRequestLesson, Level } from "@/lib/types";
 
-function str(fd: FormData, key: string): string {
-  const v = fd.get(key);
-  return typeof v === "string" ? v.trim() : "";
-}
-function num(fd: FormData, key: string, fallback = 0): number {
-  const n = Number(str(fd, key).replace(/[۰-۹]/g, (d) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d))));
-  return Number.isFinite(n) && n > 0 ? n : fallback;
-}
-function bool(fd: FormData, key: string): boolean {
-  return fd.get(key) === "on" || fd.get(key) === "1" || fd.get(key) === "true";
-}
 function lines(value: string): string[] {
   return value.split("\n").map((l) => l.trim()).filter(Boolean);
 }

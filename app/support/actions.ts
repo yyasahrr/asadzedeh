@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getSessionUser, can } from "@/lib/auth";
 import { getTickets, getTicket, writeDb } from "@/lib/store";
-import { isTicketStatus } from "@/lib/validation";
+import { isTicketStatus } from "@/lib/validation/legacy";
 import type { Ticket, TicketMessage } from "@/lib/types";
 
 /* ---------- Student: create ticket ---------- */

@@ -6,20 +6,10 @@ import { audit } from "@/lib/audit";
 import { getSessionUser, type SessionUser } from "@/lib/auth";
 import { getCourses, getCourse, getInstructorByUser, getInstructors, getSubmissions, writeDb } from "@/lib/store";
 import type { Chapter, Instructor, Lesson } from "@/lib/types";
+import { bool, num, str } from "@/lib/validation/form";
 
 /* Instructor panel actions: every write is scoped to the instructor's own courses. */
 
-function str(fd: FormData, key: string): string {
-  const v = fd.get(key);
-  return typeof v === "string" ? v.trim() : "";
-}
-function num(fd: FormData, key: string, fallback = 0): number {
-  const n = Number(str(fd, key).replace(/[۰-۹]/g, (d) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d))));
-  return Number.isFinite(n) && n > 0 ? n : fallback;
-}
-function bool(fd: FormData, key: string): boolean {
-  return fd.get(key) === "on" || fd.get(key) === "1" || fd.get(key) === "true";
-}
 
 async function me(): Promise<{ user: SessionUser; inst: Instructor }> {
   const user = await getSessionUser();

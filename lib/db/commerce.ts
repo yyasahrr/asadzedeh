@@ -527,3 +527,55 @@ export async function readAvailability(
     reserved: Number(rows[0].reserved_seats),
   };
 }
+
+/* ------------------------------------------------------------- certificates */
+
+/**
+ * Issue a certificate, or do nothing if this learner already holds one for the
+ * course.
+ *
+ * Concurrency-safe by construction: the partial unique index
+ * `certificates_user_course_active_idx` (one active certificate per
+ * learner+course) rejects the loser, and `ON CONFLICT DO NOTHING` turns that
+ * rejection into a clean no-op instead of an exception.
+ *
+ * Returns true only for the row this call actually inserted.
+ */
+export async function insertCertificateIfAbsent(certificate: {
+  code: string;
+  userId?: string | null;
+  student: string;
+  course: string;
+  instructorName?: string | null;
+  hours: number;
+  issuedAt?: string;
+  payload?: unknown;
+}): Promise<boolean> {
+  const sql = await getSql();
+  const issuedAt = certificate.issuedAt ?? new Date().toISOString();
+  try {
+    const inserted = await sql.query<{ code: string }>(
+      `INSERT INTO certificates
+         (code, user_id, student_name, course_title, instructor_name, hours, issued_at, payload)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb)
+       ON CONFLICT (user_id, course_title) WHERE revoked_at IS NULL DO NOTHING
+       RETURNING code`,
+      [
+        certificate.code,
+        certificate.userId ?? null,
+        certificate.student,
+        certificate.course,
+        certificate.instructorName ?? null,
+        certificate.hours,
+        issuedAt,
+        JSON.stringify(certificate.payload ?? certificate),
+      ],
+    );
+    return inserted.length > 0;
+  } catch (error) {
+    // A second completion request that raced to the same moment: the index has
+    // already recorded a certificate, so this is a no-op rather than a failure.
+    if ((error as { code?: string } | null)?.code === "23505") return false;
+    throw error;
+  }
+}

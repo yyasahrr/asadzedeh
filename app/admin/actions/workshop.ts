@@ -1,10 +1,12 @@
 "use server";
 
+import { numAllowZero, str } from "@/lib/validation/form";
+
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { audit } from "@/lib/audit";
 import { getSettings, writeDb } from "@/lib/store";
-import { isValidLatitude, isValidLongitude, clampText } from "@/lib/validation";
+import { isValidLatitude, isValidLongitude, clampText } from "@/lib/validation/legacy";
 import { getSessionUser, can } from "@/lib/auth";
 import type { SessionUser } from "@/lib/auth";
 
@@ -18,18 +20,6 @@ async function staff(perm: "settings"): Promise<SessionUser> {
     redirect("/admin");
   }
   return user;
-}
-
-function str(fd: FormData, key: string): string {
-  const v = fd.get(key);
-  return typeof v === "string" ? v.trim() : "";
-}
-
-function numAllowZero(fd: FormData, key: string): number {
-  const raw = str(fd, key);
-  if (raw === "") return 0;
-  const n = Number(raw);
-  return Number.isFinite(n) ? n : 0;
 }
 
 function revalidateAll() {

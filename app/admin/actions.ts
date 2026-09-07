@@ -1,5 +1,9 @@
 "use server";
 
+import { bool, num, numAllowZero, str } from "@/lib/validation/form";
+import { addStaffSchema, updateRoleSchema } from "@/lib/validation/admin";
+import { validate } from "@/lib/validation/schema";
+
 import fs from "node:fs";
 import path from "node:path";
 import { revalidatePath } from "next/cache";
@@ -9,7 +13,7 @@ import { can, getSessionUser, hashPassword, isSuperAdmin, type Permission, type 
 import { audit } from "@/lib/audit";
 import { sendEmail, sendSms } from "@/lib/notify";
 import { deleteVideoFiles, resetFfmpegCache, transcodeToHls } from "@/lib/video";
-import { clampText } from "@/lib/validation";
+import { clampText } from "@/lib/validation/legacy";
 import { grantAccessForOrder } from "@/lib/access";
 import { generateCertificateCode } from "@/lib/certificate-code";
 import { isProduction } from "@/lib/env";
@@ -69,28 +73,6 @@ async function staff(perm: Permission): Promise<SessionUser> {
     redirect("/admin");
   }
   return user as SessionUser;
-}
-
-function str(fd: FormData, key: string, fallback = ""): string {
-  const v = fd.get(key);
-  return typeof v === "string" ? v.trim() : fallback;
-}
-
-function num(fd: FormData, key: string, fallback = 0): number {
-  const n = Number(str(fd, key).replace(/[۰-۹]/g, (d) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d))).replace(/[^0-9.]/g, ""));
-  return Number.isFinite(n) && n > 0 ? n : fallback;
-}
-
-function numAllowZero(fd: FormData, key: string, fallback = 0): number {
-  const raw = str(fd, key);
-  if (raw === "") return fallback;
-  const n = Number(raw.replace(/[۰-۹]/g, (d) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d))).replace(/[^0-9.]/g, ""));
-  return Number.isFinite(n) ? n : fallback;
-}
-
-function bool(fd: FormData, key: string): boolean {
-  const v = str(fd, key);
-  return v === "on" || v === "1" || v === "true";
 }
 
 function lines(value: string): string[] {
@@ -1330,11 +1312,14 @@ export async function saveSiteContent(fd: FormData) {
 export async function addStaff(fd: FormData) {
   const me = await staff("users");
   if (!isSuperAdmin(me)) redirect("/admin");
-  const name = str(fd, "name");
-  const phone = str(fd, "phone");
-  const password = str(fd, "password");
-  const role = str(fd, "role") as "manager" | "editor" | "support" | "instructor";
-  if (!name || !phone || password.length < 10 || !["manager", "editor", "support", "instructor"].includes(role)) return;
+  const parsed = validate(addStaffSchema, {
+    name: fd.get("name"),
+    phone: fd.get("phone"),
+    password: fd.get("password"),
+    role: fd.get("role"),
+  });
+  if (!parsed.ok) redirect("/admin/users?error=validation");
+  const { name, phone, password, role } = parsed.data;
   if (getUserByPhone(phone)) redirect("/admin/users?error=dup");
   const users = getUsers();
   const id = `u-${Date.now().toString(36)}`;
@@ -1355,10 +1340,24 @@ export async function addStaff(fd: FormData) {
 export async function updateUserRole(fd: FormData) {
   const me = await staff("users");
   if (!isSuperAdmin(me)) redirect("/admin");
-  const id = str(fd, "id");
-  const role = str(fd, "role") as "manager" | "editor" | "support" | "instructor" | "student";
+  // The role is validated against an explicit allowlist. `super_admin` is not
+  // in it, so this action can never mint a super admin no matter what the form
+  // posts.
+  const parsed = validate(updateRoleSchema, { id: fd.get("id"), role: fd.get("role") });
+  if (!parsed.ok) {
+    await audit({
+      action: "user.role.rejected",
+      level: "security",
+      actor: actor(me),
+      target: `user:${String(fd.get("id") ?? "")}`,
+      detail: { reason: parsed.issues[0]?.field, requested: String(fd.get("role") ?? "") },
+    });
+    redirect("/admin/users?error=role");
+  }
+  const { id, role } = parsed.data;
   if (id === me.id) redirect("/admin/users"); // can't demote yourself
   const prev = getUserById(id);
+  if (!prev) redirect("/admin/users?error=notfound");
   writeDb({ users: getUsers().map((u) => (u.id === id ? { ...u, role } : u)) });
   await audit({ action: "user.role", level: "security", actor: actor(me), target: `user:${id}`, detail: { from: prev?.role, to: role } });
   revalidatePath("/admin/users");

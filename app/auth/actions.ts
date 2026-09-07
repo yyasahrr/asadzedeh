@@ -18,21 +18,14 @@ import {
 } from "@/lib/auth";
 import { audit, requestContext } from "@/lib/audit";
 import { openSecret, verifyTotp } from "@/lib/totp";
+import { loginSchema, mfaSchema, registerSchema, zTotpCode } from "@/lib/validation/auth";
+import { validate } from "@/lib/validation/schema";
 import { safeNextPath } from "@/lib/auth-navigation";
 import { getSettings, getUserById, getUserByPhone, getUsers, getSessions, writeDb } from "@/lib/store";
 import { rateLimit, LIMITS } from "@/lib/rate-limit";
 import type { User } from "@/lib/types";
 
 const SESSION_DAYS = 30;
-
-function normalizePhone(raw: string): string {
-  return raw
-    .replace(/[۰-۹]/g, (d) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d)))
-    .replace(/[٠-٩]/g, (d) => String("٠١٢٣٤٥٦٧٨٩".indexOf(d)))
-    .replace(/[^0-9+]/g, "")
-    .replace(/^\+98/, "0")
-    .replace(/^98/, "0");
-}
 
 async function createSession(user: User, mfaVerified: boolean) {
   const token = newToken();
@@ -80,12 +73,15 @@ export async function register(fd: FormData) {
   const { ip } = await requestContext();
   const limited = rateLimit(`register:${ip}`, LIMITS.register.limit, LIMITS.register.windowMs);
   if (!limited.ok) redirect("/auth?tab=register&error=rate");
-  const name = String(fd.get("name") ?? "").trim();
-  const phone = normalizePhone(String(fd.get("phone") ?? ""));
-  const password = String(fd.get("password") ?? "");
-  if (!name || !/^09\d{9}$/.test(phone) || password.length < 10) {
+  const parsed = validate(registerSchema, {
+    name: fd.get("name"),
+    phone: fd.get("phone"),
+    password: fd.get("password"),
+  });
+  if (!parsed.ok) {
     redirect("/auth?tab=register&error=validation");
   }
+  const { name, phone, password } = parsed.data;
   if (getUserByPhone(phone)) {
     redirect("/auth?tab=register&error=dup");
   }
@@ -106,9 +102,16 @@ export async function register(fd: FormData) {
 }
 
 export async function login(fd: FormData) {
-  const phone = normalizePhone(String(fd.get("phone") ?? ""));
-  const password = String(fd.get("password") ?? "");
-  const next = String(fd.get("next") ?? "");
+  const parsed = validate(loginSchema, {
+    phone: fd.get("phone"),
+    password: fd.get("password"),
+    next: fd.get("next"),
+  });
+  if (!parsed.ok) {
+    await audit({ action: "auth.login.rejected", level: "security", detail: { field: parsed.issues[0]?.field } });
+    redirect("/auth?error=validation");
+  }
+  const { phone, password, next } = parsed.data;
   const user = getUserByPhone(phone);
   const sec = getSettings().security;
 
@@ -167,7 +170,9 @@ export async function verifyMfa(fd: FormData) {
   const { ip } = await requestContext();
   const limited = rateLimit(`totp:${ip}`, LIMITS.totp.limit, LIMITS.totp.windowMs);
   if (!limited.ok) redirect("/auth/verify?error=rate");
-  const code = String(fd.get("code") ?? "").trim();
+  const codeParsed = validate(mfaSchema, { code: fd.get("code"), next: "" });
+  if (!codeParsed.ok) redirect("/auth/verify?error=code");
+  const code = codeParsed.data.code;
   const isRecovery = /^[0-9A-Z]{4}-[0-9A-Z]{4}$/i.test(code);
   let ok = false;
 
@@ -205,7 +210,9 @@ export async function verifyMfaForSession(fd: FormData) {
   if (!me) redirect("/auth");
   const user = getUserById(me.id);
   if (!user?.totp?.enabled) redirect(isInstructor(me) ? "/instructor" : "/admin");
-  const code = String(fd.get("code") ?? "").trim();
+  const codeParsed = validate(zTotpCode, fd.get("code"));
+  if (!codeParsed.ok) redirect("/auth/verify?error=code&mode=session");
+  const code = codeParsed.data;
   const step = verifyTotp(openSecret(user.totp.secret), code);
   const ok = step !== null && step > (user.totp.lastStep ?? 0);
   if (!ok) {
