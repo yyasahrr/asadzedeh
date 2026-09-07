@@ -22,7 +22,9 @@
     "test:e2e": "playwright test",
     "test:e2e:install": "playwright install --with-deps chromium",
     "db:push": "drizzle-kit push",
-    "db:generate": "drizzle-kit generate"
+    "db:generate": "drizzle-kit generate",
+    "smoke": "tsx scripts/smoke.ts",
+    "backup:verify": "tsx scripts/verify-backup-restore.ts"
   },
   "dependencies": {
     "@fontsource-variable/vazirmatn": "^5.3.0",

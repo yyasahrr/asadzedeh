@@ -238,19 +238,50 @@ function emptyDb(): Db {
   };
 }
 
-let cache: Db = emptyDb();
-let ready = false;
-let persistChain: Promise<void> = Promise.resolve();
-let initPromise: Promise<void> | null = null;
-let writeLock: Promise<void> = Promise.resolve();
+/**
+ * Per-process store state.
+ *
+ * Next bundles this module into several server chunks, so plain module-level
+ * variables are NOT shared: the chunk that ran `initStore()` at boot would hold
+ * the loaded data while the chunk rendering a page held an empty shell. The SQL
+ * client already solves the same problem for connections (see lib/db/client.ts);
+ * the document cache needs it too.
+ *
+ * A write-ahead log used to hide this, because every chunk re-read the same
+ * file. With PostgreSQL as the single source of truth the state itself has to be
+ * a real singleton.
+ */
+interface StoreState {
+  cache: Db | null;
+  ready: boolean;
+  persistChain: Promise<void>;
+  initPromise: Promise<void> | null;
+  writeLock: Promise<void>;
+  pendingWrites: Set<keyof Db>;
+}
+
+const globalStore = globalThis as unknown as { __asadzedehStore?: StoreState };
+
+if (!globalStore.__asadzedehStore) {
+  globalStore.__asadzedehStore = {
+    cache: null,
+    ready: false,
+    persistChain: Promise.resolve(),
+    initPromise: null,
+    writeLock: Promise.resolve(),
+    pendingWrites: new Set<keyof Db>(),
+  };
+}
+
+const state = globalStore.__asadzedehStore;
 
 export async function withStoreLock<T>(fn: () => T | Promise<T>): Promise<T> {
   let release: () => void = () => undefined;
   const wait = new Promise<void>((resolve) => {
     release = resolve;
   });
-  const prev = writeLock;
-  writeLock = prev.then(() => wait);
+  const prev = state.writeLock;
+  state.writeLock = prev.then(() => wait);
   await prev;
   try {
     return await fn();
@@ -258,6 +289,9 @@ export async function withStoreLock<T>(fn: () => T | Promise<T>): Promise<T> {
     release();
   }
 }
+
+/** Every jsonb column in the schema is named `payload`. */
+const JSONB_COLUMNS = new Set(["payload"]);
 
 function json(value: unknown): string {
   return JSON.stringify(value);
@@ -278,7 +312,13 @@ async function replaceTable(
   await sql.query(`DELETE FROM ${table} WHERE ${pk} NOT IN (${placeholders})`, keys);
   for (const row of rows) {
     const cols = row.columns.join(", ");
-    const ph = row.columns.map((_, i) => `$${i + 1}`).join(", ");
+    // jsonb columns must be bound as text and cast explicitly. Without the cast
+    // the driver applies its own jsonb serializer to an already-stringified
+    // value and stores `"{\"a\":1}"` instead of `{"a":1}` — reads still work
+    // through JSON.parse, but no jsonb operator can see inside the value.
+    const ph = row.columns
+      .map((c, i) => (JSONB_COLUMNS.has(c) ? `$${i + 1}::text::jsonb` : `$${i + 1}`))
+      .join(", ");
     const updates = row.columns
       .slice(1)
       .map((c) => `${c} = EXCLUDED.${c}`)
@@ -510,7 +550,7 @@ async function persist(db: Db, keys?: (keyof Db)[]) {
   if (has("settings")) {
     const sql = await getSql();
     await sql.query(
-      `INSERT INTO site_settings (id, payload, updated_at) VALUES ('default', $1::jsonb, $2)
+      `INSERT INTO site_settings (id, payload, updated_at) VALUES ('default', $1::text::jsonb, $2)
        ON CONFLICT (id) DO UPDATE SET payload = EXCLUDED.payload, updated_at = EXCLUDED.updated_at`,
       [json(db.settings), now],
     );
@@ -636,17 +676,17 @@ function readLegacyJson(): Db | null {
 }
 
 export async function initStore(): Promise<void> {
-  if (ready) return;
-  if (initPromise) return initPromise;
-  initPromise = (async () => {
+  if (state.ready) return;
+  if (state.initPromise) return state.initPromise;
+  state.initPromise = (async () => {
     await runMigrations();
     let loaded = await loadFromSql();
     // Re-apply anything written while the load was in flight.
     const withPendingWrites = (base: Db): Db => {
-      if (cache && pendingWrites.size > 0) {
+      if (state.cache && state.pendingWrites.size > 0) {
         const merged = { ...base } as Record<string, unknown>;
-        const source = cache as unknown as Record<string, unknown>;
-        for (const key of pendingWrites) merged[key] = source[key];
+        const source = state.cache as unknown as Record<string, unknown>;
+        for (const key of state.pendingWrites) merged[key] = source[key];
         return merged as unknown as Db;
       }
       return base;
@@ -654,8 +694,8 @@ export async function initStore(): Promise<void> {
     if (!loaded) {
       const legacy = readLegacyJson();
       loaded = legacy ?? (isProduction() ? { ...emptyDb(), settings: { ...defaultSettings, seo: defaultSeo() } } : seed());
-      cache = withPendingWrites(loaded);
-      await persist(cache);
+      state.cache = withPendingWrites(loaded);
+      await persist(state.cache);
       if (legacy) {
         logger.info({ event: "db.migrated_json", users: legacy.users.length, orders: legacy.orders.length });
         try {
@@ -667,16 +707,16 @@ export async function initStore(): Promise<void> {
         logger.info({ event: "db.seeded", production: isProduction() });
       }
     } else {
-      cache = withPendingWrites(loaded);
-      if (pendingWrites.size > 0) await persist(cache);
+      state.cache = withPendingWrites(loaded);
+      if (state.pendingWrites.size > 0) await persist(state.cache);
     }
-    pendingWrites.clear();
-    ready = true;
+    state.pendingWrites.clear();
+    state.ready = true;
   })();
   try {
-    await initPromise;
+    await state.initPromise;
   } catch (error) {
-    initPromise = null;
+    state.initPromise = null;
     throw error;
   }
 }
@@ -688,7 +728,6 @@ export async function initStore(): Promise<void> {
  * path, a test). Those writes must survive the load instead of being silently
  * replaced by whatever was in the database a moment earlier.
  */
-const pendingWrites = new Set<keyof Db>();
 
 /**
  * Synchronous accessor for the in-memory cache.
@@ -699,10 +738,10 @@ const pendingWrites = new Set<keyof Db>();
  * from PostgreSQL asynchronously; see `withPendingWrites` in `initStore()`.
  */
 function ensureReady(): Db {
-  if (!cache) {
+  if (!state.cache) {
     const legacy = readLegacyJson();
     if (legacy) {
-      cache = {
+      state.cache = {
         ...seed(),
         ...legacy,
         settings: mergeSettings(defaultSettings, legacy.settings),
@@ -711,21 +750,24 @@ function ensureReady(): Db {
         payments: legacy.payments ?? [],
       };
     } else if (!isProduction()) {
-      cache = seed();
+      state.cache = seed();
     } else {
       // Production never invents data. Serve the empty shell until the load
       // from PostgreSQL completes.
-      cache = { ...emptyDb(), settings: { ...defaultSettings, seo: defaultSeo() } };
+      state.cache = { ...emptyDb(), settings: { ...defaultSettings, seo: defaultSeo() } };
     }
     void initStore().catch((error) => logger.error({ event: "db.init.failed", err: String(error) }));
   }
-  return cache;
+  return state.cache;
 }
 
 function schedulePersist(keys: (keyof Db)[]) {
-  if (!ready) for (const key of keys) pendingWrites.add(key);
-  persistChain = persistChain
-    .then(() => persist(cache, keys))
+  if (!state.ready) for (const key of keys) state.pendingWrites.add(key);
+  state.persistChain = state.persistChain
+    .then(() => {
+      if (!state.cache) return;
+      return persist(state.cache, keys);
+    })
     .catch((error) => {
       logger.error({ event: "db.persist.failed", err: String(error), keys });
     });
@@ -733,7 +775,7 @@ function schedulePersist(keys: (keyof Db)[]) {
 
 export async function flushStore(): Promise<void> {
   await initStore();
-  await persistChain;
+  await state.persistChain;
 }
 
 /**
@@ -746,13 +788,13 @@ export async function flushStore(): Promise<void> {
  */
 export async function syncCollections(keys: (keyof Db)[]): Promise<void> {
   await initStore();
-  await persistChain;
+  await state.persistChain;
   const sql = await getSql();
   const read = async <T>(table: string): Promise<T[]> => {
     const rows = await sql.query<Record<string, unknown>>(`SELECT payload FROM ${table}`);
     return rows.map((r) => parsePayload<T>(r));
   };
-  const next: Db = { ...cache };
+  const next: Db = { ...(state.cache ?? emptyDb()) };
   for (const key of keys) {
     switch (key) {
       case "products":
@@ -786,14 +828,14 @@ export async function syncCollections(keys: (keyof Db)[]): Promise<void> {
         break;
     }
   }
-  cache = next;
+  state.cache = next;
 }
 
 export function writeDb(patch: Partial<Db>): Db {
   const current = ensureReady();
-  cache = { ...current, ...patch };
+  state.cache = { ...current, ...patch };
   schedulePersist(Object.keys(patch) as (keyof Db)[]);
-  return cache;
+  return state.cache;
 }
 
 export async function writeDbAsync(patch: Partial<Db>): Promise<Db> {
@@ -806,13 +848,13 @@ export function resetDb(): Db {
   if (isProduction()) {
     throw new Error("resetDb is disabled in production");
   }
-  cache = seed();
-  schedulePersist(Object.keys(cache) as (keyof Db)[]);
-  return cache;
+  state.cache = seed();
+  schedulePersist(Object.keys(state.cache) as (keyof Db)[]);
+  return state.cache;
 }
 
 export function isStoreReady(): boolean {
-  return ready;
+  return state.ready;
 }
 
 function readDb(): Db {

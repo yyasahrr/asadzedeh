@@ -63,6 +63,9 @@ export async function startTestDatabase(): Promise<TestDatabase> {
     password: "asadzedeh",
     port,
     persistent: false,
+    // Production runs UTF-8. The embedded default is SQL_ASCII, which rejects
+    // the Persian text this app stores and would hide real encoding bugs.
+    initdbFlags: ["--encoding=UTF8", "--locale=C.UTF-8"],
   });
 
   await pg.initialise();

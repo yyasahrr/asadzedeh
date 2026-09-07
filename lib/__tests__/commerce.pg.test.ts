@@ -52,7 +52,7 @@ afterAll(async () => {
 async function seedProduct(slug: string, stock: number, opts: { kind?: string; backorder?: boolean } = {}) {
   await exec(
     `INSERT INTO products (slug, title, price, stock, kind, active, allow_backorder, payload)
-     VALUES ($1, $2, 1000, $3, $4, TRUE, $5, $6::jsonb)`,
+     VALUES ($1, $2, 1000, $3, $4, TRUE, $5, $6::text::jsonb)`,
     [slug, `Product ${slug}`, stock, opts.kind ?? "physical", opts.backorder ?? false, JSON.stringify({ slug, stock })],
   );
 }
@@ -60,20 +60,20 @@ async function seedProduct(slug: string, stock: number, opts: { kind?: string; b
 async function seedClass(slug: string, remaining: number) {
   await exec(
     `INSERT INTO classes (slug, title, price, remaining, capacity, payload)
-     VALUES ($1, $2, 2000, $3, $4, $5::jsonb)`,
+     VALUES ($1, $2, 2000, $3, $4, $5::text::jsonb)`,
     [slug, `Class ${slug}`, remaining, remaining, JSON.stringify({ slug, remaining })],
   );
 }
 
 async function seedUser(id: string) {
   await exec(
-    `INSERT INTO users (id, phone, password_hash, role, payload) VALUES ($1, $2, 'x', 'student', $3::jsonb)`,
+    `INSERT INTO users (id, phone, password_hash, role, payload) VALUES ($1, $2, 'x', 'student', $3::text::jsonb)`,
     [id, `09${id}`, JSON.stringify({ id, role: "student" })],
   );
 }
 
 async function seedOrder(id: string) {
-  await exec(`INSERT INTO orders (id, status, amount, payload) VALUES ($1, 'در انتظار پرداخت', 1000, $2::jsonb)`, [
+  await exec(`INSERT INTO orders (id, status, amount, payload) VALUES ($1, 'در انتظار پرداخت', 1000, $2::text::jsonb)`, [
     id,
     JSON.stringify({ id }),
   ]);
@@ -81,7 +81,7 @@ async function seedOrder(id: string) {
 
 async function seedPayment(id: string, orderId: string) {
   await exec(
-    `INSERT INTO payments (id, order_id, provider, status, amount, payload) VALUES ($1, $2, 'zarinpal', 'pending', 1000, $3::jsonb)`,
+    `INSERT INTO payments (id, order_id, provider, status, amount, payload) VALUES ($1, $2, 'zarinpal', 'pending', 1000, $3::text::jsonb)`,
     [id, orderId, JSON.stringify({ id, status: "pending" })],
   );
 }

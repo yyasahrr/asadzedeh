@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Do not advertise the framework on every response.
+  poweredByHeader: false,
   // Native SVG renderer must be required at runtime, not bundled.
   serverExternalPackages: ["@resvg/resvg-js", "satori", "harfbuzzjs", "postgres", "@electric-sql/pglite", "pino", "drizzle-orm"],
   experimental: {

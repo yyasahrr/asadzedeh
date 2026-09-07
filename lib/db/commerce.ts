@@ -30,7 +30,7 @@ async function patch(
   key: string,
   fields: Record<string, unknown>,
 ) {
-  await exec.query(`UPDATE ${table} SET payload = payload || $2::jsonb WHERE ${pk} = $1`, [
+  await exec.query(`UPDATE ${table} SET payload = payload || $2::text::jsonb WHERE ${pk} = $1`, [
     key,
     JSON.stringify(fields),
   ]);
@@ -319,7 +319,7 @@ export async function finalizePaidOrderTx(args: FinalizeArgs): Promise<FinalizeR
                 gateway_transaction_id = COALESCE($2, gateway_transaction_id),
                 authority = COALESCE($3, authority),
                 verified_at = $4,
-                payload = COALESCE(payload, '{}'::jsonb) || $5::jsonb
+                payload = COALESCE(payload, '{}'::jsonb) || $5::text::jsonb
           WHERE id = $1`,
         [
           args.paymentId,
@@ -334,7 +334,7 @@ export async function finalizePaidOrderTx(args: FinalizeArgs): Promise<FinalizeR
     await tx.query(
       `UPDATE orders
           SET status = $2, ref_id = COALESCE($3, ref_id), updated_at = now(),
-              payload = payload || $4::jsonb
+              payload = payload || $4::text::jsonb
         WHERE id = $1`,
       [args.orderId, paidLabel, args.refId ?? null, JSON.stringify({ status: paidLabel, refId: args.refId ?? null })],
     );
@@ -361,7 +361,7 @@ export async function finalizePaidOrderTx(args: FinalizeArgs): Promise<FinalizeR
       };
       const inserted = await tx.query<{ id: string }>(
         `INSERT INTO enrollments (id, user_id, course_slug, order_id, payload)
-         VALUES ($1, $2, $3, $4, $5::jsonb)
+         VALUES ($1, $2, $3, $4, $5::text::jsonb)
          ON CONFLICT (user_id, course_slug) DO NOTHING
          RETURNING id`,
         [id, args.userId, courseSlug, args.orderId, JSON.stringify(payload)],
@@ -373,7 +373,7 @@ export async function finalizePaidOrderTx(args: FinalizeArgs): Promise<FinalizeR
     await tx.query(
       `UPDATE orders
           SET settled_at = $2, released_at = NULL, updated_at = now(),
-              payload = payload || $3::jsonb
+              payload = payload || $3::text::jsonb
         WHERE id = $1`,
       [args.orderId, settledAt, JSON.stringify({ settledAt })],
     );
@@ -409,7 +409,7 @@ export async function markPaymentPaid(
               gateway_transaction_id = COALESCE($2, gateway_transaction_id),
               authority = COALESCE($3, authority),
               verified_at = $4,
-              payload = COALESCE(payload, '{}'::jsonb) || $5::jsonb
+              payload = COALESCE(payload, '{}'::jsonb) || $5::text::jsonb
         WHERE id = $1 AND status <> 'paid'
         RETURNING id`,
       [
@@ -442,7 +442,7 @@ export async function markOrderPaid(orderId: string, refId?: string): Promise<bo
         SET status = $2,
             ref_id = COALESCE($3, ref_id),
             updated_at = now(),
-            payload = payload || $4::jsonb
+            payload = payload || $4::text::jsonb
       WHERE id = $1 AND status <> $2
       RETURNING id`,
     [orderId, PAID_LABEL, refId ?? null, JSON.stringify({ status: PAID_LABEL, refId: refId ?? null })],
@@ -462,7 +462,7 @@ export async function insertEnrollmentIfAbsent(
   try {
     const rows = await sql.query<{ id: string }>(
       `INSERT INTO enrollments (id, user_id, course_slug, order_id, payload)
-       VALUES ($1, $2, $3, $4, $5::jsonb)
+       VALUES ($1, $2, $3, $4, $5::text::jsonb)
        ON CONFLICT (user_id, course_slug) DO NOTHING
        RETURNING id`,
       [id, userId, courseSlug, orderId, JSON.stringify(payload)],
@@ -557,7 +557,7 @@ export async function insertCertificateIfAbsent(certificate: {
     const inserted = await sql.query<{ code: string }>(
       `INSERT INTO certificates
          (code, user_id, student_name, course_title, instructor_name, hours, issued_at, payload)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8::text::jsonb)
        ON CONFLICT (user_id, course_title) WHERE revoked_at IS NULL DO NOTHING
        RETURNING code`,
       [

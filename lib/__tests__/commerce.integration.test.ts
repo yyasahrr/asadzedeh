@@ -36,7 +36,7 @@ async function reset() {
 async function seedProduct(slug: string, stock: number, opts: { kind?: string; backorder?: boolean } = {}) {
   await exec(
     `INSERT INTO products (slug, title, price, stock, kind, active, allow_backorder, payload)
-     VALUES ($1, $2, 1000, $3, $4, TRUE, $5, $6::jsonb)`,
+     VALUES ($1, $2, 1000, $3, $4, TRUE, $5, $6::text::jsonb)`,
     [
       slug,
       `Product ${slug}`,
@@ -51,7 +51,7 @@ async function seedProduct(slug: string, stock: number, opts: { kind?: string; b
 async function seedClass(slug: string, remaining: number, capacity = 10) {
   await exec(
     `INSERT INTO classes (slug, title, price, remaining, capacity, payload)
-     VALUES ($1, $2, 2000, $3, $4, $5::jsonb)`,
+     VALUES ($1, $2, 2000, $3, $4, $5::text::jsonb)`,
     [slug, `Class ${slug}`, remaining, capacity, JSON.stringify({ slug, remaining })],
   );
 }
@@ -59,14 +59,14 @@ async function seedClass(slug: string, remaining: number, capacity = 10) {
 async function seedUser(id: string, phone: string) {
   await exec(
     `INSERT INTO users (id, phone, password_hash, role, payload)
-     VALUES ($1, $2, 'x', 'student', $3::jsonb)`,
+     VALUES ($1, $2, 'x', 'student', $3::text::jsonb)`,
     [id, phone, JSON.stringify({ id, phone, role: "student" })],
   );
 }
 
 async function seedOrder(id: string, status = "در انتظار پرداخت") {
   await exec(
-    `INSERT INTO orders (id, status, amount, payload) VALUES ($1, $2, 1000, $3::jsonb)`,
+    `INSERT INTO orders (id, status, amount, payload) VALUES ($1, $2, 1000, $3::text::jsonb)`,
     [id, status, JSON.stringify({ id, status })],
   );
 }
@@ -74,7 +74,7 @@ async function seedOrder(id: string, status = "در انتظار پرداخت") 
 async function seedPayment(id: string, orderId: string) {
   await exec(
     `INSERT INTO payments (id, order_id, provider, status, amount, payload)
-     VALUES ($1, $2, 'zarinpal', 'pending', 1000, $3::jsonb)`,
+     VALUES ($1, $2, 'zarinpal', 'pending', 1000, $3::text::jsonb)`,
     [id, orderId, JSON.stringify({ id, orderId, status: "pending" })],
   );
 }
