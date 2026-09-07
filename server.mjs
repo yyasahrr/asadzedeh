@@ -7,14 +7,30 @@ import { Server } from "socket.io";
 
 const SESSION_COOKIE = "az_session";
 const DB_PATH = path.join(process.cwd(), "data", "db.json");
-const SUPPORT_ROLES = new Set(["admin", "manager", "support"]);
+const WAL_PATH = path.join(process.cwd(), "data", ".store-wal.json");
+const REDIRECTS_PATH = path.join(process.cwd(), "data", "seo-redirects.json");
+const SUPPORT_ROLES = new Set(["super_admin", "admin", "manager", "support"]);
 const TICKET_STATUSES = new Set(["باز", "در حال بررسی", "پاسخ داده شده", "بسته شده"]);
 const dev = process.argv.includes("--dev");
 const hostname = process.env.HOSTNAME || "0.0.0.0";
 const port = Number.parseInt(process.env.PORT || "3000", 10);
 
+function storePath() {
+  if (fs.existsSync(WAL_PATH)) return WAL_PATH;
+  return DB_PATH;
+}
+
 function readDb() {
-  return JSON.parse(fs.readFileSync(DB_PATH, "utf8"));
+  return JSON.parse(fs.readFileSync(storePath(), "utf8"));
+}
+
+function loadRedirects() {
+  try {
+    const rows = JSON.parse(fs.readFileSync(REDIRECTS_PATH, "utf8"));
+    return Array.isArray(rows) ? rows.filter((r) => r && r.enabled !== false && r.fromPath && r.toPath) : [];
+  } catch {
+    return [];
+  }
 }
 
 function writeDb(db) {
@@ -63,6 +79,19 @@ const httpServer = createServer((request, response) => {
   if (!handleRequest) {
     response.writeHead(503).end("Server is starting");
     return;
+  }
+  try {
+    const url = new URL(request.url || "/", `http://${request.headers.host || "localhost"}`);
+    const pathname = url.pathname;
+    const match = loadRedirects().find((r) => r.fromPath === pathname);
+    if (match && request.method === "GET") {
+      const status = match.statusCode === 308 ? 308 : 301;
+      response.writeHead(status, { Location: match.toPath, "Cache-Control": "public, max-age=300" });
+      response.end();
+      return;
+    }
+  } catch {
+    /* fall through to Next */
   }
   void handleRequest(request, response);
 });
@@ -185,5 +214,13 @@ io.on("connection", (socket) => {
 });
 
 httpServer.listen(port, hostname, () => {
-  console.log(`> Next.js + Socket.IO ready on http://localhost:${port}`);
+  console.log(`> Next.js + Socket.IO ready on http://${hostname}:${port}`);
 });
+
+function shutdown(signal) {
+  console.log(`> ${signal} received, closing`);
+  httpServer.close(() => process.exit(0));
+  setTimeout(() => process.exit(1), 10_000).unref();
+}
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));

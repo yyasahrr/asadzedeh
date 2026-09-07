@@ -9,10 +9,13 @@
 ## شروع
 
 ```bash
-npm install
+npm install --legacy-peer-deps
+cp .env.example .env.local
 npm run dev      # http://localhost:3000
 npm run build    # بررسی تولید
 ```
+
+Production data lives in **PostgreSQL** (`DATABASE_URL`). Development without Postgres uses PGlite under `data/pglite`. See `docs/DEPLOY.md`, `docs/ENV.md`, `docs/BACKUP.md`, `docs/SECURITY.md`, `docs/SEO.md`.
 
 ## پنل مدیریت واقعی + گواهی PDF
 

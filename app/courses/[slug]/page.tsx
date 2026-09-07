@@ -15,6 +15,7 @@ import {
   UsersRound,
 } from "lucide-react";
 import { getCourse, getCourses, getSettings } from "@/lib/store";
+import { breadcrumbJsonLd, toMetadata } from "@/lib/seo";
 import { formatPrice, formatPriceCompact, toFa } from "@/lib/format";
 import { PageHero } from "@/components/PageHero";
 import { Badge } from "@/components/ui/Badge";
@@ -34,11 +35,15 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const course = getCourse(slug);
   if (!course) return { title: "دوره" };
-  return {
-    title: course.shortTitle,
+  return toMetadata({
+    title: course.title,
     description: course.excerpt,
-    openGraph: { title: course.title, description: course.excerpt, type: "website" },
-  };
+    image: course.image,
+    path: `/courses/${course.slug}`,
+    type: "course",
+    id: course.slug,
+    imageAlt: course.shortTitle,
+  });
 }
 
 const faqs = [
@@ -87,6 +92,14 @@ export default async function CourseDetailPage({
     ? Math.round(((course.oldPrice - course.price) / course.oldPrice) * 100)
     : 0;
 
+  const crumbs = breadcrumbJsonLd(
+    [
+      { name: "خانه", path: "/" },
+      { name: "دوره‌های آنلاین", path: "/courses" },
+      { name: course.shortTitle, path: `/courses/${course.slug}` },
+    ],
+    siteUrl,
+  );
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Course",
@@ -113,6 +126,7 @@ export default async function CourseDetailPage({
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(crumbs) }} />
       <PageHero
         compact
         title={course.title}

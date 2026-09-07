@@ -5,12 +5,14 @@ import path from "node:path";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { faToday, parsePrice, slugify } from "@/lib/format";
-import { can, getSessionUser, hashPassword, type Permission, type SessionUser } from "@/lib/auth";
+import { can, getSessionUser, hashPassword, isSuperAdmin, type Permission, type SessionUser } from "@/lib/auth";
 import { audit } from "@/lib/audit";
 import { sendEmail, sendSms } from "@/lib/notify";
 import { deleteVideoFiles, resetFfmpegCache, transcodeToHls } from "@/lib/video";
 import { clampText } from "@/lib/validation";
 import { grantAccessForOrder } from "@/lib/access";
+import { generateCertificateCode } from "@/lib/certificate-code";
+import { isProduction } from "@/lib/env";
 import {
   getArticle,
   getArticles,
@@ -1055,6 +1057,12 @@ export async function updateOrderStatus(fd: FormData) {
   const trackingCode = str(fd, "trackingCode");
   if (!id || !status) return;
   const prev = getOrders().find((o) => o.id === id);
+  const { assertTransition } = await import("@/lib/order-status");
+  try {
+    if (prev) assertTransition(prev.status, status);
+  } catch (error) {
+    redirect(`/admin/orders?error=${encodeURIComponent(error instanceof Error ? error.message : "گذار نامعتبر")}`);
+  }
   writeDb({
     orders: getOrders().map((o) =>
       o.id === id
@@ -1090,12 +1098,10 @@ export async function issueCertificate(fd: FormData) {
   if (!student || !course) return;
   const certs = getCertificates();
   let code = str(fd, "code");
-  if (!code || getCertificate(code)) {
-    const maxNum = certs.reduce((m, c) => {
-      const n = Number(c.code.replace(/[^0-9]/g, ""));
-      return Number.isFinite(n) && n > m ? n : m;
-    }, 1200);
-    code = `AZ-C-${maxNum + 1}`;
+  if (!code || getCertificate(code) || /^AZ-C-\d+$/i.test(code)) {
+    do {
+      code = generateCertificateCode();
+    } while (getCertificate(code));
   }
   certs.unshift({
     code,
@@ -1103,6 +1109,8 @@ export async function issueCertificate(fd: FormData) {
     course,
     date: str(fd, "date") || faToday(),
     hours: num(fd, "hours", 12),
+    instructorName: str(fd, "instructor") || undefined,
+    issuedAt: new Date().toISOString(),
   });
   writeDb({ certificates: certs });
   await audit({ action: "certificate.issue", actor: actor(me), target: `certificate:${code}`, detail: { student, course } });
@@ -1233,12 +1241,6 @@ export async function reviewSubmission(fd: FormData) {
 
 /* ---------- media ---------- */
 
-const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
-
-function sanitize(name: string): string {
-  return name.replace(/[^\w.\-()\s\u0600-\u06FF]/g, "").replace(/\s+/g, "-").slice(-80) || "file";
-}
-
 export async function uploadMedia(fd: FormData): Promise<{ ok: boolean; path?: string; error?: string }> {
   const user = await getSessionUser();
   const allowed = can(user, "media") || can(user, "content") || can(user, "blog") || can(user, "shop") || user?.role === "instructor";
@@ -1249,13 +1251,13 @@ export async function uploadMedia(fd: FormData): Promise<{ ok: boolean; path?: s
   if (!(file instanceof File) || file.size === 0) return { ok: false, error: "فایلی انتخاب نشده" };
   if (!file.type.startsWith("image/")) return { ok: false, error: "فقط تصویر مجاز است" };
   if (file.size > 5 * 1024 * 1024) return { ok: false, error: "حجم تصویر بیش از ۵ مگابایت است" };
-  const name = `${Date.now().toString(36)}-${sanitize(file.name)}`;
-  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
   const buf = Buffer.from(await file.arrayBuffer());
-  fs.writeFileSync(path.join(UPLOAD_DIR, name), buf);
-  await audit({ action: "media.upload", actor: actor(user!), detail: { name, size: file.size } });
+  const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+  const { putObject, randomObjectKey } = await import("@/lib/storage");
+  const stored = await putObject(randomObjectKey("uploads", ext), buf, file.type || "image/jpeg");
+  await audit({ action: "media.upload", actor: actor(user!), detail: { key: stored.key, size: file.size } });
   revalidatePath("/admin/media");
-  return { ok: true, path: `/uploads/${name}` };
+  return { ok: true, path: stored.url };
 }
 
 export async function deleteMedia(fd: FormData) {
@@ -1327,7 +1329,7 @@ export async function saveSiteContent(fd: FormData) {
 
 export async function addStaff(fd: FormData) {
   const me = await staff("users");
-  if (me.role !== "admin") redirect("/admin");
+  if (!isSuperAdmin(me)) redirect("/admin");
   const name = str(fd, "name");
   const phone = str(fd, "phone");
   const password = str(fd, "password");
@@ -1352,7 +1354,7 @@ export async function addStaff(fd: FormData) {
 
 export async function updateUserRole(fd: FormData) {
   const me = await staff("users");
-  if (me.role !== "admin") redirect("/admin");
+  if (!isSuperAdmin(me)) redirect("/admin");
   const id = str(fd, "id");
   const role = str(fd, "role") as "manager" | "editor" | "support" | "instructor" | "student";
   if (id === me.id) redirect("/admin/users"); // can't demote yourself
@@ -1385,7 +1387,7 @@ export async function saveSecuritySettings(fd: FormData) {
 
 export async function resetUserTotp(fd: FormData) {
   const me = await staff("security");
-  if (me.role !== "admin") redirect("/admin");
+  if (!isSuperAdmin(me)) redirect("/admin");
   const id = str(fd, "id");
   if (id === me.id) return;
   writeDb({
@@ -1554,7 +1556,7 @@ export async function sendBroadcast(fd: FormData) {
 
 export async function resetDemoData() {
   const me = await staff("settings");
-  if (me.role !== "admin") redirect("/admin");
+  if (!isSuperAdmin(me) || isProduction()) redirect("/admin");
   await audit({ action: "db.reset", level: "warn", actor: actor(me) });
   resetDb();
   revalidateAll();

@@ -294,11 +294,16 @@ export interface Certificate {
   course: string;
   date: string;
   hours: number;
+  /** Snapshot at issue time — never mutated if the course is renamed later. */
+  instructorName?: string;
+  userId?: string;
+  issuedAt?: string;
+  revokedAt?: string;
 }
 
 /* ---------- Backend ---------- */
 
-export type Role = "admin" | "manager" | "editor" | "support" | "instructor" | "student";
+export type Role = "super_admin" | "admin" | "manager" | "editor" | "support" | "instructor" | "student";
 
 export interface User {
   id: string;
@@ -686,6 +691,74 @@ export interface LegalSettings {
   pages: LegalPage[];
 }
 
+export interface SeoDefaults {
+  defaultTitle: string;
+  titleTemplate: string;
+  defaultDescription: string;
+  defaultOgImage: string;
+  siteName: string;
+  canonicalBaseUrl: string;
+  robotsIndex: boolean;
+  robotsFollow: boolean;
+  social: { instagram?: string; telegram?: string; twitter?: string };
+  organization: {
+    name: string;
+    logo?: string;
+    phone?: string;
+    address?: string;
+    openingHours?: string;
+  };
+}
+
+export type SeoEntityType =
+  | "site"
+  | "course"
+  | "class"
+  | "path"
+  | "instructor"
+  | "product"
+  | "blog"
+  | "category"
+  | "page";
+
+export interface SeoEntry {
+  entityType: SeoEntityType;
+  entityId: string;
+  metaTitle?: string;
+  metaDescription?: string;
+  canonicalUrl?: string;
+  ogTitle?: string;
+  ogDescription?: string;
+  ogImage?: string;
+  twitterTitle?: string;
+  twitterDescription?: string;
+  twitterImage?: string;
+  index?: boolean;
+  follow?: boolean;
+  schemaType?: string;
+  imageAlt?: string;
+}
+
+export interface SeoRedirect {
+  id: string;
+  fromPath: string;
+  toPath: string;
+  statusCode: 301 | 308;
+  enabled: boolean;
+}
+
+export interface PaymentRecord {
+  id: string;
+  orderId: string;
+  provider: string;
+  status: "pending" | "paid" | "failed" | "cancelled";
+  amount: number;
+  gatewayTransactionId?: string;
+  authority?: string;
+  createdAt: string;
+  verifiedAt?: string;
+}
+
 export interface Settings {
   site: SiteSettings;
   sms: SmsSettings;
@@ -697,4 +770,5 @@ export interface Settings {
   instagram: InstagramSettings;
   shop: ShopSettings;
   legal: LegalSettings;
+  seo?: SeoDefaults;
 }

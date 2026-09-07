@@ -1,12 +1,16 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { GraduationCap, LogOut, ShieldCheck } from "lucide-react";
+import { noIndexMetadata } from "@/lib/seo";
 import { SideNav } from "@/components/dashboard/SideNav";
 import { LogoMark } from "@/components/Logo";
 import { getSessionUser, isStaff, needsMfa } from "@/lib/auth";
 import { getCourseRequests, getCourses, getInstructorByUser, getSubmissions } from "@/lib/store";
 import { toFa } from "@/lib/format";
 import { logout } from "@/app/auth/actions";
+
+export const metadata: Metadata = noIndexMetadata("پنل استاد");
 
 export const dynamic = "force-dynamic";
 

@@ -1,8 +1,12 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { LogOut } from "lucide-react";
+import { noIndexMetadata } from "@/lib/seo";
 import { SideNav } from "@/components/dashboard/SideNav";
 import { getSessionUser } from "@/lib/auth";
 import { logout } from "@/app/auth/actions";
+
+export const metadata: Metadata = noIndexMetadata("پنل هنرجو");
 
 const items = [
   { href: "/dashboard", label: "پیشخوان", icon: "dashboard" },

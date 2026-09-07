@@ -3,15 +3,17 @@
 import crypto from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { audit } from "@/lib/audit";
 import { faToday, normalizeDigits } from "@/lib/format";
 import type { CartItem } from "@/lib/cart";
 import { getSessionUser, hashPassword } from "@/lib/auth";
 import { sendSms } from "@/lib/notify";
-import { requestPayment } from "@/lib/payment";
+import { isDemoPayment, requestPayment } from "@/lib/payment";
 import { finalizePaidOrder, releaseOrder } from "@/lib/order-payment";
-import { getClasses, getCourses, getEnrollments, getLearningPath, getLearningPathFinalPrice, getOrders, getProducts, getSettings, getUserByPhone, getUsers, writeDb } from "@/lib/store";
-import type { OrderLine, ShippingInfo, User } from "@/lib/types";
+import { getClasses, getCourses, getEnrollments, getLearningPath, getLearningPathFinalPrice, getOrders, getPayments, getProducts, getSettings, getUserByPhone, getUsers, withStoreLock, writeDbAsync } from "@/lib/store";
+import { rateLimit, LIMITS } from "@/lib/rate-limit";
+import type { OrderLine, PaymentRecord, ShippingInfo, User } from "@/lib/types";
 
 function nextOrderId(): string {
   return `AZ-${crypto.randomBytes(8).toString("hex").toUpperCase()}`;
@@ -73,6 +75,9 @@ function buildLines(items: CartItem[]): { lines: OrderLine[]; problems: string[]
 }
 
 export async function startCheckout(fd: FormData) {
+  const ip = (await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  const limited = rateLimit(`checkout:${ip}`, LIMITS.payment.limit, LIMITS.payment.windowMs);
+  if (!limited.ok) redirect(`/checkout?error=${encodeURIComponent("تعداد درخواست‌ها بیش از حد مجاز است")}`);
   const user = await getSessionUser();
   const name = String(fd.get("name") ?? "").trim() || user?.name || "مهمان";
   const phone = normalizeDigits(String(fd.get("phone") ?? "").trim());
@@ -171,7 +176,7 @@ export async function startCheckout(fd: FormData) {
         role: "student",
         createdAt: faToday(),
       };
-      writeDb({ users: [...getUsers(), created] });
+      await writeDbAsync({ users: [...getUsers(), created] });
       ownerId = created.id;
       await audit({ action: "auth.register", actor: { id: created.id, name: created.name, role: "student" }, detail: { via: "checkout" } });
     }
@@ -183,34 +188,62 @@ export async function startCheckout(fd: FormData) {
     .map((l) => `${l.title}${l.qty > 1 ? ` ×${l.qty}` : ""} (${l.kind === "course" ? "آنلاین" : l.kind === "class" ? "حضوری" : l.kind === "preorder" ? "پیش‌سفارش" : "کالا"})`)
     .join(" + ");
 
-  // Reserve capacity / stock now; released again if the payment fails or is cancelled.
-  const classes = getClasses().map((c) => {
-    const hit = lines.find((l) => l.kind === "class" && l.slug === c.slug);
-    return hit && c.remaining > 0 ? { ...c, remaining: c.remaining - 1 } : c;
-  });
-  const products = getProducts().map((p) => {
-    const hit = lines.find((l) => l.kind === "product" && l.slug === p.slug);
-    return hit ? { ...p, stock: Math.max(0, p.stock - hit.qty), sold: p.sold + hit.qty } : p;
+  const demo = isDemoPayment();
+  const paymentId = `pay-${crypto.randomBytes(6).toString("hex")}`;
+
+  await withStoreLock(async () => {
+    const { lines: lockedLines, problems: lockedProblems } = buildLines(items);
+    if (lockedProblems.length > 0 || lockedLines.length === 0) {
+      redirect(`/checkout?error=${encodeURIComponent(lockedProblems[0] ?? "سبد خرید معتبر نیست")}`);
+    }
+    const classes = getClasses().map((c) => {
+      const hit = lockedLines.find((l) => l.kind === "class" && l.slug === c.slug);
+      if (!hit) return c;
+      if (c.remaining <= 0) redirect(`/checkout?error=${encodeURIComponent(`ظرفیت «${c.title}» تکمیل شده است`)}`);
+      return { ...c, remaining: c.remaining - 1 };
+    });
+    const products = getProducts().map((p) => {
+      const hit = lockedLines.find((l) => l.kind === "product" && l.slug === p.slug);
+      if (!hit) return p;
+      if (p.kind === "physical" && !p.allowBackorder && p.stock < hit.qty) {
+        redirect(`/checkout?error=${encodeURIComponent(`موجودی «${p.title}» کافی نیست`)}`);
+      }
+      return { ...p, stock: Math.max(0, p.stock - hit.qty), sold: p.sold + hit.qty };
+    });
+    const paymentRow: PaymentRecord = {
+      id: paymentId,
+      orderId: id,
+      provider: demo ? "demo" : "zarinpal",
+      status: demo ? "paid" : "pending",
+      amount: final,
+      createdAt: new Date().toISOString(),
+      verifiedAt: demo ? new Date().toISOString() : undefined,
+    };
+    await writeDbAsync({
+      users: getUsers(),
+      classes,
+      products,
+      orders: [
+        {
+          id,
+          student: phone ? `${name} (${phone})` : name,
+          item: itemLabel,
+          amount: final,
+          status: demo ? "پرداخت شده" : "در انتظار پرداخت",
+          date: faToday(),
+          lines: lockedLines,
+          userId: ownerId,
+          phone: phone || user?.phone,
+          shipping,
+          discount: discount || undefined,
+          note: String(fd.get("note") ?? "").trim() || undefined,
+        },
+        ...getOrders(),
+      ],
+      payments: [paymentRow, ...getPayments()],
+    });
   });
 
-  const { payment } = getSettings();
-  const demo = payment.provider === "demo" || !payment.merchantId;
-  const orders = getOrders();
-  orders.unshift({
-    id,
-    student: phone ? `${name} (${phone})` : name,
-    item: itemLabel,
-    amount: final,
-    status: demo ? "پرداخت شده" : "در انتظار پرداخت",
-    date: faToday(),
-    lines,
-    userId: ownerId,
-    phone: phone || user?.phone,
-    shipping,
-    discount: discount || undefined,
-    note: String(fd.get("note") ?? "").trim() || undefined,
-  });
-  writeDb({ orders, classes, products });
   await audit({
     action: "order.create",
     actor: user ? { id: user.id, name: user.name, role: user.role } : null,
@@ -230,14 +263,18 @@ export async function startCheckout(fd: FormData) {
     redirect(`/checkout/success?order=${id}${provisionedPassword ? "&account=new" : ""}`);
   }
 
-  const order = orders[0];
+  const order = getOrders().find((o) => o.id === id);
+  if (!order) redirect("/checkout/failed?reason=notfound");
   const base = getSettings().site.siteUrl.replace(/\/$/, "") || "http://localhost:3000";
   const r = await requestPayment(order, `${base}/api/payment/callback`);
   if (!r.ok || !r.payUrl || !r.authority) {
     await releaseOrder(id);
     redirect(`/checkout/failed?order=${id}&reason=${encodeURIComponent(r.error ?? "خطای درگاه")}`);
   }
-  writeDb({ orders: getOrders().map((o) => (o.id === id ? { ...o, authority: r.authority } : o)) });
+  await writeDbAsync({
+    orders: getOrders().map((o) => (o.id === id ? { ...o, authority: r.authority } : o)),
+    payments: getPayments().map((p) => (p.id === paymentId ? { ...p, authority: r.authority } : p)),
+  });
   redirect(r.payUrl);
 }
 

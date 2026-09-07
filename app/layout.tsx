@@ -3,6 +3,8 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { getSettings } from "@/lib/store";
+import { jsonLd, organizationJsonLd, websiteJsonLd } from "@/lib/seo";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://asadzedeh.ir";
 
@@ -46,9 +48,14 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const settings = getSettings();
+  const org = organizationJsonLd(settings);
+  const site = websiteJsonLd(settings);
   return (
     <html lang="fa" dir="rtl" className={`${peyda.variable} ${neirizi.variable}`}>
       <body className="flex min-h-screen flex-col">
+        {org ? <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(org) }} /> : null}
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(site) }} />
         <Header />
         <main className="flex-1">{children}</main>
         <Footer />

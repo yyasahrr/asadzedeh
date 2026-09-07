@@ -1,12 +1,16 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { LogOut, ShieldAlert, ShieldCheck } from "lucide-react";
+import { noIndexMetadata } from "@/lib/seo";
 import { SideNav } from "@/components/dashboard/SideNav";
 import { LogoMark } from "@/components/Logo";
 import { getSessionUser, can, isStaff, needsMfa, roleLabels, type Permission } from "@/lib/auth";
 import { getComments, getCourseRequests, getOrders, getPreorders, getSubmissions, getTickets, getVideos } from "@/lib/store";
 import { toFa } from "@/lib/format";
 import { logout } from "@/app/auth/actions";
+
+export const metadata: Metadata = noIndexMetadata("مدیریت");
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const user = await getSessionUser();
@@ -56,6 +60,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     { href: "/admin/blog", label: "مقالات", icon: "blog", perm: "blog" },
     { href: "/admin/media", label: "رسانه", icon: "media", perm: "media" },
     { href: "/admin/content", label: "محتوای سایت", icon: "content", perm: "content" },
+    { href: "/admin/seo", label: "سئو", icon: "content", perm: "seo" },
     { href: "/admin/comments", label: "نظرات", icon: "comments", perm: "comments", badge: pendingComments ? toFa(pendingComments) : undefined },
     { href: "/admin/students", label: "هنرجویان", icon: "students", perm: "students" },
     { href: "/admin/enrollments", label: "اعضای دوره‌ها", icon: "enrollments", perm: "orders" },

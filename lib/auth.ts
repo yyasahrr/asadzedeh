@@ -104,23 +104,27 @@ export type Permission =
   | "preorders"
   | "audit"
   | "security"
-  | "support";
+  | "support"
+  | "seo";
+
+const STAFF_ALL: Permission[] = [
+  "courses", "classes", "blog", "content", "media", "comments",
+  "students", "orders", "submissions", "certificates",
+  "users", "notify", "payments", "settings",
+  "videos", "instructors", "shop", "preorders", "audit", "security",
+  "support", "seo",
+];
 
 const ROLE_PERMS: Record<Role, Permission[]> = {
-  admin: [
-    "courses", "classes", "blog", "content", "media", "comments",
-    "students", "orders", "submissions", "certificates",
-    "users", "notify", "payments", "settings",
-    "videos", "instructors", "shop", "preorders", "audit", "security",
-    "support",
-  ],
+  super_admin: STAFF_ALL,
+  admin: STAFF_ALL,
   manager: [
     "courses", "classes", "blog", "content", "media", "comments",
     "students", "orders", "submissions", "certificates", "notify", "payments",
     "videos", "instructors", "shop", "preorders", "audit",
-    "support",
+    "support", "seo",
   ],
-  editor: ["blog", "content", "media", "comments", "courses", "classes", "videos", "shop"],
+  editor: ["blog", "content", "media", "comments", "courses", "classes", "videos", "shop", "seo"],
   support: ["students", "orders", "submissions", "certificates", "comments", "preorders", "support"],
   /** Instructors use their own panel (/instructor); no admin permissions. */
   instructor: [],
@@ -133,6 +137,7 @@ export function can(user: SessionUser | null, perm: Permission): boolean {
 }
 
 export const roleLabels: Record<Role, string> = {
+  super_admin: "مدیر ارشد",
   admin: "مدیر کل",
   manager: "مدیر",
   editor: "ویراستار",
@@ -140,6 +145,10 @@ export const roleLabels: Record<Role, string> = {
   instructor: "استاد",
   student: "هنرجو",
 };
+
+export function isSuperAdmin(user: SessionUser | null): boolean {
+  return !!user && (user.role === "super_admin" || user.role === "admin");
+}
 
 /* ---------- signed URLs for protected video delivery ---------- */
 

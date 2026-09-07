@@ -19,6 +19,7 @@ import { audit, requestContext } from "@/lib/audit";
 import { openSecret, verifyTotp } from "@/lib/totp";
 import { safeNextPath } from "@/lib/auth-navigation";
 import { getSettings, getUserById, getUserByPhone, getUsers, getSessions, writeDb } from "@/lib/store";
+import { rateLimit, LIMITS } from "@/lib/rate-limit";
 import type { User } from "@/lib/types";
 
 const SESSION_DAYS = 30;
@@ -64,6 +65,9 @@ function homeFor(user: Pick<User, "role">): string {
 }
 
 export async function register(fd: FormData) {
+  const { ip } = await requestContext();
+  const limited = rateLimit(`register:${ip}`, LIMITS.register.limit, LIMITS.register.windowMs);
+  if (!limited.ok) redirect("/auth?tab=register&error=rate");
   const name = String(fd.get("name") ?? "").trim();
   const phone = normalizePhone(String(fd.get("phone") ?? ""));
   const password = String(fd.get("password") ?? "");
@@ -148,6 +152,9 @@ export async function verifyMfa(fd: FormData) {
   const user = getUserById(payload.uid);
   if (!user?.totp?.enabled) redirect("/auth?error=invalid");
 
+  const { ip } = await requestContext();
+  const limited = rateLimit(`totp:${ip}`, LIMITS.totp.limit, LIMITS.totp.windowMs);
+  if (!limited.ok) redirect("/auth/verify?error=rate");
   const code = String(fd.get("code") ?? "").trim();
   const isRecovery = /^[0-9A-Z]{4}-[0-9A-Z]{4}$/i.test(code);
   let ok = false;

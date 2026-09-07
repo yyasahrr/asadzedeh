@@ -1,11 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getSessionUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { getSessionUser as getMe, hashPassword, verifyPassword } from "@/lib/auth";
-import { getEnrollments, getUsers, writeDb } from "@/lib/store";
+import { getSessionUser, hashPassword, verifyPassword } from "@/lib/auth";
+import { getCertificates, getCourse, getEnrollments, getUsers, writeDb } from "@/lib/store";
 import { audit } from "@/lib/audit";
+import { generateCertificateCode } from "@/lib/certificate-code";
+import { faToday } from "@/lib/format";
 
 /** Mark a lesson as completed / not completed and remember the last watched lesson. */
 export async function setLessonProgress(courseSlug: string, lessonId: string, completed: boolean) {
@@ -19,10 +20,42 @@ export async function setLessonProgress(courseSlug: string, lessonId: string, co
   if (completed) set.add(lessonId);
   else set.delete(lessonId);
   enrollments[idx] = { ...e, completed: Array.from(set), lastLessonId: lessonId };
-  writeDb({ enrollments });
+  const course = getCourse(courseSlug);
+  const required = (course?.lessons ?? []).filter((l) => !l.free);
+  const requiredIds = required.length > 0 ? required.map((l) => l.id) : (course?.lessons ?? []).map((l) => l.id);
+  const done = requiredIds.length > 0 && requiredIds.every((id) => set.has(id));
+  if (done && course && user) {
+    const existing = getCertificates().find((c) => c.userId === user.id && c.course === course.title && !c.revokedAt);
+    if (!existing) {
+      let code = generateCertificateCode();
+      while (getCertificates().some((c) => c.code === code)) code = generateCertificateCode();
+      writeDb({
+        enrollments,
+        certificates: [
+          {
+            code,
+            student: user.name,
+            course: course.title,
+            date: faToday(),
+            hours: course.hours,
+            instructorName: course.instructor,
+            userId: user.id,
+            issuedAt: new Date().toISOString(),
+          },
+          ...getCertificates(),
+        ],
+      });
+      await audit({ action: "certificate.issue", actor: { id: user.id, name: user.name, role: user.role }, target: `certificate:${code}`, detail: { via: "progress", course: course.slug } });
+    } else {
+      writeDb({ enrollments });
+    }
+  } else {
+    writeDb({ enrollments });
+  }
   revalidatePath(`/dashboard/courses/${courseSlug}`);
   revalidatePath("/dashboard/courses");
   revalidatePath("/dashboard");
+  revalidatePath("/dashboard/certificates");
   return { ok: true, completed: enrollments[idx].completed.length };
 }
 
@@ -41,7 +74,7 @@ const clean = (fd: FormData, key: string, max = 200) => String(fd.get(key) ?? ""
 
 /** Student profile: name / email / province / city / age / gender / bio (phone is the login id and cannot be changed here). */
 export async function updateProfile(fd: FormData) {
-  const me = await getMe();
+  const me = await getSessionUser();
   if (!me) redirect("/auth?next=/dashboard/profile");
   const name = clean(fd, "name", 80);
   const email = clean(fd, "email", 120);
@@ -71,7 +104,7 @@ export async function updateProfile(fd: FormData) {
 }
 
 export async function changePassword(fd: FormData) {
-  const me = await getMe();
+  const me = await getSessionUser();
   if (!me) redirect("/auth?next=/dashboard/profile");
   const current = String(fd.get("current") ?? "");
   const next = String(fd.get("next") ?? "");
