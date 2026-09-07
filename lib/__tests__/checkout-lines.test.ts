@@ -156,3 +156,85 @@ describe("checkout line building — the browser never sets a price", () => {
     expect(lines[0].price).toBe(target.price);
   });
 });
+
+describe("checkout line building — a price that moved is reported, not silently charged", () => {
+  it("flags a course whose catalogue price changed", () => {
+    const c = course();
+    const { lines, problems, priceChanges } = buildLines([
+      { kind: "course", slug: c.slug, title: c.title, price: c.price + 50_000, image: "" },
+    ]);
+
+    // Still charged the real price, and not treated as an error.
+    expect(problems).toHaveLength(0);
+    expect(lines[0].price).toBe(c.price);
+
+    expect(priceChanges).toHaveLength(1);
+    expect(priceChanges[0]).toMatchObject({
+      kind: "course",
+      slug: c.slug,
+      expected: c.price + 50_000,
+      actual: c.price,
+    });
+  });
+
+  it("reports nothing when the cart price already matches", () => {
+    const c = course();
+    const { priceChanges } = buildLines([
+      { kind: "course", slug: c.slug, title: c.title, price: c.price, image: "" },
+    ]);
+    expect(priceChanges).toHaveLength(0);
+  });
+
+  it("ignores a missing or zero cart price instead of flagging everything", () => {
+    const c = course();
+    const { priceChanges } = buildLines([
+      { kind: "course", slug: c.slug, title: c.title, price: 0, image: "" },
+      // @ts-expect-error deliberately malformed cart from an older client build
+      { kind: "course", slug: c.slug, title: c.title, image: "" },
+      { kind: "course", slug: c.slug, title: c.title, price: Number.NaN, image: "" },
+    ]);
+    expect(priceChanges).toHaveLength(0);
+  });
+
+  it("flags a physical product price change once, whatever the quantity", () => {
+    // The store is shared across tests in this file and earlier ones mutate
+    // stock, so set up known availability here rather than inheriting theirs.
+    const base = physical();
+    store.writeDb({
+      products: store.getProducts().map((p) =>
+        p.slug === base.slug ? { ...p, active: true, stock: 50, reservedStock: 0, allowBackorder: false } : p,
+      ),
+    });
+    const fresh = store.getProducts().find((p) => p.slug === base.slug)!;
+
+    const { lines, problems, priceChanges } = buildLines([
+      { kind: "product", slug: fresh.slug, title: fresh.title, price: fresh.price - 1_000, image: "", qty: 2 },
+    ]);
+
+    expect(problems).toHaveLength(0);
+    expect(lines).toHaveLength(1);
+    expect(lines[0].price).toBe(fresh.price);
+    expect(priceChanges).toHaveLength(1);
+    expect(priceChanges[0].actual).toBe(fresh.price);
+  });
+
+  it("collects one entry per changed item so the message can name them", () => {
+    const c = course();
+    const k = klass();
+    const { priceChanges } = buildLines([
+      { kind: "course", slug: c.slug, title: c.title, price: c.price + 1_000, image: "" },
+      { kind: "class", slug: k.slug, title: k.title, price: k.price + 2_000, image: "" },
+    ]);
+    expect(priceChanges).toHaveLength(2);
+    expect(priceChanges.map((x) => x.slug).sort()).toEqual([c.slug, k.slug].sort());
+  });
+
+  it("never lets the stale cart price reach the order total", () => {
+    const c = course();
+    const { lines } = buildLines([
+      { kind: "course", slug: c.slug, title: c.title, price: 1, image: "" },
+    ]);
+    expect(linesSubtotal(lines)).toBe(c.price);
+    expect(linesSubtotal(lines)).not.toBe(1);
+  });
+});

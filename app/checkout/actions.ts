@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { audit } from "@/lib/audit";
-import { faToday, normalizeDigits } from "@/lib/format";
+import { faToday, formatPrice, normalizeDigits, toFa } from "@/lib/format";
 import type { CartItem } from "@/lib/cart";
 import { getSessionUser, hashPassword } from "@/lib/auth";
 import { buildLines, linesSubtotal } from "@/lib/checkout-lines";
@@ -46,9 +46,23 @@ export async function startCheckout(fd: FormData) {
   }
   if (items.length === 0) redirect("/cart");
 
-  const { lines, problems } = buildLines(items);
+  const { lines, problems, priceChanges } = buildLines(items);
   if (problems.length > 0 || lines.length === 0) {
     redirect(`/checkout?error=${encodeURIComponent(problems[0] ?? "سبد خرید معتبر نیست")}`);
+  }
+
+  /**
+   * A price moved while the item sat in the cart. We never charge the stale
+   * figure, and we do not quietly charge the new one either — the shopper is
+   * sent back to review the updated amount and confirm it.
+   */
+  if (priceChanges.length > 0) {
+    const c = priceChanges[0];
+    const message =
+      `قیمت «${c.title}» تغییر کرده است (${formatPrice(c.expected)} ← ${formatPrice(c.actual)} تومان).` +
+      (priceChanges.length > 1 ? ` و ${toFa(priceChanges.length - 1)} مورد دیگر نیز به‌روز شده‌اند.` : "") +
+      " لطفاً سبد خرید را بازبینی کنید.";
+    redirect(`/checkout?error=${encodeURIComponent(message)}`);
   }
 
   // ── جلوگیری از خرید تکراری ──
