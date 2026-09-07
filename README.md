@@ -35,7 +35,9 @@ npm run build    # بررسی تولید
 
 CI: فایل `ci/ci.yml` را به `.github/workflows/ci.yml` منتقل کنید.
 
-مستندات: `docs/DEPLOY.md` · `docs/ENV.md` · `docs/DATABASE.md` · `docs/PAYMENT.md` · `docs/BACKUP.md` · `docs/SECURITY.md` · `docs/SEO.md`.
+مستندات: `docs/DEPLOY.md` · `docs/ENV.md` · `docs/DATABASE.md` · `docs/PAYMENT.md` · `docs/BACKUP.md` · `docs/backup-restore.md` · `docs/SECURITY.md` · `docs/SEO.md`.
+
+گزارش‌های آمادگی: `GO_LIVE_CHECKLIST.md` · `FINAL_GO_LIVE_GAP_REPORT.md` · `PRODUCTION_READINESS_REPORT.md`.
 
 ## پنل مدیریت واقعی + گواهی PDF
 
