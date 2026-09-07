@@ -60,6 +60,10 @@ data/pglite*/
 data/.store-wal*.json
 data/seo-redirects.json
 
+# Runtime audit trail — lib/audit.ts appends to this on every audited action.
+# PostgreSQL is the authoritative copy; the file is a shipping buffer.
+data/audit.log
+
 # Playwright
 /test-results/
 /playwright-report/
