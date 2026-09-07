@@ -22,7 +22,7 @@ outside this repository.
 |---|---|
 | `npm run lint` | 0 errors, 0 warnings |
 | `npm run typecheck` | 0 errors (`tsc --noEmit`, includes `e2e/` and `playwright.config.ts`) |
-| `npm test` | **196 passed / 24 files** (was 78 / 14 at the last report) |
+| `npm test` | **205 passed / 25 files** (was 78 / 14 at the last report) |
 | `npm run build` | `✓ Compiled successfully`, 49 static pages |
 | `npm run seo:audit` | `PASS` — 0 ERROR, 0 WARN (exit-code behaviour measured, see SEO) |
 | `npm run smoke` | **36/36** against real PostgreSQL 18.4 on a production build |
@@ -111,7 +111,7 @@ This suite also caught a real privilege escalation: `updateUserRole` accepted
 | Outbound timeouts | **READY** — `lib/http.ts`, 30 s cap |
 | Retries only on idempotent calls | **READY** — opt-in per call; verification retries, creation does not |
 | **Zarinpal live gateway** | **BLOCKED BY EXTERNAL CONFIGURATION** — no merchant id. Never called for real. |
-| **Abandoned-order reconciliation** | **NOT IMPLEMENTED** — orders abandoned at the gateway hold reservations until they expire. Reservations carry `createdAt`/`expiresAt`/`status`, so the data model supports a sweeper; the sweeper itself does not exist. |
+| Abandoned-order reconciliation | **READY** — `releaseExpiredReservations()` sweeps unpaid orders past the TTL under `FOR UPDATE SKIP LOCKED`. `reservation-expiry.pg.test.ts` (9). |
 
 ---
 
@@ -213,7 +213,7 @@ non-production host.
 
 ## Testing — PARTIAL
 
-`npm test` → **196 passed / 24 files**.
+`npm test` → **205 passed / 25 files**.
 
 | File | Tests | Covers |
 |---|---|---|
@@ -230,6 +230,7 @@ non-production host.
 | `session-state.test.ts` | 7 | expired/revoked/unknown sessions |
 | `stock.test.ts` | 7 | availability arithmetic |
 | `concurrent-writers.pg.test.ts` | 7 | append-only tables survive a second writer |
+| `reservation-expiry.pg.test.ts` | 9 | expired reservations reclaimed; paid orders never swept |
 | `auth.test.ts` | 6 | hashing and login |
 | `auth-navigation.test.ts` | 5 | redirect handling |
 | `order-status.test.ts` | 4 | order state transitions |
@@ -243,7 +244,7 @@ non-production host.
 | `rate-limit.test.ts` | 1 | limiter |
 
 Four suites (`commerce.pg`, `backup-verify.pg`, `concurrent-writers.pg`,
-`payload-encoding.pg` — 36 of the 196 tests) are **not** excluded from a bare
+`payload-encoding.pg` — 36 of the 205 tests) are **not** excluded from a bare
 `npm test`: `vitest.config.ts` includes `**/*.test.ts` with no filter, and each
 of those files boots its own throwaway PostgreSQL cluster from the
 `embedded-postgres` dev dependency. So a plain `npm test` does exercise real
@@ -275,7 +276,6 @@ non-zero on any SEO ERROR.
 
 1. **Playwright E2E has never run.** The only item keeping the verdict off READY.
 2. **No password-reset flow.** `password_resets` is an unused table.
-3. **No abandoned-order reconciliation.** Reservations expire but nothing sweeps them.
 4. **Six integrations are unconfigured** — Zarinpal, S3, SpotPlayer, SMS, SMTP, Sentry DSN.
 5. **`security.requireStaff2fa` is `false`** in the shipped seed.
 

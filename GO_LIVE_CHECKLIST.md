@@ -5,7 +5,7 @@ behind the mark. Nothing is marked DONE on the strength of code being written �
 only on a test that ran or a command that produced the stated output.
 
 Verification run for this checklist: `lint` 0/0 · `typecheck` 0 errors ·
-`vitest run` **196 passed / 24 files** · `build` compiled (49 static pages) ·
+`vitest run` **205 passed / 25 files** · `build` compiled (49 static pages) ·
 `seo:audit` PASS · `smoke` **36/36** against real PostgreSQL 18.4.
 
 ---
@@ -113,6 +113,8 @@ as operational targets. Removed the reference to the deleted WAL file.
 | Item | Status | Evidence |
 |---|---|---|
 | Row-level writes on critical paths | **DONE** | C4 — append-only tables no longer prune. `concurrent-writers.pg.test.ts` (7). |
+| Abandoned-order reservations reclaimed | **DONE** | `releaseExpiredReservations()` sweeps unpaid orders past the TTL under `FOR UPDATE SKIP LOCKED`; paid orders are never touched. `reservation-expiry.pg.test.ts` (9). |
+| Smoke test runs in CI | **DONE** | `smoke` job in `ci/ci.yml` — PostgreSQL service, migrate, seed, build, real server, 36 checks. Rehearsed against a fresh empty database: 36/36. |
 | `seo:audit` exit code | **DONE** | ERROR → exit 1, WARN-only → exit 0, both measured by injecting a finding. |
 | Price-changed UX at checkout | **DONE** | M3 — `checkout-lines.test.ts` (15). |
 | Sold-out UX at checkout | **DONE** | `buildLines()` reports capacity and stock exhaustion; reservation failures surface a message. |
@@ -150,7 +152,7 @@ These are operator actions, not code changes.
 
 **NOT READY** — solely because Playwright E2E has never executed in a browser.
 
-Everything the repository can verify on its own passes: 196 tests, a 36-check
+Everything the repository can verify on its own passes: 205 tests, a 36-check
 smoke test against real PostgreSQL, a verified restore path, clean lint,
 typecheck and build. The moment the E2E suite runs green in CI, and the
 configuration list above is completed, the verdict becomes READY.

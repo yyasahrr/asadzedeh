@@ -20,7 +20,7 @@ storage.
 |---|---|
 | `npm run lint` | 0 errors, 0 warnings |
 | `npm run typecheck` | 0 errors (`tsc --noEmit`) |
-| `npx vitest run` | **196 passed, 24 files** |
+| `npx vitest run` | **205 passed, 25 files** |
 | `npm run build` | compiled successfully, 49 static pages |
 | `npm run seo:audit` | `PASS`, 0 ERROR / 0 WARN |
 | `npx tsx scripts/smoke.ts` | **36/36** against real PostgreSQL 18.4 |
@@ -154,6 +154,33 @@ tables), so `resetDb()` now deletes those six tables explicitly. Covered by a
 test in `concurrent-writers.pg.test.ts`.
 
 ### L2 — Turbopack warning at the WAL read — **RESOLVED** by M1.
+
+---
+
+## Closed after the initial report
+
+### Reservations from abandoned orders were never reclaimed — **FIXED**
+Reservations are taken at checkout, before the gateway confirms anything. A
+shopper who closed the tab never triggered the callback that would release them,
+so the unit stayed unsellable forever — the mirror image of overselling, and it
+was invisible because no stock counter ever went wrong.
+
+`releaseExpiredReservations()` (`lib/db/commerce.ts`) sweeps them atomically:
+`FOR UPDATE SKIP LOCKED` so concurrent sweepers partition the work; the
+paid-status exclusion and `released_at`/`settled_at` guards so a paid order can
+never have its reservation returned and hand the same unit to two people; release
+and marker in the same transaction so stock cannot be returned twice.
+`instrumentation.ts` triggers it on a timer (`RESERVATION_SWEEP_MINUTES`,
+default 10; `RESERVATION_TTL_MINUTES`, default 30).
+**Evidence:** `reservation-expiry.pg.test.ts` (9). Shown to discriminate —
+dropping the paid-status exclusion fails exactly the 2 paid-order tests; dropping
+the `released_at` guard fails exactly the idempotency and limit tests.
+
+### The smoke test did not run in CI — **FIXED**
+It was what found three production defects, but only ran when someone remembered
+to run it. `ci/ci.yml` now has a `smoke` job: PostgreSQL service container,
+migrate, seed, build, start the real production server, run all 36 checks.
+Rehearsed locally against a freshly created empty database — 36/36.
 
 ---
 
