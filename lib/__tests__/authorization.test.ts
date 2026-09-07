@@ -26,9 +26,6 @@ let dashboard: typeof import("@/app/dashboard/actions");
 let admin: typeof import("@/app/admin/actions");
 let auth: typeof import("@/lib/auth");
 
-const OTHER = "sara";
-const ATTACKER = "reza";
-
 function form(entries: Record<string, string>): FormData {
   const fd = new FormData();
   for (const [key, value] of Object.entries(entries)) fd.set(key, value);
@@ -130,6 +127,19 @@ beforeEach(() => {
 const ownCourse = () => store.getCourses()[0];
 const foreignCourse = () => store.getCourses()[1];
 
+type WithLessons = { slug: string; lessons?: { id: string; title: string; free?: boolean }[] };
+
+/** The fixtures always attach lessons; fail loudly if that ever stops. */
+function lessonsOf(course: WithLessons | undefined) {
+  const lessons = course?.lessons;
+  if (!lessons || lessons.length === 0) throw new Error("test fixture has no lessons");
+  return lessons;
+}
+
+function firstLesson(course: WithLessons | undefined): string {
+  return lessonsOf(course)[0].id;
+}
+
 describe("IDOR — instructor course ownership", () => {
   it("lets an instructor edit their own course", async () => {
     loginAs("u-sara");
@@ -146,22 +156,22 @@ describe("IDOR — instructor course ownership", () => {
 
   it("refuses to add a lesson to another instructor's course", async () => {
     loginAs("u-reza");
-    const before = store.getCourse(ownCourse().slug)?.lessons.length ?? 0;
+    const before = lessonsOf(store.getCourse(ownCourse().slug)).length;
     await call(() =>
       instructor.instructorAddLesson(
         form({ slug: ownCourse().slug, title: "درس تزریق شده", durationMin: "30", free: "" }),
       ),
     );
-    expect(store.getCourse(ownCourse().slug)?.lessons).toHaveLength(before);
+    expect(lessonsOf(store.getCourse(ownCourse().slug))).toHaveLength(before);
   });
 
   it("refuses to delete another instructor's lesson", async () => {
     loginAs("u-reza");
     const target = ownCourse();
-    const victim = target.lessons[0];
-    const before = target.lessons.length;
+    const victim = lessonsOf(target)[0];
+    const before = lessonsOf(target).length;
     await call(() => instructor.instructorDeleteLesson(form({ slug: target.slug, id: victim.id })));
-    expect(store.getCourse(target.slug)?.lessons).toHaveLength(before);
+    expect(lessonsOf(store.getCourse(target.slug))).toHaveLength(before);
   });
 
   it("refuses to rewrite another instructor's course text", async () => {
@@ -179,19 +189,19 @@ describe("IDOR — instructor course ownership", () => {
   it("refuses a student who posts to an instructor action", async () => {
     loginAs("u-learner");
     const target = ownCourse();
-    const before = target.lessons.length;
+    const before = lessonsOf(target).length;
     const outcome = await call(() =>
       instructor.instructorAddLesson(form({ slug: target.slug, title: "x", durationMin: "10" })),
     );
     expect(outcome.redirected).toBe("/auth?next=/instructor");
-    expect(store.getCourse(target.slug)?.lessons).toHaveLength(before);
+    expect(lessonsOf(store.getCourse(target.slug))).toHaveLength(before);
   });
 
   it("refuses an anonymous request", async () => {
     const target = ownCourse();
-    const before = target.lessons.length;
+    const before = lessonsOf(target).length;
     await call(() => instructor.instructorAddLesson(form({ slug: target.slug, title: "x", durationMin: "10" })));
-    expect(store.getCourse(target.slug)?.lessons).toHaveLength(before);
+    expect(lessonsOf(store.getCourse(target.slug))).toHaveLength(before);
   });
 
   it("refuses to review a submission for a course the instructor does not own", async () => {
@@ -219,7 +229,7 @@ describe("IDOR — learner course progress and certificates", () => {
   it("lets an enrolled learner mark a real lesson complete", async () => {
     loginAs("u-learner");
     const target = ownCourse();
-    const lesson = target.lessons.find((l) => !l.free) ?? target.lessons[0];
+    const lesson = lessonsOf(target).find((l) => !l.free) ?? lessonsOf(target)[0];
     const outcome = await call(() => dashboard.setLessonProgress(target.slug, lesson.id, true));
     expect(outcome.result?.ok).toBe(true);
     expect(store.getEnrollments().find((e) => e.userId === "u-learner")?.completed).toContain(lesson.id);
@@ -228,7 +238,7 @@ describe("IDOR — learner course progress and certificates", () => {
   it("refuses progress on a course the learner is not enrolled in", async () => {
     loginAs("u-learner");
     const target = foreignCourse();
-    const outcome = await call(() => dashboard.setLessonProgress(target.slug, target.lessons[0].id, true));
+    const outcome = await call(() => dashboard.setLessonProgress(target.slug, firstLesson(target), true));
     expect(outcome.result?.ok).toBe(false);
     expect(outcome.result?.error).toBe("not-enrolled");
   });
@@ -236,7 +246,7 @@ describe("IDOR — learner course progress and certificates", () => {
   it("refuses a lessonId that does not belong to the enrolled course", async () => {
     loginAs("u-learner");
     const target = ownCourse();
-    const foreignLesson = foreignCourse().lessons[0].id;
+    const foreignLesson = firstLesson(foreignCourse());
     const outcome = await call(() => dashboard.setLessonProgress(target.slug, foreignLesson, true));
     expect(outcome.result?.ok).toBe(false);
     expect(outcome.result?.error).toBe("unknown-lesson");
@@ -253,7 +263,7 @@ describe("IDOR — learner course progress and certificates", () => {
 
   it("refuses an anonymous progress write", async () => {
     const target = ownCourse();
-    const outcome = await call(() => dashboard.setLessonProgress(target.slug, target.lessons[0].id, true));
+    const outcome = await call(() => dashboard.setLessonProgress(target.slug, firstLesson(target), true));
     expect(outcome.result?.ok).toBe(false);
     expect(outcome.result?.error).toBe("unauthorized");
   });
