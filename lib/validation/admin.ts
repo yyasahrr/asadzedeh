@@ -115,3 +115,23 @@ export const smsSettingsSchema = z.object({
 });
 
 export type SmsSettingsInput = z.infer<typeof smsSettingsSchema>;
+
+/**
+ * External channel toggles.
+ *
+ * Credentials are capped but not format-checked, for the same reason as the
+ * gateway keys: rejecting a Basalam key we merely fail to recognise would lock a
+ * shop out of a channel it has legitimately been issued.
+ */
+export const channelSettingsSchema = z.object({
+  torob: z.object({ enabled: z.boolean() }),
+  emalls: z.object({ enabled: z.boolean() }),
+  basalam: z.object({
+    enabled: z.boolean(),
+    merchantId: z.string().trim().max(120, "شناسه فروشنده بیش از حد طولانی است"),
+    apiKey: z.string().trim().max(300, "کلید API بیش از حد طولانی است"),
+  }),
+  brand: z.string().trim().max(80, "نام برند بیش از حد طولانی است"),
+});
+
+export type ChannelSettingsInput = z.infer<typeof channelSettingsSchema>;

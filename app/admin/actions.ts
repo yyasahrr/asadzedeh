@@ -2,7 +2,14 @@
 
 import { logger } from "@/lib/logger";
 import { bool, num, numAllowZero, str } from "@/lib/validation/form";
-import { addStaffSchema, paymentSettingsSchema, smsSettingsSchema, supportChannelsSchema, updateRoleSchema } from "@/lib/validation/admin";
+import {
+  addStaffSchema,
+  channelSettingsSchema,
+  paymentSettingsSchema,
+  smsSettingsSchema,
+  supportChannelsSchema,
+  updateRoleSchema,
+} from "@/lib/validation/admin";
 import { getDriver } from "@/lib/gateways/registry";
 import { validate } from "@/lib/validation/schema";
 
@@ -1753,4 +1760,38 @@ export async function deleteLearningPath(fd: FormData) {
   await audit({ action: "learningPath.delete", level: "warn", actor: actor(me), target: `learningPath:${slug}` });
   revalidateAll();
   redirect("/admin/learning-paths");
+}
+
+export async function saveChannelSettings(fd: FormData) {
+  const me = await staff("settings");
+  const s = getSettings();
+  const parsed = validate(channelSettingsSchema, {
+    torob: { enabled: str(fd, "torobEnabled") === "on" },
+    emalls: { enabled: str(fd, "emallsEnabled") === "on" },
+    basalam: {
+      enabled: str(fd, "basalamEnabled") === "on",
+      merchantId: str(fd, "basalamMerchantId"),
+      apiKey: str(fd, "basalamApiKey"),
+    },
+    brand: str(fd, "brand") || s.channels.brand,
+  });
+  if (!parsed.ok) {
+    logger.warn({ event: "settings.channels.rejected", issues: parsed.issues });
+    redirect(`/admin/settings?error=${encodeURIComponent(parsed.message)}`);
+  }
+  writeDb({ settings: { ...s, channels: parsed.data } });
+  await audit({
+    action: "settings.update",
+    level: "security",
+    actor: actor(me),
+    // Only which channels are on is logged, never a credential.
+    detail: {
+      section: "channels",
+      torob: parsed.data.torob.enabled,
+      emalls: parsed.data.emalls.enabled,
+      basalam: parsed.data.basalam.enabled,
+    },
+  });
+  revalidatePath("/admin/settings");
+  redirect("/admin/settings?saved=1");
 }

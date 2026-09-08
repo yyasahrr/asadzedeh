@@ -5,7 +5,8 @@ import { getSessionUser, can } from "@/lib/auth";
 import { Denied } from "@/components/admin/Denied";
 import { FieldLabel, Input, Select } from "@/components/ui/Input";
 import { listSmsDrivers } from "@/lib/sms";
-import { resetDemoData, saveEmailSettings, saveLegalSettings, saveSmsSettings } from "../actions";
+import { appUrl } from "@/lib/env";
+import { resetDemoData, saveChannelSettings, saveEmailSettings, saveLegalSettings, saveSmsSettings } from "../actions";
 import { LegalSettingsManager } from "@/components/admin/LegalSettingsManager";
 
 export const metadata: Metadata = { title: "تنظیمات" };
@@ -26,6 +27,8 @@ export default async function SettingsPage({
   if (!can(user, "settings")) return <Denied />;
   const { saved } = await searchParams;
   const settings = getSettings();
+  // Shown to the operator so the exact feed URL can be pasted into the panel.
+  const siteUrl = appUrl();
 
   return (
     <div className="space-y-5">
@@ -73,6 +76,61 @@ export default async function SettingsPage({
         </p>
         <button type="submit" className="mt-4 inline-flex h-11 cursor-pointer items-center rounded-xl bg-navy-800 px-8 font-bold text-white transition-colors hover:bg-navy-700">
           ذخیره تنظیمات پیامک
+        </button>
+      </form>
+
+      <form action={saveChannelSettings} className="rounded-2xl bg-card p-6 shadow-card ring-1 ring-ink-900/5">
+        <h2 className="font-extrabold text-navy-900">کانال‌های فروش و مقایسه قیمت</h2>
+        <p className="mt-2 text-[13px] leading-7 text-ink-500">
+          ترب و ایمالز فید محصولات را از نشانی زیر می‌خوانند و دوره‌ای به‌روز می‌کنند. نشانی فید را در
+          پنل فروشنده همان سامانه ثبت کنید:
+        </p>
+        <ul className="mt-2 space-y-1 text-[13px] text-ink-700" dir="ltr">
+          <li className="font-mono">{`${siteUrl}/api/feed/torob`}</li>
+          <li className="font-mono">{`${siteUrl}/api/feed/emalls`}</li>
+        </ul>
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <label className="flex items-center gap-2.5 text-sm font-bold">
+            <input type="checkbox" name="torobEnabled" defaultChecked={settings.channels.torob.enabled} className="h-4 w-4 accent-teal-600" />
+            فعال‌سازی فید ترب
+          </label>
+          <label className="flex items-center gap-2.5 text-sm font-bold">
+            <input type="checkbox" name="emallsEnabled" defaultChecked={settings.channels.emalls.enabled} className="h-4 w-4 accent-teal-600" />
+            فعال‌سازی فید ایمالز
+          </label>
+          <div>
+            <FieldLabel htmlFor="ch-brand">نام برند در فید</FieldLabel>
+            <Input id="ch-brand" name="brand" defaultValue={settings.channels.brand} />
+          </div>
+        </div>
+
+        <div className="mt-5 rounded-xl bg-sand-100 p-4">
+          <p className="text-sm font-extrabold text-navy-900">باسلام (مارکت‌پلیس)</p>
+          <p className="mt-1 text-[13px] leading-7 text-ink-600">
+            باسام برخلاف ترب فید نمی‌خواند، بلکه کالا باید از طریق API فروشنده ارسال شود. تا وارد شدن
+            اعتبارنامه و دریافت قرارداد پایانه‌ها، این کانال
+            <span className="font-bold text-madder-700"> BLOCKED BY EXTERNAL CONFIGURATION </span>
+            است و انتشار واقعی انجام نمی‌شود.
+          </p>
+          <div className="mt-3 grid gap-4 sm:grid-cols-2">
+            <label className="flex items-center gap-2.5 text-sm font-bold">
+              <input type="checkbox" name="basalamEnabled" defaultChecked={settings.channels.basalam.enabled} className="h-4 w-4 accent-teal-600" />
+              فعال‌سازی باسلام
+            </label>
+            <div />
+            <div>
+              <FieldLabel htmlFor="ch-basalam-id">شناسه فروشنده</FieldLabel>
+              <Input id="ch-basalam-id" name="basalamMerchantId" defaultValue={settings.channels.basalam.merchantId} dir="ltr" className="text-left" autoComplete="off" />
+            </div>
+            <div>
+              <FieldLabel htmlFor="ch-basalam-key">کلید API</FieldLabel>
+              <Input id="ch-basalam-key" name="basalamApiKey" type="password" defaultValue={settings.channels.basalam.apiKey} dir="ltr" className="text-left" autoComplete="off" />
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" className="mt-4 inline-flex h-11 cursor-pointer items-center rounded-xl bg-navy-800 px-8 font-bold text-white transition-colors hover:bg-navy-700">
+          ذخیره تنظیمات کانال‌ها
         </button>
       </form>
 

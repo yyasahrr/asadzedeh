@@ -645,6 +645,20 @@ export interface EmailSettings {
   from: string;
 }
 
+/**
+ * External sales/discovery channels.
+ *
+ * Torob and Emalls pull a feed, so all they need is an on/off switch. Basalam is
+ * a marketplace that pushes, so it needs merchant credentials.
+ */
+export interface ChannelSettings {
+  torob: { enabled: boolean };
+  emalls: { enabled: boolean };
+  basalam: { enabled: boolean; merchantId: string; apiKey: string };
+  /** Brand name emitted in the feed; falls back to the site name. */
+  brand: string;
+}
+
 /** SMS panels the shop can be wired to. */
 export const SMS_PROVIDERS = ["demo", "kavenegar", "ghasedak", "smsir"] as const;
 export type SmsProviderId = (typeof SMS_PROVIDERS)[number];
@@ -812,6 +826,7 @@ export interface Settings {
   sms: SmsSettings;
   email: EmailSettings;
   payment: PaymentSettings;
+  channels: ChannelSettings;
   support: SupportChannelSettings;
   security: SecuritySettings;
   video: VideoSettings;

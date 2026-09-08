@@ -327,6 +327,12 @@ export const defaultSettings: Settings = {
   sms: { provider: "demo", apiKey: "", sender: "", templateId: "" },
   email: { host: "", port: 587, user: "", pass: "", from: "" },
   payment: { provider: "demo", merchantId: "", secret: "", sandbox: true },
+  channels: {
+    torob: { enabled: false },
+    emalls: { enabled: false },
+    basalam: { enabled: false, merchantId: "", apiKey: "" },
+    brand: "اسدزاده",
+  },
   support: {
     enabled: true,
     telegram: "",
