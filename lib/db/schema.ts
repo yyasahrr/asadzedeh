@@ -391,6 +391,26 @@ export const passwordResets = pgTable(
   ],
 );
 
+export const otpCodes = pgTable(
+  "otp_codes",
+  {
+    id: text("id").primaryKey(),
+    phone: text("phone").notNull(),
+    /** Only sha256(code) is ever stored — a database leak must not yield codes. */
+    codeHash: text("code_hash").notNull(),
+    expiresAt: ts("expires_at").notNull(),
+    usedAt: ts("used_at"),
+    /** Wrong guesses against this code. Bounds brute force inside its window. */
+    attempts: integer("attempts").notNull().default(0),
+    createdAt: ts("created_at").notNull().defaultNow(),
+  },
+  (t) => [
+    index("otp_codes_phone_idx").on(t.phone),
+    index("otp_codes_lookup_idx").on(t.phone, t.usedAt, t.expiresAt),
+    index("otp_codes_created_idx").on(t.phone, t.createdAt),
+  ],
+);
+
 export const kvMeta = pgTable("kv_meta", {
   key: text("key").primaryKey(),
   value: text("value").notNull(),

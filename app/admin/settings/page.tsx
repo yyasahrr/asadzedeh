@@ -4,6 +4,7 @@ import { getSettings } from "@/lib/store";
 import { getSessionUser, can } from "@/lib/auth";
 import { Denied } from "@/components/admin/Denied";
 import { FieldLabel, Input, Select } from "@/components/ui/Input";
+import { listSmsDrivers } from "@/lib/sms";
 import { resetDemoData, saveEmailSettings, saveLegalSettings, saveSmsSettings } from "../actions";
 import { LegalSettingsManager } from "@/components/admin/LegalSettingsManager";
 
@@ -46,8 +47,11 @@ export default async function SettingsPage({
             <FieldLabel htmlFor="sms-provider">سامانه</FieldLabel>
             <Select id="sms-provider" name="provider" defaultValue={settings.sms.provider}>
               <option value="demo">نمایشی (بدون ارسال واقعی)</option>
-              <option value="kavenegar">کاوه‌نگار</option>
-              <option value="ghasedak">قاصدک</option>
+              {listSmsDrivers().map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.label}
+                </option>
+              ))}
             </Select>
           </div>
           <div>
@@ -58,7 +62,15 @@ export default async function SettingsPage({
             <FieldLabel htmlFor="sms-sender">شماره فرستنده (اختیاری)</FieldLabel>
             <Input id="sms-sender" name="sender" defaultValue={settings.sms.sender} dir="ltr" className="text-left" />
           </div>
+          <div>
+            <FieldLabel htmlFor="sms-template">شناسه قالب کد (برای پیامک‌دهی)</FieldLabel>
+            <Input id="sms-template" name="templateId" defaultValue={settings.sms.templateId} dir="ltr" className="text-left" placeholder="123456" />
+          </div>
         </div>
+        <p className="mt-3 text-[13px] leading-7 text-ink-500">
+          پیامک‌دهی (sms.ir) کد ورود را از طریق قالب ثبت‌شده ارسال می‌کند، پس شناسه قالب لازم است؛
+          کاوه‌نگار و قاصدک متن آزاد می‌فرستند. ورود با کد پیامکی در صفحه ورود فعال است.
+        </p>
         <button type="submit" className="mt-4 inline-flex h-11 cursor-pointer items-center rounded-xl bg-navy-800 px-8 font-bold text-white transition-colors hover:bg-navy-700">
           ذخیره تنظیمات پیامک
         </button>

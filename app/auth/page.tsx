@@ -31,7 +31,9 @@ export default async function AuthPage({
           <div className="p-6 sm:p-10">
             <Logo className="mb-6" />
             <AuthTabs
-              initialTab={tab === "register" ? "register" : tab === "reset" ? "reset" : "login"}
+              initialTab={
+                tab === "register" ? "register" : tab === "reset" ? "reset" : tab === "otp" ? "otp" : "login"
+              }
               error={error}
               notice={sent ? "sent" : reset ? "reset" : undefined}
               next={next}

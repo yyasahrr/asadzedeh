@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { PAYMENT_PROVIDERS } from "@/lib/types";
+import { PAYMENT_PROVIDERS, SMS_PROVIDERS } from "@/lib/types";
 import type { Role } from "@/lib/types";
 import { zPhone, zText } from "./schema";
 
@@ -99,3 +99,19 @@ export const paymentSettingsSchema = z.object({
 });
 
 export type PaymentSettingsInput = z.infer<typeof paymentSettingsSchema>;
+
+/**
+ * SMS panel selection.
+ *
+ * Same reasoning as the gateway: the provider is an allowlist, credentials are
+ * capped but not format-checked, and the template id is optional at this layer
+ * because only template-based panels need one.
+ */
+export const smsSettingsSchema = z.object({
+  provider: z.enum(SMS_PROVIDERS, { error: "پنل پیامک معتبر نیست" }),
+  apiKey: z.string().trim().max(200, "کلید وب‌سرویس بیش از حد طولانی است"),
+  sender: z.string().trim().max(40, "شماره ارسال‌کننده بیش از حد طولانی است"),
+  templateId: z.string().trim().max(20, "شناسه قالب بیش از حد طولانی است"),
+});
+
+export type SmsSettingsInput = z.infer<typeof smsSettingsSchema>;

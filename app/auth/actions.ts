@@ -23,6 +23,7 @@ import { validate } from "@/lib/validation/schema";
 import { safeNextPath } from "@/lib/auth-navigation";
 import { normalizeDigits } from "@/lib/format";
 import { requestPasswordReset, resetPasswordWithCode } from "@/lib/password-reset";
+import { requestLoginOtp, verifyLoginOtp } from "@/lib/otp";
 import { resetPasswordSchema } from "@/lib/validation/auth";
 import { getSettings, getUserById, getUserByPhone, getUsers, getSessions, writeDb } from "@/lib/store";
 import { rateLimit, LIMITS } from "@/lib/rate-limit";
@@ -307,4 +308,73 @@ export async function resetPasswordAction(fd: FormData) {
 
   await audit({ action: "auth.password_reset.completed", level: "security" });
   redirect("/auth?tab=login&reset=1");
+}
+
+/* ------------------------------------------------------- OTP (passwordless) */
+
+/**
+ * Step 1: send a login code.
+ *
+ * Rate-limited here *and* cooldown-limited in SQL, because the two guard
+ * different things: this bounds a single client's request rate, the SQL cooldown
+ * bounds how often any code is sent to one phone regardless of which client asks.
+ * Both are needed to keep SMS spend under control.
+ */
+export async function requestOtpAction(fd: FormData) {
+  const phone = normalizeDigits(String(fd.get("phone") ?? "").trim());
+  const next = String(fd.get("next") ?? "");
+  const limited = rateLimit(`otp:req:${phone || "anon"}`, LIMITS.otp.limit, LIMITS.otp.windowMs);
+  if (!limited.ok) redirect(`/auth?tab=otp&error=locked${next ? `&next=${encodeURIComponent(next)}` : ""}`);
+
+  const outcome = await requestLoginOtp(phone, (p) => {
+    const u = getUserByPhone(p);
+    return u ? { id: u.id, name: u.name } : undefined;
+  });
+
+  await audit({ action: "auth.otp.requested", level: "security" });
+
+  if (!outcome.ok) {
+    redirect(`/auth?tab=otp&error=cooldown&retry=${outcome.retryAfterSeconds}${next ? `&next=${encodeURIComponent(next)}` : ""}`);
+  }
+  // An unknown number reports the same "sent" page as a known one.
+  redirect(`/auth?tab=otp&sent=1${next ? `&next=${encodeURIComponent(next)}` : ""}`);
+}
+
+/** Step 2: consume the code and open a session. */
+export async function verifyOtpAction(fd: FormData) {
+  const phone = normalizeDigits(String(fd.get("phone") ?? "").trim());
+  const code = String(fd.get("code") ?? "");
+  const next = String(fd.get("next") ?? "");
+  const limited = rateLimit(`otp:use:${phone || "anon"}`, LIMITS.otp.limit, LIMITS.otp.windowMs);
+  if (!limited.ok) redirect("/auth?tab=otp&error=locked");
+
+  const user = getUserByPhone(phone);
+  const outcome = await verifyLoginOtp(phone, code);
+  if (!outcome.ok) {
+    await audit({
+      action: "auth.otp.failed",
+      level: "security",
+      actor: user ? { id: user.id, name: user.name, role: user.role } : undefined,
+      detail: { reason: outcome.reason },
+    });
+    redirect(`/auth?tab=otp&error=${outcome.reason}${next ? `&next=${encodeURIComponent(next)}` : ""}`);
+  }
+  // The code proves control of the phone but not of the account, so the usual
+  // lock check still applies.
+  if (!user || (user.lockedUntil && Date.parse(user.lockedUntil) > Date.now())) {
+    redirect("/auth?tab=otp&error=locked");
+  }
+
+  // Staff holding TOTP still face it: an OTP proves the phone, not the person.
+  if (user.totp?.enabled) {
+    const jar = await cookies();
+    const ticket = signPayload({ uid: user.id, exp: Date.now() + 5 * 60_000, next });
+    jar.set(MFA_COOKIE, ticket, { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: 300 });
+    await audit({ action: "auth.2fa.challenge", level: "security", actor: { id: user.id, name: user.name, role: user.role } });
+    redirect("/auth/verify");
+  }
+
+  await createSession(user, false);
+  await audit({ action: "auth.login", actor: { id: user.id, name: user.name, role: user.role }, detail: { method: "otp" } });
+  redirect(safeNextPath(next, homeFor(user)));
 }

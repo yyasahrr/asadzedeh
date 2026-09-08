@@ -630,9 +630,11 @@ export interface SupportChannelSettings {
 }
 
 export interface SmsSettings {
-  provider: "demo" | "kavenegar" | "ghasedak";
+  provider: SmsProviderId;
   apiKey: string;
   sender: string;
+  /** Template id, required by template-based panels (sms.ir) to deliver a code. */
+  templateId: string;
 }
 
 export interface EmailSettings {
@@ -642,6 +644,10 @@ export interface EmailSettings {
   pass: string;
   from: string;
 }
+
+/** SMS panels the shop can be wired to. */
+export const SMS_PROVIDERS = ["demo", "kavenegar", "ghasedak", "smsir"] as const;
+export type SmsProviderId = (typeof SMS_PROVIDERS)[number];
 
 /** Payment gateways the shop can be wired to. */
 export const PAYMENT_PROVIDERS = ["demo", "zarinpal", "idpay", "zibal", "payping"] as const;

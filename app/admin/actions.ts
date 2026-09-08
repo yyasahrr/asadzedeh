@@ -2,7 +2,7 @@
 
 import { logger } from "@/lib/logger";
 import { bool, num, numAllowZero, str } from "@/lib/validation/form";
-import { addStaffSchema, paymentSettingsSchema, supportChannelsSchema, updateRoleSchema } from "@/lib/validation/admin";
+import { addStaffSchema, paymentSettingsSchema, smsSettingsSchema, supportChannelsSchema, updateRoleSchema } from "@/lib/validation/admin";
 import { getDriver } from "@/lib/gateways/registry";
 import { validate } from "@/lib/validation/schema";
 
@@ -1516,11 +1516,17 @@ export async function saveSmsSettings(fd: FormData) {
   writeDb({
     settings: {
       ...s,
-      sms: {
-        provider: (str(fd, "provider") || "demo") as "demo" | "kavenegar" | "ghasedak",
-        apiKey: str(fd, "apiKey"),
-        sender: str(fd, "sender"),
-      },
+      sms: (() => {
+        const parsed = validate(smsSettingsSchema, {
+          provider: str(fd, "provider") || "demo",
+          apiKey: str(fd, "apiKey"),
+          sender: str(fd, "sender"),
+          templateId: str(fd, "templateId"),
+        });
+        // An unparseable provider would break every OTP and order notification,
+        // so keep the stored config rather than write a broken one.
+        return parsed.ok ? parsed.data : s.sms;
+      })(),
     },
   });
   await audit({ action: "settings.update", actor: actor(me), detail: { section: "sms" } });
