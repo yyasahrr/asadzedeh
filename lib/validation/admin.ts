@@ -49,3 +49,33 @@ export type UpdateRoleInput = z.infer<typeof updateRoleSchema>;
 export function isAssignableRole(role: Role): role is AssignableRole {
   return (ASSIGNABLE_ROLES as readonly string[]).includes(role);
 }
+
+/**
+ * Floating support channels.
+ *
+ * Each channel is optional: an empty value means "do not show this icon", which
+ * is how a shop that only staffs Telegram configures it. What must not happen is
+ * an operator pasting an arbitrary URL that we then render as a link, so the
+ * Telegram field accepts a bare handle or a t.me link and nothing else.
+ */
+export const supportChannelsSchema = z.object({
+  enabled: z.boolean(),
+  telegram: z
+    .string()
+    .trim()
+    .max(120, "شناسه تلگرام بیش از حد طولانی است")
+    .refine((v) => v === "" || /^@?[A-Za-z0-9_]{4,60}$/.test(v) || /^https:\/\/(www\.)?t\.me\/[A-Za-z0-9_]{4,60}$/i.test(v), {
+      error: "شناسه تلگرام باید نام کاربری یا لینک t.me باشد",
+    }),
+  whatsapp: z
+    .string()
+    .trim()
+    .max(24, "شماره واتساپ بیش از حد طولانی است")
+    .refine((v) => v === "" || /^\+?[\d\s-]{8,20}$/.test(v), {
+      error: "شماره واتساپ معتبر نیست",
+    }),
+  label: z.string().trim().max(40, "عنوان بیش از حد طولانی است"),
+  whatsappMessage: z.string().trim().max(400, "پیام پیش‌فرض بیش از حد طولانی است"),
+});
+
+export type SupportChannelsInput = z.infer<typeof supportChannelsSchema>;

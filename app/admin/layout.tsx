@@ -6,7 +6,7 @@ import { noIndexMetadata } from "@/lib/seo";
 import { SideNav } from "@/components/dashboard/SideNav";
 import { LogoMark } from "@/components/Logo";
 import { getSessionUser, can, isStaff, needsMfa, roleLabels, type Permission } from "@/lib/auth";
-import { getComments, getCourseRequests, getOrders, getPreorders, getSubmissions, getTickets, getVideos } from "@/lib/store";
+import { getComments, getCourseRequests, getOrders, getPreorders, getSubmissions, getVideos } from "@/lib/store";
 import { toFa } from "@/lib/format";
 import { logout } from "@/app/auth/actions";
 
@@ -45,7 +45,6 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const pendingOrders = getOrders().filter((o) => o.status === "در انتظار پرداخت").length;
   const processingVideos = getVideos().filter((v) => v.status === "processing").length;
   const openPreorders = getPreorders().filter((p) => p.status === "ثبت شده" || p.status === "در انتظار بیعانه").length;
-  const openTickets = getTickets().filter((t) => t.status === "باز" || t.status === "در حال بررسی").length;
   const pendingCourseRequests = getCourseRequests().filter((r) => r.status === "در انتظار بررسی").length;
 
   const items = [
@@ -66,7 +65,6 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     { href: "/admin/enrollments", label: "اعضای دوره‌ها", icon: "enrollments", perm: "orders" },
     { href: "/admin/learning-paths", label: "مسیرهای آموزشی", icon: "paths", perm: "courses" },
     { href: "/admin/orders", label: "سفارش‌ها", icon: "orders", perm: "orders", badge: pendingOrders ? toFa(pendingOrders) : undefined },
-    { href: "/admin/support", label: "تیکت‌های پشتیبانی", icon: "support", perm: "orders", badge: openTickets ? toFa(openTickets) : undefined },
     { href: "/admin/submissions", label: "تمرین‌ها", icon: "assignments", perm: "submissions", badge: pendingSubs ? toFa(pendingSubs) : undefined },
     { href: "/admin/certificates", label: "گواهی‌ها", icon: "certificates", perm: "certificates" },
     { href: "/admin/notify", label: "پیامک و ایمیل", icon: "notify", perm: "notify" },

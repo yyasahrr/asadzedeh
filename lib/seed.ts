@@ -327,6 +327,13 @@ export const defaultSettings: Settings = {
   sms: { provider: "demo", apiKey: "", sender: "" },
   email: { host: "", port: 587, user: "", pass: "", from: "" },
   payment: { provider: "demo", merchantId: "", sandbox: true },
+  support: {
+    enabled: true,
+    telegram: "",
+    whatsapp: "",
+    label: "پشتیبانی سریع",
+    whatsappMessage: "سلام، سوالی درباره دوره‌های اسدزاده دارم.",
+  },
   security: { requireStaff2fa: false, adminSessionMinutes: 120, maxFailedLogins: 5, lockMinutes: 15 },
   video: {
     defaults: defaultProtection,

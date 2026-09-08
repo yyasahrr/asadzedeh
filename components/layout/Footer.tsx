@@ -133,7 +133,6 @@ export async function Footer() {
           <div className="flex items-center gap-4">
             <Link href="/terms" className="transition-colors hover:text-white">قوانین و مقررات</Link>
             <Link href="/privacy" className="transition-colors hover:text-white">حریم خصوصی</Link>
-            <Link href="/support" className="transition-colors hover:text-white">پشتیبانی</Link>
           </div>
         </div>
       </div>

@@ -2,7 +2,7 @@
 
 import { logger } from "@/lib/logger";
 import { bool, num, numAllowZero, str } from "@/lib/validation/form";
-import { addStaffSchema, updateRoleSchema } from "@/lib/validation/admin";
+import { addStaffSchema, supportChannelsSchema, updateRoleSchema } from "@/lib/validation/admin";
 import { validate } from "@/lib/validation/schema";
 
 import { revalidatePath } from "next/cache";
@@ -57,6 +57,7 @@ import type {
   PreorderStatus,
   Product,
   ShippingMethod,
+  SupportChannelSettings,
   Trailer,
 } from "@/lib/types";
 
@@ -1290,6 +1291,26 @@ export async function deleteMedia(fd: FormData) {
 
 /* ---------- site content (CMS) ---------- */
 
+/**
+ * Validate the floating support channels before storing them.
+ *
+ * Invalid input falls back to the stored value rather than throwing: this runs
+ * inside a larger site-content form, and losing the operator's other edits over
+ * one bad Telegram handle would be worse than ignoring that one field.
+ */
+function parseSupportSettings(input: unknown): SupportChannelSettings {
+  const current = getSettings().support;
+  const parsed = validate(supportChannelsSchema, input);
+  if (!parsed.ok) return current;
+  return {
+    enabled: parsed.data.enabled,
+    telegram: parsed.data.telegram.replace(/^@/, ""),
+    whatsapp: parsed.data.whatsapp.replace(/[^\d+]/g, ""),
+    label: parsed.data.label || "پشتیبانی سریع",
+    whatsappMessage: parsed.data.whatsappMessage,
+  };
+}
+
 export async function saveSiteContent(fd: FormData) {
   const me = await staff("content");
   const s = getSettings();
@@ -1333,7 +1354,14 @@ export async function saveSiteContent(fd: FormData) {
     title: str(fd, "igTitle") || s.instagram.title,
     description: str(fd, "igDesc") || s.instagram.description,
   };
-  writeDb({ settings: { ...s, site, instagram } });
+  const support = parseSupportSettings({
+    enabled: bool(fd, "supEnabled"),
+    telegram: str(fd, "supTelegram"),
+    whatsapp: str(fd, "supWhatsapp"),
+    label: str(fd, "supLabel"),
+    whatsappMessage: str(fd, "supWhatsappMessage"),
+  });
+  writeDb({ settings: { ...s, site, instagram, support } });
   await audit({ action: "content.update", actor: actor(me), detail: { section: "site" } });
   revalidateAll();
   redirect("/admin/content?saved=1");

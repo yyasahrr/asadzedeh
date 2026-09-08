@@ -609,6 +609,26 @@ export interface SiteSettings {
   };
 }
 
+/**
+ * Floating support button.
+ *
+ * Replaces the old realtime chat. Visitors are handed off to a channel a human
+ * actually staffs (Telegram/WhatsApp) instead of waiting on an in-app socket
+ * that nobody is watching.
+ */
+export interface SupportChannelSettings {
+  /** Show the floating button at all. */
+  enabled: boolean;
+  /** Telegram username ("asadzedeh") or full link ("https://t.me/asadzedeh"). */
+  telegram: string;
+  /** WhatsApp number, international format, digits only (e.g. 989121234567). */
+  whatsapp: string;
+  /** Label shown next to the collapsed button. */
+  label: string;
+  /** Pre-filled first message for WhatsApp, so the visitor need not type. */
+  whatsappMessage: string;
+}
+
 export interface SmsSettings {
   provider: "demo" | "kavenegar" | "ghasedak";
   apiKey: string;
@@ -774,6 +794,7 @@ export interface Settings {
   sms: SmsSettings;
   email: EmailSettings;
   payment: PaymentSettings;
+  support: SupportChannelSettings;
   security: SecuritySettings;
   video: VideoSettings;
   spotplayer: SpotPlayerSettings;

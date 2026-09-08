@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { SupportDock } from "@/components/support/SupportDock";
 import { getSettings } from "@/lib/store";
 import { jsonLd, organizationJsonLd, websiteJsonLd } from "@/lib/seo";
 
@@ -59,6 +60,7 @@ export default function RootLayout({
         <Header />
         <main className="flex-1">{children}</main>
         <Footer />
+        <SupportDock settings={settings.support} />
       </body>
     </html>
   );

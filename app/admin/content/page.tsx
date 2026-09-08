@@ -18,7 +18,7 @@ export default async function ContentPage({
   const user = await getSessionUser();
   if (!can(user, "content")) return <Denied />;
   const { saved } = await searchParams;
-  const { site, instagram } = getSettings();
+  const { site, instagram, support } = getSettings();
 
   return (
     <div className="space-y-5">
@@ -130,6 +130,39 @@ export default async function ContentPage({
             <div className="sm:col-span-2">
               <FieldLabel htmlFor="footerAbout">متن معرفی فوتر</FieldLabel>
               <Textarea id="footerAbout" name="footerAbout" defaultValue={site.footerAbout} />
+            </div>
+          </div>
+        </section>
+
+        <section className="rounded-2xl border border-line bg-surface p-5">
+          <h2 className="mb-1 text-lg font-extrabold">دکمه شناور پشتیبانی</h2>
+          <p className="mb-4 text-sm text-muted">
+            یک دکمه شناور در گوشه سایت نمایش داده می‌شود که با کلیک روی آن، آیکون تلگرام و واتساپ باز
+            می‌شود. هر کانالی که خالی بگذارید نمایش داده نمی‌شود.
+          </p>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="flex items-center gap-2 text-sm sm:col-span-2">
+              <input type="checkbox" name="supEnabled" value="1" defaultChecked={support.enabled} className="h-4 w-4 accent-teal-700" />
+              نمایش دکمه شناور پشتیبانی
+            </label>
+            <div>
+              <FieldLabel htmlFor="supTelegram">شناسه تلگرام</FieldLabel>
+              <Input id="supTelegram" name="supTelegram" defaultValue={support.telegram} dir="ltr" className="text-left" placeholder="asadzedeh" />
+              <p className="mt-1 text-xs text-muted">نام کاربری بدون @ یا لینک کامل t.me</p>
+            </div>
+            <div>
+              <FieldLabel htmlFor="supWhatsapp">شماره واتساپ</FieldLabel>
+              <Input id="supWhatsapp" name="supWhatsapp" defaultValue={support.whatsapp} dir="ltr" className="text-left" placeholder="989121234567" />
+              <p className="mt-1 text-xs text-muted">با کد کشور، بدون + (مثال: ۹۸۹۱۲۱۲۳۴۵۶۷)</p>
+            </div>
+            <div>
+              <FieldLabel htmlFor="supLabel">متن دکمه</FieldLabel>
+              <Input id="supLabel" name="supLabel" defaultValue={support.label} />
+            </div>
+            <div>
+              <FieldLabel htmlFor="supWhatsappMessage">پیام پیش‌فرض واتساپ</FieldLabel>
+              <Input id="supWhatsappMessage" name="supWhatsappMessage" defaultValue={support.whatsappMessage} />
+              <p className="mt-1 text-xs text-muted">متنی که از قبل در چت واتساپ نوشته می‌شود</p>
             </div>
           </div>
         </section>
