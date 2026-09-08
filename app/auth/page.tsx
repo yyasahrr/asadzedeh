@@ -3,15 +3,24 @@ import Image from "next/image";
 import { PageHero } from "@/components/PageHero";
 import { AuthTabs } from "@/components/auth/AuthTabs";
 import { Logo } from "@/components/Logo";
+import { getSettings } from "@/lib/store";
 
 export const metadata: Metadata = { title: "ورود | ثبت‌نام" };
 
 export default async function AuthPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string; error?: string; next?: string; sent?: string; reset?: string }>;
+  searchParams: Promise<{
+    tab?: string;
+    error?: string;
+    next?: string;
+    sent?: string;
+    reset?: string;
+    phone?: string;
+  }>;
 }) {
-  const { tab, error, next, sent, reset } = await searchParams;
+  const { tab, error, next, sent, reset, phone } = await searchParams;
+  const otp = getSettings().otp;
   return (
     <>
       <PageHero
@@ -31,10 +40,15 @@ export default async function AuthPage({
           <div className="p-6 sm:p-10">
             <Logo className="mb-6" />
             <AuthTabs
-              initialTab={tab === "register" ? "register" : tab === "reset" ? "reset" : "login"}
+              initialTab={
+                tab === "register" ? "register" : tab === "reset" ? "reset" : tab === "otp" ? "otp" : "login"
+              }
               error={error}
-              notice={sent ? "sent" : reset ? "reset" : undefined}
+              notice={sent === "otp" ? "otp" : sent ? "sent" : reset ? "reset" : undefined}
               next={next}
+              phone={phone}
+              otpEnabled={otp?.enabled ?? true}
+              otpCodeLength={otp?.codeLength ?? 6}
             />
           </div>
         </div>

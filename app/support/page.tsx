@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Headphones, MessageSquarePlus } from "lucide-react";
-import { getTickets } from "@/lib/store";
+import { getSettings, getTickets } from "@/lib/store";
 import { getSessionUser } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import { NewTicketForm } from "@/components/support/NewTicketForm";
 import { NewTicketButton } from "@/components/support/NewTicketButton";
+import { channelHref } from "@/components/support/SupportWidget";
 
 export const metadata: Metadata = { title: "پشتیبانی" };
 export const dynamic = "force-dynamic";
@@ -20,6 +21,8 @@ const statusColors: Record<string, string> = {
 export default async function SupportPage() {
   const user = await getSessionUser();
   const tickets = user ? getTickets().filter((t) => t.userId === user.id) : [];
+  const support = getSettings().support;
+  const quickChannels = (support?.enabled ? support.channels : []).filter((c) => c.enabled && c.value.trim());
 
   return (
     <div className="space-y-6">
@@ -36,7 +39,7 @@ export default async function SupportPage() {
         </div>
       )}
 
-      {/* Online support (chat widget) */}
+      {/* Quick channels — the floating support button carries the same links. */}
       {user && (
         <div className="rounded-2xl bg-gradient-to-l from-teal-600 to-navy-800 p-6 text-white">
           <div className="flex items-center gap-3">
@@ -44,16 +47,29 @@ export default async function SupportPage() {
               <Headphones className="h-6 w-6" />
             </div>
             <div>
-              <h2 className="font-black">پشتیبانی آنلاین</h2>
-              <p className="text-sm text-white/70">سریع‌ترین راه ارتباط با ما</p>
+              <h2 className="font-black">پشتیبانی سریع</h2>
+              <p className="text-sm text-white/70">برای پاسخ فوری، از پیام‌رسان‌ها استفاده کنید</p>
             </div>
           </div>
-          <Link
-            href="/support/chat"
-            className="mt-4 inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-bold text-navy-900 transition-colors hover:bg-sand-100"
-          >
-            <MessageSquarePlus className="h-4 w-4" /> شروع گفتگو
-          </Link>
+          {quickChannels.length > 0 ? (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {quickChannels.map((channel) => (
+                <a
+                  key={channel.id}
+                  href={channelHref(channel)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-bold text-navy-900 transition-colors hover:bg-sand-100"
+                >
+                  <MessageSquarePlus className="h-4 w-4" /> {channel.label}
+                </a>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-4 text-sm text-white/70">
+              برای پیگیری دقیق‌تر، تیکت ثبت کنید تا کارشناسان پاسخ دهند.
+            </p>
+          )}
         </div>
       )}
 

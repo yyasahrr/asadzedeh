@@ -54,11 +54,15 @@ import type {
   LearningPath,
   Lesson,
   LessonAttachment,
+  PaymentProvider,
   PreorderStatus,
   Product,
   ShippingMethod,
+  SmsProvider,
+  SupportChannel,
   Trailer,
 } from "@/lib/types";
+import { defaultMarketplaces, defaultPaymentGateways } from "@/lib/seed";
 
 /* ---------- helpers ---------- */
 
@@ -1484,19 +1488,124 @@ export async function saveVideoSettings(fd: FormData) {
 export async function saveSmsSettings(fd: FormData) {
   const me = await staff("settings");
   const s = getSettings();
+  const provider = (str(fd, "provider") || "demo") as SmsProvider;
   writeDb({
     settings: {
       ...s,
       sms: {
-        provider: (str(fd, "provider") || "demo") as "demo" | "kavenegar" | "ghasedak",
+        provider,
         apiKey: str(fd, "apiKey"),
         sender: str(fd, "sender"),
+        username: str(fd, "username"),
+        // An empty password field means "keep the stored one" — the form never
+        // echoes the secret back, so a blank submit must not wipe it.
+        password: str(fd, "password") || s.sms.password || "",
+        otpTemplate: str(fd, "otpTemplate"),
+        otpTemplateParam: str(fd, "otpTemplateParam") || "code",
       },
     },
   });
-  await audit({ action: "settings.update", actor: actor(me), detail: { section: "sms" } });
+  await audit({ action: "settings.update", actor: actor(me), detail: { section: "sms", provider } });
   revalidatePath("/admin/settings");
   redirect("/admin/settings?saved=sms");
+}
+
+export async function saveOtpSettings(fd: FormData) {
+  const me = await staff("settings");
+  const s = getSettings();
+  const codeLength = num(fd, "codeLength", 6);
+  writeDb({
+    settings: {
+      ...s,
+      otp: {
+        enabled: str(fd, "enabled") === "on",
+        allowRegistration: str(fd, "allowRegistration") === "on",
+        codeLength: (codeLength === 4 || codeLength === 5 ? codeLength : 6) as 4 | 5 | 6,
+        // Bounded so an operator cannot configure a code that stays valid for a
+        // day, or a budget that turns the send path into a billing hole.
+        ttlMinutes: Math.min(30, Math.max(1, num(fd, "ttlMinutes", 3))),
+        maxPerHour: Math.min(20, Math.max(1, num(fd, "maxPerHour", 6))),
+      },
+    },
+  });
+  await audit({ action: "settings.update", level: "security", actor: actor(me), detail: { section: "otp" } });
+  revalidatePath("/admin/settings");
+  redirect("/admin/settings?saved=otp");
+}
+
+export async function saveMarketplaceSettings(fd: FormData) {
+  const me = await staff("shop");
+  const s = getSettings();
+  const current = s.marketplaces?.channels ?? defaultMarketplaces;
+  const channels = current.map((channel) => ({
+    ...channel,
+    enabled: str(fd, `mk-${channel.id}-enabled`) === "on",
+    apiKey: str(fd, `mk-${channel.id}-apiKey`) || channel.apiKey || "",
+    vendorId: str(fd, `mk-${channel.id}-vendorId`),
+    inStockOnly: str(fd, `mk-${channel.id}-inStockOnly`) === "on",
+    utmSource: str(fd, `mk-${channel.id}-utm`) || channel.utmSource || channel.id,
+  }));
+  writeDb({
+    settings: {
+      ...s,
+      marketplaces: {
+        enabled: str(fd, "enabled") === "on",
+        feedKey: str(fd, "feedKey"),
+        channels,
+      },
+    },
+  });
+  await audit({
+    action: "settings.update",
+    actor: actor(me),
+    detail: { section: "marketplaces", enabled: channels.filter((c) => c.enabled).map((c) => c.id) },
+  });
+  revalidatePath("/admin/marketplaces");
+  redirect("/admin/marketplaces?saved=1");
+}
+
+export async function saveSupportWidgetSettings(fd: FormData) {
+  const me = await staff("settings");
+  const s = getSettings();
+  const raw = str(fd, "channels");
+  let channels: SupportChannel[] = s.support?.channels ?? [];
+  if (raw) {
+    try {
+      const parsed: unknown = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        channels = parsed
+          .filter((c): c is Record<string, unknown> => !!c && typeof c === "object")
+          .map((c, i) => ({
+            id: String(c.id ?? `ch-${i}`).slice(0, 40),
+            kind: (["telegram", "whatsapp", "phone", "email", "instagram", "link"].includes(String(c.kind))
+              ? String(c.kind)
+              : "link") as SupportChannel["kind"],
+            label: String(c.label ?? "").slice(0, 40),
+            value: String(c.value ?? "").slice(0, 200),
+            enabled: c.enabled !== false,
+          }))
+          .filter((c) => c.label && c.value)
+          .slice(0, 8);
+      }
+    } catch {
+      // Malformed payload: keep what is stored rather than emptying the widget.
+    }
+  }
+  writeDb({
+    settings: {
+      ...s,
+      support: {
+        enabled: str(fd, "enabled") === "on",
+        title: str(fd, "title") || "پشتیبانی اسدزاده",
+        description: str(fd, "description"),
+        position: str(fd, "position") === "bottom-right" ? "bottom-right" : "bottom-left",
+        channels,
+      },
+    },
+  });
+  await audit({ action: "settings.update", actor: actor(me), detail: { section: "support-widget" } });
+  revalidatePath("/", "layout");
+  redirect("/admin/settings?saved=support");
 }
 
 export async function saveEmailSettings(fd: FormData) {
@@ -1546,13 +1655,32 @@ export async function saveLegalSettings(fd: FormData) {
 export async function savePaymentSettings(fd: FormData) {
   const me = await staff("payments");
   const s = getSettings();
+  const provider = (str(fd, "provider") || "demo") as PaymentProvider;
+  const stored = s.payment.gateways ?? defaultPaymentGateways;
+
+  // Credentials are kept per gateway, so switching the active provider (or
+  // trying one out) never destroys another gateway's merchant id.
+  const gateways = defaultPaymentGateways.map((fallback) => {
+    const existing = stored.find((g) => g.provider === fallback.provider) ?? fallback;
+    const submitted = str(fd, `pg-${fallback.provider}-merchantId`);
+    return {
+      ...existing,
+      merchantId: submitted || existing.merchantId,
+      enabled: str(fd, `pg-${fallback.provider}-enabled`) === "on",
+      sandbox: str(fd, `pg-${fallback.provider}-sandbox`) === "on",
+      note: str(fd, `pg-${fallback.provider}-note`) || existing.note,
+    };
+  });
+
+  const active = gateways.find((g) => g.provider === provider);
   writeDb({
     settings: {
       ...s,
       payment: {
-        provider: (str(fd, "provider") || "demo") as "demo" | "zarinpal",
-        merchantId: str(fd, "merchantId"),
-        sandbox: str(fd, "sandbox") === "on",
+        provider,
+        merchantId: active?.merchantId ?? "",
+        sandbox: active?.sandbox ?? true,
+        gateways,
       },
     },
   });

@@ -5,7 +5,14 @@ import Link from "next/link";
 import { AlertCircle } from "lucide-react";
 import { FieldLabel, Input } from "../ui/Input";
 import { Button } from "../ui/Button";
-import { login, register, requestPasswordResetAction, resetPasswordAction } from "@/app/auth/actions";
+import {
+  login,
+  register,
+  requestOtpAction,
+  requestPasswordResetAction,
+  resetPasswordAction,
+  verifyOtpAction,
+} from "@/app/auth/actions";
 import { cn } from "@/lib/utils";
 
 const errors: Record<string, string> = {
@@ -16,28 +23,42 @@ const errors: Record<string, string> = {
   expired: "زمان تأیید دومرحله‌ای تمام شد؛ دوباره وارد شوید.",
   missing: "کد بازیابی یافت نشد یا پیش‌تر استفاده شده است.",
   attempts: "تعداد تلاش‌های ناموفق بیش از حد مجاز است؛ کد جدید درخواست دهید.",
+  rate: "تعداد درخواست‌ها بیش از حد مجاز است؛ کمی بعد دوباره تلاش کنید.",
+  otpsend: "ارسال کد ممکن نشد. لطفاً بعداً تلاش کنید یا با رمز عبور وارد شوید.",
+  otpoff: "ورود با کد یک‌بارمصرف در حال حاضر غیرفعال است.",
 };
 
 const notices: Record<string, string> = {
   sent: "اگر این شماره در اسدزاده ثبت شده باشد، کد بازیابی پیامک شد. کد ۱۵ دقیقه اعتبار دارد.",
+  otp: "کد ورود پیامک شد. کد را وارد کنید.",
   reset: "رمز عبور با موفقیت تغییر کرد. اکنون می‌توانید وارد شوید.",
 };
+
+type Tab = "login" | "register" | "reset" | "otp";
 
 export function AuthTabs({
   initialTab,
   error,
   notice,
   next,
+  phone,
+  otpEnabled = true,
+  otpCodeLength = 6,
 }: {
-  initialTab: "login" | "register" | "reset";
+  initialTab: Tab;
   error?: string;
   notice?: string;
   next?: string;
+  /** Prefilled when the OTP step has already sent a code to this number. */
+  phone?: string;
+  otpEnabled?: boolean;
+  otpCodeLength?: number;
 }) {
-  const [tab, setTab] = useState<"login" | "register" | "reset">(initialTab);
+  const [tab, setTab] = useState<Tab>(initialTab);
   // The reset action redirects back with sent=1, so the step is driven by the
   // URL rather than client state — a reload must not lose the user's place.
   const sent = notice === "sent";
+  const otpSent = notice === "otp";
 
   return (
     <div>
@@ -88,6 +109,15 @@ export function AuthTabs({
             <Input id="auth-pass" name="password" type="password" required placeholder="••••••••" dir="ltr" className="text-left" autoComplete="current-password" />
           </div>
           <Button type="submit" size="lg" className="w-full">ورود به حساب</Button>
+          {otpEnabled && (
+            <button
+              type="button"
+              onClick={() => setTab("otp")}
+              className="h-11 w-full cursor-pointer rounded-xl bg-sand-100 text-sm font-bold text-navy-900 transition-colors hover:bg-sand-200"
+            >
+              ورود با کد پیامکی (بدون رمز عبور)
+            </button>
+          )}
           <button
             type="button"
             onClick={() => setTab("reset")}
@@ -128,6 +158,55 @@ export function AuthTabs({
                 <Input id="reset-pass" name="password" type="password" required minLength={10} placeholder="••••••••" dir="ltr" className="text-left" autoComplete="new-password" />
               </div>
               <Button type="submit" size="lg" className="w-full">تغییر رمز عبور</Button>
+            </form>
+          )}
+        </div>
+      ) : tab === "otp" ? (
+        <div className="mt-6 space-y-4">
+          {!otpSent ? (
+            <form action={requestOtpAction} className="space-y-4">
+              {next && <input type="hidden" name="next" value={next} />}
+              <div>
+                <FieldLabel htmlFor="otp-phone">شماره موبایل</FieldLabel>
+                <Input id="otp-phone" name="phone" required inputMode="tel" defaultValue={phone} placeholder="۰۹۱۲۳۴۵۶۷۸۹" dir="ltr" className="text-left" />
+              </div>
+              <Button type="submit" size="lg" className="w-full">ارسال کد ورود</Button>
+              <button
+                type="button"
+                onClick={() => setTab("login")}
+                className="w-full cursor-pointer text-center text-xs font-bold text-navy-800 underline-offset-4 hover:underline"
+              >
+                ورود با رمز عبور
+              </button>
+            </form>
+          ) : (
+            <form action={verifyOtpAction} className="space-y-4">
+              {next && <input type="hidden" name="next" value={next} />}
+              <input type="hidden" name="phone" value={phone ?? ""} />
+              <p className="rounded-xl bg-sand-100 px-4 py-3 text-xs leading-6 text-ink-600">
+                کد به شماره <span dir="ltr" className="font-bold">{phone}</span> ارسال شد.
+              </p>
+              <div>
+                <FieldLabel htmlFor="otp-code">کد ورود</FieldLabel>
+                <Input
+                  id="otp-code"
+                  name="code"
+                  required
+                  inputMode="numeric"
+                  maxLength={otpCodeLength}
+                  placeholder={"۱".repeat(otpCodeLength)}
+                  dir="ltr"
+                  className="text-left tracking-[0.4em]"
+                  autoFocus
+                />
+              </div>
+              <Button type="submit" size="lg" className="w-full">ورود</Button>
+              <Link
+                href={`/auth?tab=otp&phone=${encodeURIComponent(phone ?? "")}`}
+                className="block w-full text-center text-xs font-bold text-navy-800 underline-offset-4 hover:underline"
+              >
+                ارسال دوباره کد
+              </Link>
             </form>
           )}
         </div>

@@ -56,6 +56,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     { href: "/admin/videos", label: "ویدیوها و امنیت پخش", icon: "videos", perm: "videos", badge: processingVideos ? toFa(processingVideos) : undefined },
     { href: "/admin/instructors", label: "اساتید", icon: "instructors", perm: "instructors" },
     { href: "/admin/shop", label: "فروشگاه", icon: "shop", perm: "shop" },
+    { href: "/admin/marketplaces", label: "بازارگاه‌ها (ترب، ایمالز…)", icon: "shop", perm: "shop" },
     { href: "/admin/preorders", label: "پیش‌سفارش‌ها", icon: "preorders", perm: "preorders", badge: openPreorders ? toFa(openPreorders) : undefined },
     { href: "/admin/blog", label: "مقالات", icon: "blog", perm: "blog" },
     { href: "/admin/media", label: "رسانه", icon: "media", perm: "media" },

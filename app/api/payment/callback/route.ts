@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { audit } from "@/lib/audit";
-import { verifyPayment } from "@/lib/payment";
+import { readCallback, verifyPayment } from "@/lib/payment";
 import { getOrder, getOrders, getPayments, writeDbAsync } from "@/lib/store";
 import { finalizePaidOrder, releaseOrder } from "@/lib/order-payment";
 import { isPaidStatus } from "@/lib/order-status";
@@ -9,9 +9,11 @@ import { logger } from "@/lib/logger";
 export const dynamic = "force-dynamic";
 
 /**
- * Zarinpal return URL: `?order=AZ-9050&Authority=...&Status=OK`.
+ * Gateway return URL, e.g. `?order=AZ-9050&Authority=...&Status=OK`.
  *
- * `Status` is never trusted — it only decides whether we bother asking the
+ * Every supported gateway names its transaction identifier differently, so the
+ * query string is parsed by `readCallback` rather than here. The success flag in
+ * the callback is never trusted — it only decides whether we bother asking the
  * gateway. A payment becomes PAID only after `verifyPayment` (server-to-server)
  * succeeds, and the transition itself is a conditional UPDATE, so a replayed or
  * duplicated callback cannot fulfil the order twice.
@@ -19,8 +21,7 @@ export const dynamic = "force-dynamic";
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const orderId = url.searchParams.get("order") ?? "";
-  const authority = url.searchParams.get("Authority") ?? "";
-  const status = url.searchParams.get("Status") ?? "";
+  const { authority, ok: callbackOk } = readCallback(url.searchParams);
   const order = getOrder(orderId);
 
   if (!order) redirect("/checkout/failed?reason=notfound");
@@ -34,7 +35,7 @@ export async function GET(req: Request) {
     redirect(`/checkout/success?order=${orderId}`);
   }
 
-  if (status !== "OK" || !authority) {
+  if (!callbackOk || !authority) {
     await releaseOrder(orderId);
     await writeDbAsync({
       orders: getOrders().map((o) => (o.id === orderId ? { ...o, status: "لغو شده" } : o)),

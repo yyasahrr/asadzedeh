@@ -3,11 +3,14 @@ import type {
   Comment,
   CourseProtection,
   Enrollment,
+  MarketplaceConfig,
   Order,
+  PaymentGatewayConfig,
   Product,
   Settings,
   ShippingMethod,
   Student,
+  SupportWidgetSettings,
   User,
 } from "./types";
 
@@ -285,6 +288,34 @@ export const products: Product[] = [
   },
 ];
 
+/** Every gateway we can talk to, unconfigured until an operator fills it in. */
+export const defaultPaymentGateways: PaymentGatewayConfig[] = [
+  { provider: "zarinpal", merchantId: "", enabled: false, sandbox: true },
+  { provider: "zibal", merchantId: "", enabled: false, sandbox: true },
+  { provider: "idpay", merchantId: "", enabled: false, sandbox: true },
+  { provider: "payping", merchantId: "", enabled: false, sandbox: false },
+  { provider: "nextpay", merchantId: "", enabled: false, sandbox: false },
+  { provider: "aqayepardakht", merchantId: "", enabled: false, sandbox: true },
+];
+
+export const defaultMarketplaces: MarketplaceConfig[] = [
+  { id: "torob", label: "ترب", enabled: false, inStockOnly: true, utmSource: "torob" },
+  { id: "emalls", label: "ایمالز", enabled: false, inStockOnly: true, utmSource: "emalls" },
+  { id: "basalam", label: "باسلام", enabled: false, inStockOnly: true, utmSource: "basalam" },
+  { id: "digikala", label: "دیجی‌کالا", enabled: false, inStockOnly: true, utmSource: "digikala" },
+];
+
+export const defaultSupportWidget: SupportWidgetSettings = {
+  enabled: true,
+  title: "پشتیبانی اسدزاده",
+  description: "برای پاسخ سریع، از یکی از راه‌های زیر پیام بدهید.",
+  position: "bottom-left",
+  channels: [
+    { id: "telegram", kind: "telegram", label: "تلگرام", value: "asadzedeh", enabled: true },
+    { id: "whatsapp", kind: "whatsapp", label: "واتساپ", value: "989120000000", enabled: true },
+  ],
+};
+
 export const defaultSettings: Settings = {
   site: {
     siteName: "اسدزاده",
@@ -324,9 +355,25 @@ export const defaultSettings: Settings = {
       mapProvider: "neshan",
     },
   },
-  sms: { provider: "demo", apiKey: "", sender: "" },
+  sms: {
+    provider: "demo",
+    apiKey: "",
+    sender: "",
+    username: "",
+    password: "",
+    otpTemplate: "",
+    otpTemplateParam: "code",
+  },
+  otp: { enabled: true, allowRegistration: true, codeLength: 6, ttlMinutes: 3, maxPerHour: 6 },
   email: { host: "", port: 587, user: "", pass: "", from: "" },
-  payment: { provider: "demo", merchantId: "", sandbox: true },
+  payment: {
+    provider: "demo",
+    merchantId: "",
+    sandbox: true,
+    gateways: defaultPaymentGateways,
+  },
+  marketplaces: { enabled: false, feedKey: "", channels: defaultMarketplaces },
+  support: defaultSupportWidget,
   security: { requireStaff2fa: false, adminSessionMinutes: 120, maxFailedLogins: 5, lockMinutes: 15 },
   video: {
     defaults: defaultProtection,

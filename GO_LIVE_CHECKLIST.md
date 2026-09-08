@@ -57,11 +57,12 @@ default).
 No runtime `db.json`, no WAL. PostgreSQL is the single authoritative store.
 `scripts/db-migrate-json.ts` remains as a one-time import tool.
 
-### 6. Socket.IO on PostgreSQL + authorization — **DONE**
-`server.mjs` uses the `postgres` package directly (it cannot import `@/lib/db/*`
-— TypeScript and path aliases). Auth middleware rejects unauthenticated sockets;
-`ticket:join` re-checks ownership server-side; client room ids are not trusted;
-20 messages/60 s per socket; 2000-char cap.
+### 6. Realtime chat removed — **DONE**
+The Socket.IO layer and the live-chat pages were removed; `server.mjs` is now
+Next.js plus edge SEO redirects only, and `socket.io` / `socket.io-client` are no
+longer dependencies. Support is served by tickets (server actions, no websocket)
+plus a floating support button that links out to Telegram/WhatsApp, configured in
+`/admin/settings`.
 
 ### 7. Complete Zod validation — **DONE**
 `lib/validation/{schema,form,auth,admin,legacy}.ts`, replacing ad-hoc

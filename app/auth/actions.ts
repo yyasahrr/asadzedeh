@@ -23,6 +23,7 @@ import { validate } from "@/lib/validation/schema";
 import { safeNextPath } from "@/lib/auth-navigation";
 import { normalizeDigits } from "@/lib/format";
 import { requestPasswordReset, resetPasswordWithCode } from "@/lib/password-reset";
+import { normalizePhone, requestOtp, verifyOtp } from "@/lib/otp";
 import { resetPasswordSchema } from "@/lib/validation/auth";
 import { getSettings, getUserById, getUserByPhone, getUsers, getSessions, writeDb } from "@/lib/store";
 import { rateLimit, LIMITS } from "@/lib/rate-limit";
@@ -307,4 +308,87 @@ export async function resetPasswordAction(fd: FormData) {
 
   await audit({ action: "auth.password_reset.completed", level: "security" });
   redirect("/auth?tab=login&reset=1");
+}
+
+/* ---------------------------------------------------------- OTP login */
+
+/**
+ * Step 1: send a one-time login code.
+ *
+ * The redirect target is identical whether or not the number is registered, so
+ * this cannot be used to enumerate accounts. Whether an unknown number is
+ * actually allowed to proceed is decided inside `requestOtp` from the operator
+ * setting.
+ */
+export async function requestOtpAction(fd: FormData) {
+  const rawPhone = String(fd.get("phone") ?? "");
+  const next = String(fd.get("next") ?? "");
+  const phone = normalizePhone(rawPhone);
+  const { ip } = await requestContext();
+
+  const limited = rateLimit(`otp:req:${phone || ip}`, LIMITS.otp.limit, LIMITS.otp.windowMs);
+  if (!limited.ok) redirect("/auth?tab=otp&error=rate");
+
+  const result = await requestOtp(phone, !!getUserByPhone(phone));
+  const back = `/auth?tab=otp&phone=${encodeURIComponent(phone)}${next ? `&next=${encodeURIComponent(next)}` : ""}`;
+
+  if (!result.ok) {
+    const error =
+      result.reason === "rate_limited" ? "rate" : result.reason === "disabled" ? "otpoff" : result.reason === "invalid_phone" ? "validation" : "otpsend";
+    redirect(`/auth?tab=otp&error=${error}`);
+  }
+
+  await audit({ action: "auth.otp.requested", level: "security", detail: { sent: result.sent } });
+  redirect(`${back}&sent=otp`);
+}
+
+/** Step 2: verify the code, then log in — creating the account if that is allowed. */
+export async function verifyOtpAction(fd: FormData) {
+  const rawPhone = String(fd.get("phone") ?? "");
+  const code = String(fd.get("code") ?? "");
+  const next = String(fd.get("next") ?? "");
+  const { ip } = await requestContext();
+
+  const limited = rateLimit(`otp:verify:${ip}`, LIMITS.otp.limit, LIMITS.otp.windowMs);
+  if (!limited.ok) redirect("/auth?tab=otp&error=rate");
+
+  const result = await verifyOtp(rawPhone, code);
+  if (!result.ok) {
+    await audit({ action: "auth.otp.failed", level: "security", detail: { reason: result.reason } });
+    redirect(`/auth?tab=otp&phone=${encodeURIComponent(normalizePhone(rawPhone))}&sent=otp&error=${result.reason === "attempts" ? "attempts" : result.reason === "expired" ? "expired" : "invalid"}`);
+  }
+
+  let user = getUserByPhone(result.phone);
+
+  if (!user) {
+    if (!getSettings().otp.allowRegistration) redirect("/auth?tab=otp&error=invalid");
+    // OTP registration: the account has no password until the user sets one.
+    // A random, unusable hash keeps the shape of the record intact without
+    // creating a guessable credential.
+    const created: User = {
+      id: `u-${Date.now().toString(36)}`,
+      name: `کاربر ${result.phone.slice(-4)}`,
+      phone: result.phone,
+      passwordHash: hashPassword(newToken()),
+      role: "student",
+      createdAt: faToday(),
+    };
+    writeDb({ users: [...getUsers(), created] });
+    await audit({ action: "auth.register", actor: { id: created.id, name: created.name, role: "student" }, detail: { via: "otp" } });
+    user = created;
+  }
+
+  // A one-time code is a first factor only. Staff with TOTP still get the
+  // second-factor challenge, exactly as on the password path.
+  if (user.totp?.enabled) {
+    const jar = await cookies();
+    const ticket = signPayload({ uid: user.id, exp: Date.now() + 5 * 60_000, next });
+    jar.set(MFA_COOKIE, ticket, { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: 300 });
+    await audit({ action: "auth.2fa.challenge", level: "security", actor: { id: user.id, name: user.name, role: user.role } });
+    redirect("/auth/verify");
+  }
+
+  await createSession(user, false);
+  await audit({ action: "auth.login", actor: { id: user.id, name: user.name, role: user.role }, detail: { via: "otp" } });
+  redirect(safeNextPath(next, homeFor(user)));
 }

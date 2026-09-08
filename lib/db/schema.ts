@@ -391,6 +391,31 @@ export const passwordResets = pgTable(
   ],
 );
 
+/**
+ * One-time login codes.
+ *
+ * Keyed by phone rather than user id: a code may also be the act that creates
+ * the account, and issuing one must not depend on the number being registered.
+ */
+export const otpCodes = pgTable(
+  "otp_codes",
+  {
+    id: text("id").primaryKey(),
+    phone: text("phone").notNull(),
+    codeHash: text("code_hash").notNull(),
+    purpose: text("purpose").notNull().default("login"),
+    expiresAt: ts("expires_at").notNull(),
+    usedAt: ts("used_at"),
+    /** Wrong guesses against this code. */
+    attempts: integer("attempts").notNull().default(0),
+    createdAt: ts("created_at").notNull().defaultNow(),
+  },
+  (t) => [
+    index("otp_codes_lookup_idx").on(t.phone, t.usedAt, t.expiresAt),
+    index("otp_codes_recent_idx").on(t.phone, t.createdAt),
+  ],
+);
+
 export const kvMeta = pgTable("kv_meta", {
   key: text("key").primaryKey(),
   value: text("value").notNull(),

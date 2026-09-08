@@ -609,10 +609,39 @@ export interface SiteSettings {
   };
 }
 
+/** SMS panels the platform can talk to. */
+export type SmsProvider =
+  | "demo"
+  | "kavenegar"
+  | "ghasedak"
+  | "smsir"
+  | "melipayamak"
+  | "farazsms"
+  | "raygansms";
+
 export interface SmsSettings {
-  provider: "demo" | "kavenegar" | "ghasedak";
+  provider: SmsProvider;
   apiKey: string;
   sender: string;
+  /** Panels that authenticate with username/password instead of a key. */
+  username?: string;
+  password?: string;
+  /** Pattern/template code used for OTP messages (sms.ir, kavenegar lookup, …). */
+  otpTemplate?: string;
+  /** Named parameter inside the pattern that carries the code. */
+  otpTemplateParam?: string;
+}
+
+/** Login with a one-time code sent by SMS. */
+export interface OtpSettings {
+  /** Offer "login with code" on the auth page. */
+  enabled: boolean;
+  /** Let an unknown number create an account by verifying a code. */
+  allowRegistration: boolean;
+  codeLength: 4 | 5 | 6;
+  ttlMinutes: number;
+  /** Codes per phone per hour. */
+  maxPerHour: number;
 }
 
 export interface EmailSettings {
@@ -623,10 +652,84 @@ export interface EmailSettings {
   from: string;
 }
 
+/** Iranian payment gateways with a documented REST API. */
+export type PaymentProvider =
+  | "demo"
+  | "zarinpal"
+  | "zibal"
+  | "idpay"
+  | "payping"
+  | "nextpay"
+  | "aqayepardakht";
+
+/** Credentials for a single gateway. Only the active one is used at checkout. */
+export interface PaymentGatewayConfig {
+  provider: PaymentProvider;
+  /** Merchant id / API key / terminal token, depending on the gateway. */
+  merchantId: string;
+  enabled: boolean;
+  /** Gateway sandbox, where the provider offers one. */
+  sandbox: boolean;
+  /** Free-form note for the operator (e.g. which bank account it settles to). */
+  note?: string;
+}
+
 export interface PaymentSettings {
-  provider: "demo" | "zarinpal";
+  /** Gateway used for new payments. */
+  provider: PaymentProvider;
+  /** Credential of the active gateway (kept in sync with `gateways`). */
   merchantId: string;
   sandbox: boolean;
+  /** Every configured gateway, so switching provider does not lose credentials. */
+  gateways: PaymentGatewayConfig[];
+}
+
+/** Iranian marketplaces / price comparison engines the shop can feed. */
+export type MarketplaceId = "torob" | "emalls" | "basalam" | "digikala" | "custom";
+
+export interface MarketplaceConfig {
+  id: MarketplaceId;
+  /** Publish a feed / sync for this channel. */
+  enabled: boolean;
+  /** Display name shown in the admin panel. */
+  label: string;
+  /** API token, when the channel has a write API (Basalam, Digikala). */
+  apiKey?: string;
+  /** Vendor / shop identifier at the marketplace. */
+  vendorId?: string;
+  /** Only publish products that are active and in stock. */
+  inStockOnly: boolean;
+  /** Extra UTM tag appended to product links in the feed. */
+  utmSource?: string;
+  /** Last successful publish/sync, ISO. */
+  lastSyncedAt?: string;
+}
+
+export interface MarketplaceSettings {
+  /** Master switch for every outbound product feed. */
+  enabled: boolean;
+  /** Shared secret required on feed URLs (?key=…). Empty = public feed. */
+  feedKey: string;
+  channels: MarketplaceConfig[];
+}
+
+/** Floating support button (Telegram / WhatsApp / phone / email). */
+export interface SupportChannel {
+  id: string;
+  kind: "telegram" | "whatsapp" | "phone" | "email" | "instagram" | "link";
+  label: string;
+  /** Username, phone number, address or URL — normalised when rendered. */
+  value: string;
+  enabled: boolean;
+}
+
+export interface SupportWidgetSettings {
+  enabled: boolean;
+  title: string;
+  description: string;
+  /** Which corner the bubble sits in. */
+  position: "bottom-right" | "bottom-left";
+  channels: SupportChannel[];
 }
 
 export interface SecuritySettings {
@@ -772,8 +875,11 @@ export interface PaymentRecord {
 export interface Settings {
   site: SiteSettings;
   sms: SmsSettings;
+  otp: OtpSettings;
   email: EmailSettings;
   payment: PaymentSettings;
+  marketplaces: MarketplaceSettings;
+  support: SupportWidgetSettings;
   security: SecuritySettings;
   video: VideoSettings;
   spotplayer: SpotPlayerSettings;
