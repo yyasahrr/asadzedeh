@@ -326,7 +326,7 @@ export const defaultSettings: Settings = {
   },
   sms: { provider: "demo", apiKey: "", sender: "" },
   email: { host: "", port: 587, user: "", pass: "", from: "" },
-  payment: { provider: "demo", merchantId: "", sandbox: true },
+  payment: { provider: "demo", merchantId: "", secret: "", sandbox: true },
   support: {
     enabled: true,
     telegram: "",

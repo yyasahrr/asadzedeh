@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { PAYMENT_PROVIDERS } from "@/lib/types";
 import type { Role } from "@/lib/types";
 import { zPhone, zText } from "./schema";
 
@@ -79,3 +80,22 @@ export const supportChannelsSchema = z.object({
 });
 
 export type SupportChannelsInput = z.infer<typeof supportChannelsSchema>;
+
+/**
+ * Payment gateway selection.
+ *
+ * The provider is an allowlist rather than a cast: an unknown id would make
+ * `getDriver()` return undefined and every checkout would fail at the gateway
+ * boundary instead of at the form. Credentials are trimmed and length-capped,
+ * but deliberately not format-checked — each PSP's key format is its own
+ * business, and rejecting a key we merely fail to recognise would lock a shop
+ * out of its own money.
+ */
+export const paymentSettingsSchema = z.object({
+  provider: z.enum(PAYMENT_PROVIDERS, { error: "درگاه پرداخت معتبر نیست" }),
+  merchantId: z.string().trim().max(200, "شناسه درگاه بیش از حد طولانی است"),
+  secret: z.string().trim().max(300, "رمز درگاه بیش از حد طولانی است"),
+  sandbox: z.boolean(),
+});
+
+export type PaymentSettingsInput = z.infer<typeof paymentSettingsSchema>;

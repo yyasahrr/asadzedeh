@@ -643,9 +643,21 @@ export interface EmailSettings {
   from: string;
 }
 
+/** Payment gateways the shop can be wired to. */
+export const PAYMENT_PROVIDERS = ["demo", "zarinpal", "idpay", "zibal", "payping"] as const;
+export type PaymentProviderId = (typeof PAYMENT_PROVIDERS)[number];
+
 export interface PaymentSettings {
-  provider: "demo" | "zarinpal";
+  /** `demo` is the absence of a gateway and is never reachable in production. */
+  provider: PaymentProviderId;
+  /**
+   * Primary credential. What it means depends on the gateway: a merchant id for
+   * Zarinpal, an API key for IDPay, a merchant string for Zibal, a client id for
+   * PayPing. One field keeps the settings shape stable across providers.
+   */
   merchantId: string;
+  /** Secondary credential, used only by OAuth gateways (PayPing client secret). */
+  secret: string;
   sandbox: boolean;
 }
 

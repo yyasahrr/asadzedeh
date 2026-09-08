@@ -2,7 +2,8 @@
 
 import { logger } from "@/lib/logger";
 import { bool, num, numAllowZero, str } from "@/lib/validation/form";
-import { addStaffSchema, supportChannelsSchema, updateRoleSchema } from "@/lib/validation/admin";
+import { addStaffSchema, paymentSettingsSchema, supportChannelsSchema, updateRoleSchema } from "@/lib/validation/admin";
+import { getDriver } from "@/lib/gateways/registry";
 import { validate } from "@/lib/validation/schema";
 
 import { revalidatePath } from "next/cache";
@@ -1574,17 +1575,33 @@ export async function saveLegalSettings(fd: FormData) {
 export async function savePaymentSettings(fd: FormData) {
   const me = await staff("payments");
   const s = getSettings();
-  writeDb({
-    settings: {
-      ...s,
-      payment: {
-        provider: (str(fd, "provider") || "demo") as "demo" | "zarinpal",
-        merchantId: str(fd, "merchantId"),
-        sandbox: str(fd, "sandbox") === "on",
-      },
-    },
+  const parsed = validate(paymentSettingsSchema, {
+    provider: str(fd, "provider") || "demo",
+    merchantId: str(fd, "merchantId"),
+    secret: str(fd, "secret"),
+    sandbox: str(fd, "sandbox") === "on",
   });
-  await audit({ action: "settings.update", level: "security", actor: actor(me), detail: { section: "payment" } });
+  // Never store a half-validated gateway config: an unparseable provider would
+  // make every checkout fail at the gateway instead of at the form.
+  if (!parsed.ok) {
+    logger.warn({ event: "settings.payment.rejected", issues: parsed.issues });
+    redirect(`/admin/payments?error=${encodeURIComponent(parsed.message)}`);
+  }
+  const { provider, merchantId, secret, sandbox } = parsed.data;
+  const driver = getDriver(provider);
+  // Refuse to switch on a gateway that cannot run, so the operator finds out
+  // now rather than when the first customer tries to pay.
+  if (provider !== "demo" && (!merchantId || (driver?.needsSecret && !secret))) {
+    redirect(`/admin/payments?error=${encodeURIComponent("شناسه یا رمز درگاه را وارد کنید")}`);
+  }
+  writeDb({ settings: { ...s, payment: { provider, merchantId, secret, sandbox } } });
+  await audit({
+    action: "settings.update",
+    level: "security",
+    actor: actor(me),
+    // Credentials never go in the audit log — only the fact that they changed.
+    detail: { section: "payment", provider, sandbox, credentialSet: Boolean(merchantId) },
+  });
   revalidatePath("/admin/payments");
   redirect("/admin/payments?saved=1");
 }

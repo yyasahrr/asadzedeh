@@ -1,14 +1,20 @@
 import type { Order } from "./types";
 import { getSettings } from "./store";
 import { demoPaymentAllowed } from "./env";
-import { tomanToRial } from "./money";
-import { fetchWithTimeout } from "./http";
 import { logger } from "./logger";
+import { getDriver } from "./gateways/registry";
+import type { GatewayCredentials } from "./gateways/types";
 
 /**
- * Payment gateway layer.
- * - `demo`: only when not production (or ALLOW_DEMO_PAYMENT=true)
- * - `zarinpal`: real Zarinpal v4 API. Amounts convert Toman → Rial at the boundary only.
+ * Payment gateway dispatcher.
+ *
+ * `demo` short-circuits everything below it: it is only reachable when
+ * `demoPaymentAllowed()` says so, which is never in production. Every real
+ * gateway lives in `lib/gateways/` behind one interface, so this file's only
+ * jobs are to pick a driver and to refuse to run one that is not configured.
+ *
+ * Amounts stay Toman all the way down; each driver converts to Rial at its own
+ * boundary.
  */
 
 interface RequestResult {
@@ -18,97 +24,59 @@ interface RequestResult {
   error?: string;
 }
 
+interface VerifyResult {
+  ok: boolean;
+  refId?: string;
+  alreadyVerified?: boolean;
+  error?: string;
+}
+
+const NOT_CONFIGURED = "درگاه پرداخت پیکربندی نشده است";
+
 export function isDemoPayment(): boolean {
   const { payment } = getSettings();
   if (!demoPaymentAllowed()) return false;
   return payment.provider === "demo" || !payment.merchantId;
 }
 
-export async function requestPayment(order: Order, callbackUrl: string): Promise<RequestResult> {
+/** Credentials for the configured gateway, or null when it cannot run. */
+function resolve(): { credentials: GatewayCredentials; driver: NonNullable<ReturnType<typeof getDriver>> } | { error: string } {
   const { payment } = getSettings();
+  const driver = getDriver(payment.provider);
+  if (!driver) return { error: "درگاه پرداخت پشتیبانی‌نشده" };
+  if (!payment.merchantId) return { error: NOT_CONFIGURED };
+  // OAuth gateways need both halves of the pair.
+  if (driver.needsSecret && !payment.secret) return { error: NOT_CONFIGURED };
+  return { credentials: { merchantId: payment.merchantId, secret: payment.secret, sandbox: payment.sandbox }, driver };
+}
+
+export async function requestPayment(order: Order, callbackUrl: string): Promise<RequestResult> {
   if (isDemoPayment()) {
     return { ok: false, error: "درگاه نمایشی فعال است" };
   }
-  if (!payment.merchantId) {
-    return { ok: false, error: "درگاه پرداخت پیکربندی نشده است" };
-  }
+  const r = resolve();
+  if ("error" in r) return { ok: false, error: r.error };
 
-  const base = payment.sandbox ? "https://sandbox.zarinpal.com" : "https://api.zarinpal.com";
-  const amountRial = tomanToRial(order.amount);
-  try {
-    // Money movement: never retried. A second attempt would create a second
-    // gateway transaction.
-    const res = await fetchWithTimeout(`${base}/pg/v4/payment/request.json`, {
-      timeoutMs: 15_000,
-      event: "payment.request",
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        merchant_id: payment.merchantId,
-        amount: amountRial,
-        callback_url: `${callbackUrl}?order=${order.id}`,
-        description: `اسدزاده — ${order.item}`,
-      }),
-    });
-    const data = (await res.json()) as {
-      data?: { code?: number; authority?: string; message?: string };
-      errors?: unknown;
-    };
-    if (data.data?.code === 100 && data.data.authority) {
-      const gate = payment.sandbox ? "https://sandbox.zarinpal.com" : "https://www.zarinpal.com";
-      return {
-        ok: true,
-        authority: data.data.authority,
-        payUrl: `${gate}/pg/StartPay/${data.data.authority}`,
-      };
-    }
-    logger.warn({ event: "payment.request.failed", orderId: order.id, message: data.data?.message });
-    return { ok: false, error: data.data?.message || "خطای درگاه پرداخت" };
-  } catch (e) {
-    logger.error({ event: "payment.request.error", orderId: order.id, err: e instanceof Error ? e.message : String(e) });
-    return { ok: false, error: e instanceof Error ? e.message : "خطای اتصال به درگاه" };
+  logger.info({ event: "payment.request.start", gateway: r.driver.id, orderId: order.id, amount: order.amount });
+  const result = await r.driver.request({ order, callbackUrl }, r.credentials);
+  if (result.ok) {
+    logger.info({ event: "payment.request.ok", gateway: r.driver.id, orderId: order.id });
   }
+  return result;
 }
 
-export async function verifyPayment(
-  order: Order,
-  authority: string,
-): Promise<{ ok: boolean; refId?: string; alreadyVerified?: boolean; error?: string }> {
-  const { payment } = getSettings();
+export async function verifyPayment(order: Order, authority: string): Promise<VerifyResult> {
   if (isDemoPayment()) {
     return { ok: true, refId: `DEMO-${Date.now().toString(36).toUpperCase()}` };
   }
-  if (!payment.merchantId) {
-    return { ok: false, error: "درگاه پرداخت پیکربندی نشده است" };
+  const r = resolve();
+  if ("error" in r) return { ok: false, error: r.error };
+
+  const result = await r.driver.verify(order, authority, r.credentials);
+  if (result.ok) {
+    logger.info({ event: "payment.verify.ok", gateway: r.driver.id, orderId: order.id, already: Boolean(result.alreadyVerified) });
+  } else {
+    logger.warn({ event: "payment.verify.rejected", gateway: r.driver.id, orderId: order.id, error: result.error });
   }
-  const base = payment.sandbox ? "https://sandbox.zarinpal.com" : "https://api.zarinpal.com";
-  try {
-    // Verification is idempotent — the gateway answers 101 for an authority
-    // that was already verified — so a retry here is safe.
-    const res = await fetchWithTimeout(`${base}/pg/v4/payment/verify.json`, {
-      timeoutMs: 15_000,
-      retry: { attempts: 3 },
-      event: "payment.verify",
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        merchant_id: payment.merchantId,
-        amount: tomanToRial(order.amount),
-        authority,
-      }),
-    });
-    const data = (await res.json()) as {
-      data?: { code?: number; ref_id?: number; message?: string };
-    };
-    if (data.data?.code === 101 && data.data.ref_id) {
-      return { ok: true, alreadyVerified: true, refId: String(data.data.ref_id) };
-    }
-    if (data.data?.code === 100 && data.data.ref_id) {
-      return { ok: true, refId: String(data.data.ref_id) };
-    }
-    return { ok: false, error: data.data?.message || "تأیید پرداخت ناموفق بود" };
-  } catch (e) {
-    logger.error({ event: "payment.verify.error", orderId: order.id, err: e instanceof Error ? e.message : String(e) });
-    return { ok: false, error: e instanceof Error ? e.message : "خطای اتصال به درگاه" };
-  }
+  return result;
 }
