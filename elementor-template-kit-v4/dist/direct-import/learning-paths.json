@@ -1135,23 +1135,22 @@
                   },
                   "elements": [
                     {
-                      "id": "yv32ho6",
+                      "id": "rs0rptg",
                       "elType": "container",
                       "isInner": false,
                       "settings": {
                         "content_width": "full",
                         "flex_direction": "column",
-                        "flex_justify_content": "space-between",
                         "flex_gap": {
-                          "column": "12",
-                          "row": "12",
+                          "column": "0",
+                          "row": "0",
                           "unit": "px",
-                          "size": 12,
+                          "size": 0,
                           "isLinked": true
                         },
-                        "css_classes": "az-card az-card--navy",
-                        "_title": "کارت مسیر — شروع فرش‌بافی",
-                        "_css_classes": "az-card az-card--navy",
+                        "css_classes": "az-cell",
+                        "_title": "سلول — کارت مسیر — شروع فرش‌بافی",
+                        "_css_classes": "az-cell",
                         "width": {
                           "unit": "%",
                           "size": "33.3333"
@@ -1167,347 +1166,54 @@
                       },
                       "elements": [
                         {
-                          "id": "1r2dcu7",
+                          "id": "yv32ho6",
                           "elType": "widget",
                           "isInner": false,
-                          "widgetType": "heading",
+                          "widgetType": "bdt-interactive-card",
                           "settings": {
-                            "title": "شروع فرش‌بافی",
-                            "header_size": "h3",
-                            "align": "right",
+                            "title_text": "شروع فرش‌بافی",
+                            "sub_title_text": "REPLACE: ۳ مرحله",
+                            "description_text": "<p dir=\"rtl\">از نصب دار و اولین گره تا اجرای یک قطعهٔ کامل، بدون نیاز به تجربهٔ قبلی.<br><span dir=\"rtl\">REPLACE: ۳ دوره · REPLACE: ۴ ماه</span></p>",
+                            "readmore_text": "مشاهدهٔ مسیر",
+                            "readmore": {
+                              "url": "/learning-paths/start-carpet-weaving",
+                              "is_external": "",
+                              "nofollow": "",
+                              "custom_attributes": ""
+                            },
+                            "badge_text": "REPLACE: ۳ دوره",
+                            "image": {
+                              "url": "",
+                              "id": "",
+                              "size": "",
+                              "alt": "شروع فرش‌بافی",
+                              "source": "library"
+                            },
                             "title_color": "#193B5C",
-                            "typography_typography": "custom",
-                            "typography_font_family": "Neirizi",
-                            "typography_font_weight": "400",
-                            "typography_font_size": {
-                              "unit": "px",
-                              "size": 28,
-                              "sizes": []
-                            },
-                            "typography_line_height": {
-                              "unit": "em",
-                              "size": 1.45,
-                              "sizes": []
-                            },
-                            "_title": "H3 — شروع فرش‌بافی",
-                            "_css_classes": "az-card__title"
+                            "_title": "کارت مسیر — شروع فرش‌بافی",
+                            "_css_classes": "az-ep-card az-ep-card--navy"
                           },
                           "elements": []
-                        },
-                        {
-                          "id": "1gqm87d",
-                          "elType": "widget",
-                          "isInner": false,
-                          "widgetType": "text-editor",
-                          "settings": {
-                            "editor": "<p dir=\"rtl\">از نصب دار و اولین گره تا اجرای یک قطعهٔ کامل، بدون نیاز به تجربهٔ قبلی.</p>",
-                            "align": "right",
-                            "text_color": "#6D6A63",
-                            "typography_typography": "custom",
-                            "typography_font_family": "Peyda",
-                            "typography_font_size": {
-                              "unit": "px",
-                              "size": 14.5,
-                              "sizes": []
-                            },
-                            "typography_font_weight": "400",
-                            "typography_line_height": {
-                              "unit": "em",
-                              "size": 1.95,
-                              "sizes": []
-                            },
-                            "_title": "توضیح کارت"
-                          },
-                          "elements": []
-                        },
-                        {
-                          "id": "15rv4h6",
-                          "elType": "container",
-                          "isInner": false,
-                          "settings": {
-                            "content_width": "full",
-                            "flex_direction": "row",
-                            "flex_wrap": "wrap",
-                            "flex_gap": {
-                              "column": "8",
-                              "row": "8",
-                              "unit": "px",
-                              "size": 8,
-                              "isLinked": true
-                            },
-                            "css_classes": "az-row",
-                            "_title": "متادادهٔ کارت",
-                            "_css_classes": "az-row"
-                          },
-                          "elements": [
-                            {
-                              "id": "11zhyaj",
-                              "elType": "container",
-                              "isInner": false,
-                              "settings": {
-                                "content_width": "full",
-                                "flex_direction": "column",
-                                "flex_gap": {
-                                  "column": "0",
-                                  "row": "0",
-                                  "unit": "px",
-                                  "size": 0,
-                                  "isLinked": true
-                                },
-                                "css_classes": "az-inline-badge",
-                                "_title": "متا — REPLACE: ۳ مرحله",
-                                "_css_classes": "az-inline-badge"
-                              },
-                              "elements": [
-                                {
-                                  "id": "18vxviz",
-                                  "elType": "widget",
-                                  "isInner": false,
-                                  "widgetType": "text-editor",
-                                  "settings": {
-                                    "editor": "<p dir=\"rtl\">REPLACE: ۳ مرحله</p>",
-                                    "align": "right",
-                                    "text_color": "#6D6A63",
-                                    "typography_typography": "custom",
-                                    "typography_font_family": "Peyda",
-                                    "typography_font_size": {
-                                      "unit": "px",
-                                      "size": 13,
-                                      "sizes": []
-                                    },
-                                    "typography_font_weight": "400",
-                                    "typography_line_height": {
-                                      "unit": "em",
-                                      "size": 1.95,
-                                      "sizes": []
-                                    },
-                                    "margin": {
-                                      "unit": "px",
-                                      "top": "0",
-                                      "right": "0",
-                                      "bottom": "0",
-                                      "left": "0",
-                                      "isLinked": true
-                                    },
-                                    "_title": "متن — REPLACE: ۳ مرحله"
-                                  },
-                                  "elements": []
-                                }
-                              ]
-                            },
-                            {
-                              "id": "18pb36c",
-                              "elType": "container",
-                              "isInner": false,
-                              "settings": {
-                                "content_width": "full",
-                                "flex_direction": "column",
-                                "flex_gap": {
-                                  "column": "0",
-                                  "row": "0",
-                                  "unit": "px",
-                                  "size": 0,
-                                  "isLinked": true
-                                },
-                                "css_classes": "az-inline-badge",
-                                "_title": "متا — REPLACE: ۳ دوره",
-                                "_css_classes": "az-inline-badge"
-                              },
-                              "elements": [
-                                {
-                                  "id": "1flr0es",
-                                  "elType": "widget",
-                                  "isInner": false,
-                                  "widgetType": "text-editor",
-                                  "settings": {
-                                    "editor": "<p dir=\"rtl\">REPLACE: ۳ دوره</p>",
-                                    "align": "right",
-                                    "text_color": "#6D6A63",
-                                    "typography_typography": "custom",
-                                    "typography_font_family": "Peyda",
-                                    "typography_font_size": {
-                                      "unit": "px",
-                                      "size": 13,
-                                      "sizes": []
-                                    },
-                                    "typography_font_weight": "400",
-                                    "typography_line_height": {
-                                      "unit": "em",
-                                      "size": 1.95,
-                                      "sizes": []
-                                    },
-                                    "margin": {
-                                      "unit": "px",
-                                      "top": "0",
-                                      "right": "0",
-                                      "bottom": "0",
-                                      "left": "0",
-                                      "isLinked": true
-                                    },
-                                    "_title": "متن — REPLACE: ۳ دوره"
-                                  },
-                                  "elements": []
-                                }
-                              ]
-                            },
-                            {
-                              "id": "1qp638x",
-                              "elType": "container",
-                              "isInner": false,
-                              "settings": {
-                                "content_width": "full",
-                                "flex_direction": "column",
-                                "flex_gap": {
-                                  "column": "0",
-                                  "row": "0",
-                                  "unit": "px",
-                                  "size": 0,
-                                  "isLinked": true
-                                },
-                                "css_classes": "az-inline-badge",
-                                "_title": "متا — REPLACE: ۴ ماه",
-                                "_css_classes": "az-inline-badge"
-                              },
-                              "elements": [
-                                {
-                                  "id": "1xlm0hd",
-                                  "elType": "widget",
-                                  "isInner": false,
-                                  "widgetType": "text-editor",
-                                  "settings": {
-                                    "editor": "<p dir=\"rtl\">REPLACE: ۴ ماه</p>",
-                                    "align": "right",
-                                    "text_color": "#6D6A63",
-                                    "typography_typography": "custom",
-                                    "typography_font_family": "Peyda",
-                                    "typography_font_size": {
-                                      "unit": "px",
-                                      "size": 13,
-                                      "sizes": []
-                                    },
-                                    "typography_font_weight": "400",
-                                    "typography_line_height": {
-                                      "unit": "em",
-                                      "size": 1.95,
-                                      "sizes": []
-                                    },
-                                    "margin": {
-                                      "unit": "px",
-                                      "top": "0",
-                                      "right": "0",
-                                      "bottom": "0",
-                                      "left": "0",
-                                      "isLinked": true
-                                    },
-                                    "_title": "متن — REPLACE: ۴ ماه"
-                                  },
-                                  "elements": []
-                                }
-                              ]
-                            }
-                          ]
-                        },
-                        {
-                          "id": "z0zvla1",
-                          "elType": "container",
-                          "isInner": false,
-                          "settings": {
-                            "content_width": "full",
-                            "flex_direction": "row",
-                            "flex_wrap": "wrap",
-                            "flex_gap": {
-                              "column": "8",
-                              "row": "8",
-                              "unit": "px",
-                              "size": 8,
-                              "isLinked": true
-                            },
-                            "flex_direction_mobile": "column",
-                            "css_classes": "az-row az-card__actions",
-                            "_title": "اقدام‌های کارت",
-                            "_css_classes": "az-row az-card__actions"
-                          },
-                          "elements": [
-                            {
-                              "id": "fj92ev1",
-                              "elType": "widget",
-                              "isInner": false,
-                              "widgetType": "button",
-                              "settings": {
-                                "text": "مشاهدهٔ مسیر",
-                                "link": {
-                                  "url": "/learning-paths/start-carpet-weaving",
-                                  "is_external": "",
-                                  "nofollow": "",
-                                  "custom_attributes": ""
-                                },
-                                "size": "sm",
-                                "align": "right",
-                                "button_type": "info",
-                                "text_color": "#FFFFFF",
-                                "background_color": "#193B5C",
-                                "border_border": "solid",
-                                "border_width": {
-                                  "unit": "px",
-                                  "top": "1",
-                                  "right": "1",
-                                  "bottom": "1",
-                                  "left": "1",
-                                  "isLinked": false
-                                },
-                                "border_color": "#193B5C",
-                                "border_radius": {
-                                  "unit": "px",
-                                  "top": "13",
-                                  "right": "13",
-                                  "bottom": "13",
-                                  "left": "13",
-                                  "isLinked": false
-                                },
-                                "typography_typography": "custom",
-                                "typography_font_family": "Peyda",
-                                "typography_font_size": {
-                                  "unit": "px",
-                                  "size": 15,
-                                  "sizes": []
-                                },
-                                "typography_font_weight": "700",
-                                "button_text_padding": {
-                                  "unit": "px",
-                                  "top": "13",
-                                  "right": "22",
-                                  "bottom": "13",
-                                  "left": "22",
-                                  "isLinked": false
-                                },
-                                "align_mobile": "center",
-                                "_title": "CTA — مشاهدهٔ مسیر",
-                                "_css_classes": "az-btn az-btn--primary"
-                              },
-                              "elements": []
-                            }
-                          ]
                         }
                       ]
                     },
                     {
-                      "id": "rswd7nt",
+                      "id": "1xhwc01",
                       "elType": "container",
                       "isInner": false,
                       "settings": {
                         "content_width": "full",
                         "flex_direction": "column",
-                        "flex_justify_content": "space-between",
                         "flex_gap": {
-                          "column": "12",
-                          "row": "12",
+                          "column": "0",
+                          "row": "0",
                           "unit": "px",
-                          "size": 12,
+                          "size": 0,
                           "isLinked": true
                         },
-                        "css_classes": "az-card az-card--cream",
-                        "_title": "کارت مسیر — شروع گلیم‌بافی",
-                        "_css_classes": "az-card az-card--cream",
+                        "css_classes": "az-cell",
+                        "_title": "سلول — کارت مسیر — شروع گلیم‌بافی",
+                        "_css_classes": "az-cell",
                         "width": {
                           "unit": "%",
                           "size": "33.3333"
@@ -1523,347 +1229,54 @@
                       },
                       "elements": [
                         {
-                          "id": "tr96q01",
+                          "id": "rswd7nt",
                           "elType": "widget",
                           "isInner": false,
-                          "widgetType": "heading",
+                          "widgetType": "bdt-interactive-card",
                           "settings": {
-                            "title": "شروع گلیم‌بافی",
-                            "header_size": "h3",
-                            "align": "right",
-                            "title_color": "#193B5C",
-                            "typography_typography": "custom",
-                            "typography_font_family": "Neirizi",
-                            "typography_font_weight": "400",
-                            "typography_font_size": {
-                              "unit": "px",
-                              "size": 28,
-                              "sizes": []
+                            "title_text": "شروع گلیم‌بافی",
+                            "sub_title_text": "REPLACE: ۲ مرحله",
+                            "description_text": "<p dir=\"rtl\">یادگیری بافت‌های پایه و رسیدن به اجرای نقوش هندسی با ریتم درست.<br><span dir=\"rtl\">REPLACE: ۲ دوره · REPLACE: ۳ ماه</span></p>",
+                            "readmore_text": "مشاهدهٔ مسیر",
+                            "readmore": {
+                              "url": "/learning-paths/start-kelim-weaving",
+                              "is_external": "",
+                              "nofollow": "",
+                              "custom_attributes": ""
                             },
-                            "typography_line_height": {
-                              "unit": "em",
-                              "size": 1.45,
-                              "sizes": []
+                            "badge_text": "REPLACE: ۲ دوره",
+                            "image": {
+                              "url": "",
+                              "id": "",
+                              "size": "",
+                              "alt": "شروع گلیم‌بافی",
+                              "source": "library"
                             },
-                            "_title": "H3 — شروع گلیم‌بافی",
-                            "_css_classes": "az-card__title"
+                            "title_color": "#9D382C",
+                            "_title": "کارت مسیر — شروع گلیم‌بافی",
+                            "_css_classes": "az-ep-card az-ep-card--red"
                           },
                           "elements": []
-                        },
-                        {
-                          "id": "1g4yjdg",
-                          "elType": "widget",
-                          "isInner": false,
-                          "widgetType": "text-editor",
-                          "settings": {
-                            "editor": "<p dir=\"rtl\">یادگیری بافت‌های پایه و رسیدن به اجرای نقوش هندسی با ریتم درست.</p>",
-                            "align": "right",
-                            "text_color": "#6D6A63",
-                            "typography_typography": "custom",
-                            "typography_font_family": "Peyda",
-                            "typography_font_size": {
-                              "unit": "px",
-                              "size": 14.5,
-                              "sizes": []
-                            },
-                            "typography_font_weight": "400",
-                            "typography_line_height": {
-                              "unit": "em",
-                              "size": 1.95,
-                              "sizes": []
-                            },
-                            "_title": "توضیح کارت 2"
-                          },
-                          "elements": []
-                        },
-                        {
-                          "id": "17y6fmd",
-                          "elType": "container",
-                          "isInner": false,
-                          "settings": {
-                            "content_width": "full",
-                            "flex_direction": "row",
-                            "flex_wrap": "wrap",
-                            "flex_gap": {
-                              "column": "8",
-                              "row": "8",
-                              "unit": "px",
-                              "size": 8,
-                              "isLinked": true
-                            },
-                            "css_classes": "az-row",
-                            "_title": "متادادهٔ کارت 2",
-                            "_css_classes": "az-row"
-                          },
-                          "elements": [
-                            {
-                              "id": "1j40ias",
-                              "elType": "container",
-                              "isInner": false,
-                              "settings": {
-                                "content_width": "full",
-                                "flex_direction": "column",
-                                "flex_gap": {
-                                  "column": "0",
-                                  "row": "0",
-                                  "unit": "px",
-                                  "size": 0,
-                                  "isLinked": true
-                                },
-                                "css_classes": "az-inline-badge",
-                                "_title": "متا — REPLACE: ۲ مرحله",
-                                "_css_classes": "az-inline-badge"
-                              },
-                              "elements": [
-                                {
-                                  "id": "1gx17b6",
-                                  "elType": "widget",
-                                  "isInner": false,
-                                  "widgetType": "text-editor",
-                                  "settings": {
-                                    "editor": "<p dir=\"rtl\">REPLACE: ۲ مرحله</p>",
-                                    "align": "right",
-                                    "text_color": "#6D6A63",
-                                    "typography_typography": "custom",
-                                    "typography_font_family": "Peyda",
-                                    "typography_font_size": {
-                                      "unit": "px",
-                                      "size": 13,
-                                      "sizes": []
-                                    },
-                                    "typography_font_weight": "400",
-                                    "typography_line_height": {
-                                      "unit": "em",
-                                      "size": 1.95,
-                                      "sizes": []
-                                    },
-                                    "margin": {
-                                      "unit": "px",
-                                      "top": "0",
-                                      "right": "0",
-                                      "bottom": "0",
-                                      "left": "0",
-                                      "isLinked": true
-                                    },
-                                    "_title": "متن — REPLACE: ۲ مرحله"
-                                  },
-                                  "elements": []
-                                }
-                              ]
-                            },
-                            {
-                              "id": "1c1tt0r",
-                              "elType": "container",
-                              "isInner": false,
-                              "settings": {
-                                "content_width": "full",
-                                "flex_direction": "column",
-                                "flex_gap": {
-                                  "column": "0",
-                                  "row": "0",
-                                  "unit": "px",
-                                  "size": 0,
-                                  "isLinked": true
-                                },
-                                "css_classes": "az-inline-badge",
-                                "_title": "متا — REPLACE: ۲ دوره",
-                                "_css_classes": "az-inline-badge"
-                              },
-                              "elements": [
-                                {
-                                  "id": "anvi1da",
-                                  "elType": "widget",
-                                  "isInner": false,
-                                  "widgetType": "text-editor",
-                                  "settings": {
-                                    "editor": "<p dir=\"rtl\">REPLACE: ۲ دوره</p>",
-                                    "align": "right",
-                                    "text_color": "#6D6A63",
-                                    "typography_typography": "custom",
-                                    "typography_font_family": "Peyda",
-                                    "typography_font_size": {
-                                      "unit": "px",
-                                      "size": 13,
-                                      "sizes": []
-                                    },
-                                    "typography_font_weight": "400",
-                                    "typography_line_height": {
-                                      "unit": "em",
-                                      "size": 1.95,
-                                      "sizes": []
-                                    },
-                                    "margin": {
-                                      "unit": "px",
-                                      "top": "0",
-                                      "right": "0",
-                                      "bottom": "0",
-                                      "left": "0",
-                                      "isLinked": true
-                                    },
-                                    "_title": "متن — REPLACE: ۲ دوره"
-                                  },
-                                  "elements": []
-                                }
-                              ]
-                            },
-                            {
-                              "id": "8tc0vmq",
-                              "elType": "container",
-                              "isInner": false,
-                              "settings": {
-                                "content_width": "full",
-                                "flex_direction": "column",
-                                "flex_gap": {
-                                  "column": "0",
-                                  "row": "0",
-                                  "unit": "px",
-                                  "size": 0,
-                                  "isLinked": true
-                                },
-                                "css_classes": "az-inline-badge",
-                                "_title": "متا — REPLACE: ۳ ماه",
-                                "_css_classes": "az-inline-badge"
-                              },
-                              "elements": [
-                                {
-                                  "id": "s6lmr81",
-                                  "elType": "widget",
-                                  "isInner": false,
-                                  "widgetType": "text-editor",
-                                  "settings": {
-                                    "editor": "<p dir=\"rtl\">REPLACE: ۳ ماه</p>",
-                                    "align": "right",
-                                    "text_color": "#6D6A63",
-                                    "typography_typography": "custom",
-                                    "typography_font_family": "Peyda",
-                                    "typography_font_size": {
-                                      "unit": "px",
-                                      "size": 13,
-                                      "sizes": []
-                                    },
-                                    "typography_font_weight": "400",
-                                    "typography_line_height": {
-                                      "unit": "em",
-                                      "size": 1.95,
-                                      "sizes": []
-                                    },
-                                    "margin": {
-                                      "unit": "px",
-                                      "top": "0",
-                                      "right": "0",
-                                      "bottom": "0",
-                                      "left": "0",
-                                      "isLinked": true
-                                    },
-                                    "_title": "متن — REPLACE: ۳ ماه"
-                                  },
-                                  "elements": []
-                                }
-                              ]
-                            }
-                          ]
-                        },
-                        {
-                          "id": "o72ar5u",
-                          "elType": "container",
-                          "isInner": false,
-                          "settings": {
-                            "content_width": "full",
-                            "flex_direction": "row",
-                            "flex_wrap": "wrap",
-                            "flex_gap": {
-                              "column": "8",
-                              "row": "8",
-                              "unit": "px",
-                              "size": 8,
-                              "isLinked": true
-                            },
-                            "flex_direction_mobile": "column",
-                            "css_classes": "az-row az-card__actions",
-                            "_title": "اقدام‌های کارت 2",
-                            "_css_classes": "az-row az-card__actions"
-                          },
-                          "elements": [
-                            {
-                              "id": "6a1yu01",
-                              "elType": "widget",
-                              "isInner": false,
-                              "widgetType": "button",
-                              "settings": {
-                                "text": "مشاهدهٔ مسیر",
-                                "link": {
-                                  "url": "/learning-paths/start-kelim-weaving",
-                                  "is_external": "",
-                                  "nofollow": "",
-                                  "custom_attributes": ""
-                                },
-                                "size": "sm",
-                                "align": "right",
-                                "button_type": "info",
-                                "text_color": "#FFFFFF",
-                                "background_color": "#193B5C",
-                                "border_border": "solid",
-                                "border_width": {
-                                  "unit": "px",
-                                  "top": "1",
-                                  "right": "1",
-                                  "bottom": "1",
-                                  "left": "1",
-                                  "isLinked": false
-                                },
-                                "border_color": "#193B5C",
-                                "border_radius": {
-                                  "unit": "px",
-                                  "top": "13",
-                                  "right": "13",
-                                  "bottom": "13",
-                                  "left": "13",
-                                  "isLinked": false
-                                },
-                                "typography_typography": "custom",
-                                "typography_font_family": "Peyda",
-                                "typography_font_size": {
-                                  "unit": "px",
-                                  "size": 15,
-                                  "sizes": []
-                                },
-                                "typography_font_weight": "700",
-                                "button_text_padding": {
-                                  "unit": "px",
-                                  "top": "13",
-                                  "right": "22",
-                                  "bottom": "13",
-                                  "left": "22",
-                                  "isLinked": false
-                                },
-                                "align_mobile": "center",
-                                "_title": "CTA — مشاهدهٔ مسیر 2",
-                                "_css_classes": "az-btn az-btn--primary"
-                              },
-                              "elements": []
-                            }
-                          ]
                         }
                       ]
                     },
                     {
-                      "id": "1nlin1m",
+                      "id": "5mibjwa",
                       "elType": "container",
                       "isInner": false,
                       "settings": {
                         "content_width": "full",
                         "flex_direction": "column",
-                        "flex_justify_content": "space-between",
                         "flex_gap": {
-                          "column": "12",
-                          "row": "12",
+                          "column": "0",
+                          "row": "0",
                           "unit": "px",
-                          "size": 12,
+                          "size": 0,
                           "isLinked": true
                         },
-                        "css_classes": "az-card az-card--",
-                        "_title": "کارت مسیر — طراحی نقشه",
-                        "_css_classes": "az-card az-card--",
+                        "css_classes": "az-cell",
+                        "_title": "سلول — کارت مسیر — طراحی نقشه",
+                        "_css_classes": "az-cell",
                         "width": {
                           "unit": "%",
                           "size": "33.3333"
@@ -1879,347 +1292,54 @@
                       },
                       "elements": [
                         {
-                          "id": "1t6n8z1",
+                          "id": "1nlin1m",
                           "elType": "widget",
                           "isInner": false,
-                          "widgetType": "heading",
+                          "widgetType": "bdt-interactive-card",
                           "settings": {
-                            "title": "طراحی نقشه",
-                            "header_size": "h3",
-                            "align": "right",
-                            "title_color": "#193B5C",
-                            "typography_typography": "custom",
-                            "typography_font_family": "Neirizi",
-                            "typography_font_weight": "400",
-                            "typography_font_size": {
-                              "unit": "px",
-                              "size": 28,
-                              "sizes": []
+                            "title_text": "طراحی نقشه",
+                            "sub_title_text": "REPLACE: ۲ مرحله",
+                            "description_text": "<p dir=\"rtl\">از ترسیم نقوش سنتی تا آماده‌سازی نقشهٔ قابل اجرا روی دار.<br><span dir=\"rtl\">REPLACE: ۲ دوره · REPLACE: ۳ ماه</span></p>",
+                            "readmore_text": "مشاهدهٔ مسیر",
+                            "readmore": {
+                              "url": "/learning-paths/carpet-design-path",
+                              "is_external": "",
+                              "nofollow": "",
+                              "custom_attributes": ""
                             },
-                            "typography_line_height": {
-                              "unit": "em",
-                              "size": 1.45,
-                              "sizes": []
+                            "badge_text": "REPLACE: ۲ دوره",
+                            "image": {
+                              "url": "",
+                              "id": "",
+                              "size": "",
+                              "alt": "طراحی نقشه",
+                              "source": "library"
                             },
-                            "_title": "H3 — طراحی نقشه",
-                            "_css_classes": "az-card__title"
+                            "title_color": "#2F8C87",
+                            "_title": "کارت مسیر — طراحی نقشه",
+                            "_css_classes": "az-ep-card az-ep-card--teal"
                           },
                           "elements": []
-                        },
-                        {
-                          "id": "41tk6b1",
-                          "elType": "widget",
-                          "isInner": false,
-                          "widgetType": "text-editor",
-                          "settings": {
-                            "editor": "<p dir=\"rtl\">از ترسیم نقوش سنتی تا آماده‌سازی نقشهٔ قابل اجرا روی دار.</p>",
-                            "align": "right",
-                            "text_color": "#6D6A63",
-                            "typography_typography": "custom",
-                            "typography_font_family": "Peyda",
-                            "typography_font_size": {
-                              "unit": "px",
-                              "size": 14.5,
-                              "sizes": []
-                            },
-                            "typography_font_weight": "400",
-                            "typography_line_height": {
-                              "unit": "em",
-                              "size": 1.95,
-                              "sizes": []
-                            },
-                            "_title": "توضیح کارت 3"
-                          },
-                          "elements": []
-                        },
-                        {
-                          "id": "yggs7o6",
-                          "elType": "container",
-                          "isInner": false,
-                          "settings": {
-                            "content_width": "full",
-                            "flex_direction": "row",
-                            "flex_wrap": "wrap",
-                            "flex_gap": {
-                              "column": "8",
-                              "row": "8",
-                              "unit": "px",
-                              "size": 8,
-                              "isLinked": true
-                            },
-                            "css_classes": "az-row",
-                            "_title": "متادادهٔ کارت 3",
-                            "_css_classes": "az-row"
-                          },
-                          "elements": [
-                            {
-                              "id": "fvdwx1p",
-                              "elType": "container",
-                              "isInner": false,
-                              "settings": {
-                                "content_width": "full",
-                                "flex_direction": "column",
-                                "flex_gap": {
-                                  "column": "0",
-                                  "row": "0",
-                                  "unit": "px",
-                                  "size": 0,
-                                  "isLinked": true
-                                },
-                                "css_classes": "az-inline-badge",
-                                "_title": "متا — REPLACE: ۲ مرحله 2",
-                                "_css_classes": "az-inline-badge"
-                              },
-                              "elements": [
-                                {
-                                  "id": "flgaz91",
-                                  "elType": "widget",
-                                  "isInner": false,
-                                  "widgetType": "text-editor",
-                                  "settings": {
-                                    "editor": "<p dir=\"rtl\">REPLACE: ۲ مرحله</p>",
-                                    "align": "right",
-                                    "text_color": "#6D6A63",
-                                    "typography_typography": "custom",
-                                    "typography_font_family": "Peyda",
-                                    "typography_font_size": {
-                                      "unit": "px",
-                                      "size": 13,
-                                      "sizes": []
-                                    },
-                                    "typography_font_weight": "400",
-                                    "typography_line_height": {
-                                      "unit": "em",
-                                      "size": 1.95,
-                                      "sizes": []
-                                    },
-                                    "margin": {
-                                      "unit": "px",
-                                      "top": "0",
-                                      "right": "0",
-                                      "bottom": "0",
-                                      "left": "0",
-                                      "isLinked": true
-                                    },
-                                    "_title": "متن — REPLACE: ۲ مرحله 2"
-                                  },
-                                  "elements": []
-                                }
-                              ]
-                            },
-                            {
-                              "id": "7itisie",
-                              "elType": "container",
-                              "isInner": false,
-                              "settings": {
-                                "content_width": "full",
-                                "flex_direction": "column",
-                                "flex_gap": {
-                                  "column": "0",
-                                  "row": "0",
-                                  "unit": "px",
-                                  "size": 0,
-                                  "isLinked": true
-                                },
-                                "css_classes": "az-inline-badge",
-                                "_title": "متا — REPLACE: ۲ دوره 2",
-                                "_css_classes": "az-inline-badge"
-                              },
-                              "elements": [
-                                {
-                                  "id": "1hpkuqu",
-                                  "elType": "widget",
-                                  "isInner": false,
-                                  "widgetType": "text-editor",
-                                  "settings": {
-                                    "editor": "<p dir=\"rtl\">REPLACE: ۲ دوره</p>",
-                                    "align": "right",
-                                    "text_color": "#6D6A63",
-                                    "typography_typography": "custom",
-                                    "typography_font_family": "Peyda",
-                                    "typography_font_size": {
-                                      "unit": "px",
-                                      "size": 13,
-                                      "sizes": []
-                                    },
-                                    "typography_font_weight": "400",
-                                    "typography_line_height": {
-                                      "unit": "em",
-                                      "size": 1.95,
-                                      "sizes": []
-                                    },
-                                    "margin": {
-                                      "unit": "px",
-                                      "top": "0",
-                                      "right": "0",
-                                      "bottom": "0",
-                                      "left": "0",
-                                      "isLinked": true
-                                    },
-                                    "_title": "متن — REPLACE: ۲ دوره 2"
-                                  },
-                                  "elements": []
-                                }
-                              ]
-                            },
-                            {
-                              "id": "1arbaxn",
-                              "elType": "container",
-                              "isInner": false,
-                              "settings": {
-                                "content_width": "full",
-                                "flex_direction": "column",
-                                "flex_gap": {
-                                  "column": "0",
-                                  "row": "0",
-                                  "unit": "px",
-                                  "size": 0,
-                                  "isLinked": true
-                                },
-                                "css_classes": "az-inline-badge",
-                                "_title": "متا — REPLACE: ۳ ماه 2",
-                                "_css_classes": "az-inline-badge"
-                              },
-                              "elements": [
-                                {
-                                  "id": "1pkinlr",
-                                  "elType": "widget",
-                                  "isInner": false,
-                                  "widgetType": "text-editor",
-                                  "settings": {
-                                    "editor": "<p dir=\"rtl\">REPLACE: ۳ ماه</p>",
-                                    "align": "right",
-                                    "text_color": "#6D6A63",
-                                    "typography_typography": "custom",
-                                    "typography_font_family": "Peyda",
-                                    "typography_font_size": {
-                                      "unit": "px",
-                                      "size": 13,
-                                      "sizes": []
-                                    },
-                                    "typography_font_weight": "400",
-                                    "typography_line_height": {
-                                      "unit": "em",
-                                      "size": 1.95,
-                                      "sizes": []
-                                    },
-                                    "margin": {
-                                      "unit": "px",
-                                      "top": "0",
-                                      "right": "0",
-                                      "bottom": "0",
-                                      "left": "0",
-                                      "isLinked": true
-                                    },
-                                    "_title": "متن — REPLACE: ۳ ماه 2"
-                                  },
-                                  "elements": []
-                                }
-                              ]
-                            }
-                          ]
-                        },
-                        {
-                          "id": "tycbikv",
-                          "elType": "container",
-                          "isInner": false,
-                          "settings": {
-                            "content_width": "full",
-                            "flex_direction": "row",
-                            "flex_wrap": "wrap",
-                            "flex_gap": {
-                              "column": "8",
-                              "row": "8",
-                              "unit": "px",
-                              "size": 8,
-                              "isLinked": true
-                            },
-                            "flex_direction_mobile": "column",
-                            "css_classes": "az-row az-card__actions",
-                            "_title": "اقدام‌های کارت 3",
-                            "_css_classes": "az-row az-card__actions"
-                          },
-                          "elements": [
-                            {
-                              "id": "kzm9hh1",
-                              "elType": "widget",
-                              "isInner": false,
-                              "widgetType": "button",
-                              "settings": {
-                                "text": "مشاهدهٔ مسیر",
-                                "link": {
-                                  "url": "/learning-paths/carpet-design-path",
-                                  "is_external": "",
-                                  "nofollow": "",
-                                  "custom_attributes": ""
-                                },
-                                "size": "sm",
-                                "align": "right",
-                                "button_type": "info",
-                                "text_color": "#FFFFFF",
-                                "background_color": "#193B5C",
-                                "border_border": "solid",
-                                "border_width": {
-                                  "unit": "px",
-                                  "top": "1",
-                                  "right": "1",
-                                  "bottom": "1",
-                                  "left": "1",
-                                  "isLinked": false
-                                },
-                                "border_color": "#193B5C",
-                                "border_radius": {
-                                  "unit": "px",
-                                  "top": "13",
-                                  "right": "13",
-                                  "bottom": "13",
-                                  "left": "13",
-                                  "isLinked": false
-                                },
-                                "typography_typography": "custom",
-                                "typography_font_family": "Peyda",
-                                "typography_font_size": {
-                                  "unit": "px",
-                                  "size": 15,
-                                  "sizes": []
-                                },
-                                "typography_font_weight": "700",
-                                "button_text_padding": {
-                                  "unit": "px",
-                                  "top": "13",
-                                  "right": "22",
-                                  "bottom": "13",
-                                  "left": "22",
-                                  "isLinked": false
-                                },
-                                "align_mobile": "center",
-                                "_title": "CTA — مشاهدهٔ مسیر 3",
-                                "_css_classes": "az-btn az-btn--primary"
-                              },
-                              "elements": []
-                            }
-                          ]
                         }
                       ]
                     },
                     {
-                      "id": "gzzddl1",
+                      "id": "b5y98q1",
                       "elType": "container",
                       "isInner": false,
                       "settings": {
                         "content_width": "full",
                         "flex_direction": "column",
-                        "flex_justify_content": "space-between",
                         "flex_gap": {
-                          "column": "12",
-                          "row": "12",
+                          "column": "0",
+                          "row": "0",
                           "unit": "px",
-                          "size": 12,
+                          "size": 0,
                           "isLinked": true
                         },
-                        "css_classes": "az-card az-card--",
-                        "_title": "کارت مسیر — رنگرزی سنتی",
-                        "_css_classes": "az-card az-card--",
+                        "css_classes": "az-cell",
+                        "_title": "سلول — کارت مسیر — رنگرزی سنتی",
+                        "_css_classes": "az-cell",
                         "width": {
                           "unit": "%",
                           "size": "33.3333"
@@ -2235,347 +1355,54 @@
                       },
                       "elements": [
                         {
-                          "id": "1vbcyb2",
+                          "id": "gzzddl1",
                           "elType": "widget",
                           "isInner": false,
-                          "widgetType": "heading",
+                          "widgetType": "bdt-interactive-card",
                           "settings": {
-                            "title": "رنگرزی سنتی",
-                            "header_size": "h3",
-                            "align": "right",
-                            "title_color": "#193B5C",
-                            "typography_typography": "custom",
-                            "typography_font_family": "Neirizi",
-                            "typography_font_weight": "400",
-                            "typography_font_size": {
-                              "unit": "px",
-                              "size": 28,
-                              "sizes": []
+                            "title_text": "رنگرزی سنتی",
+                            "sub_title_text": "REPLACE: ۱ مرحله",
+                            "description_text": "<p dir=\"rtl\">ساخت پالت رنگی پایدار از منابع گیاهی برای استفاده در پروژه‌های شخصی.<br><span dir=\"rtl\">REPLACE: ۱ دوره · REPLACE: ۲ ماه</span></p>",
+                            "readmore_text": "مشاهدهٔ مسیر",
+                            "readmore": {
+                              "url": "/learning-paths/natural-dyeing-path",
+                              "is_external": "",
+                              "nofollow": "",
+                              "custom_attributes": ""
                             },
-                            "typography_line_height": {
-                              "unit": "em",
-                              "size": 1.45,
-                              "sizes": []
+                            "badge_text": "REPLACE: ۱ دوره",
+                            "image": {
+                              "url": "",
+                              "id": "",
+                              "size": "",
+                              "alt": "رنگرزی سنتی",
+                              "source": "library"
                             },
-                            "_title": "H3 — رنگرزی سنتی",
-                            "_css_classes": "az-card__title"
+                            "title_color": "#E8D8B8",
+                            "_title": "کارت مسیر — رنگرزی سنتی",
+                            "_css_classes": "az-ep-card az-ep-card--cream"
                           },
                           "elements": []
-                        },
-                        {
-                          "id": "sj3d9a8",
-                          "elType": "widget",
-                          "isInner": false,
-                          "widgetType": "text-editor",
-                          "settings": {
-                            "editor": "<p dir=\"rtl\">ساخت پالت رنگی پایدار از منابع گیاهی برای استفاده در پروژه‌های شخصی.</p>",
-                            "align": "right",
-                            "text_color": "#6D6A63",
-                            "typography_typography": "custom",
-                            "typography_font_family": "Peyda",
-                            "typography_font_size": {
-                              "unit": "px",
-                              "size": 14.5,
-                              "sizes": []
-                            },
-                            "typography_font_weight": "400",
-                            "typography_line_height": {
-                              "unit": "em",
-                              "size": 1.95,
-                              "sizes": []
-                            },
-                            "_title": "توضیح کارت 4"
-                          },
-                          "elements": []
-                        },
-                        {
-                          "id": "px7fd3a",
-                          "elType": "container",
-                          "isInner": false,
-                          "settings": {
-                            "content_width": "full",
-                            "flex_direction": "row",
-                            "flex_wrap": "wrap",
-                            "flex_gap": {
-                              "column": "8",
-                              "row": "8",
-                              "unit": "px",
-                              "size": 8,
-                              "isLinked": true
-                            },
-                            "css_classes": "az-row",
-                            "_title": "متادادهٔ کارت 4",
-                            "_css_classes": "az-row"
-                          },
-                          "elements": [
-                            {
-                              "id": "ah0gmq1",
-                              "elType": "container",
-                              "isInner": false,
-                              "settings": {
-                                "content_width": "full",
-                                "flex_direction": "column",
-                                "flex_gap": {
-                                  "column": "0",
-                                  "row": "0",
-                                  "unit": "px",
-                                  "size": 0,
-                                  "isLinked": true
-                                },
-                                "css_classes": "az-inline-badge",
-                                "_title": "متا — REPLACE: ۱ مرحله",
-                                "_css_classes": "az-inline-badge"
-                              },
-                              "elements": [
-                                {
-                                  "id": "jrhg4kk",
-                                  "elType": "widget",
-                                  "isInner": false,
-                                  "widgetType": "text-editor",
-                                  "settings": {
-                                    "editor": "<p dir=\"rtl\">REPLACE: ۱ مرحله</p>",
-                                    "align": "right",
-                                    "text_color": "#6D6A63",
-                                    "typography_typography": "custom",
-                                    "typography_font_family": "Peyda",
-                                    "typography_font_size": {
-                                      "unit": "px",
-                                      "size": 13,
-                                      "sizes": []
-                                    },
-                                    "typography_font_weight": "400",
-                                    "typography_line_height": {
-                                      "unit": "em",
-                                      "size": 1.95,
-                                      "sizes": []
-                                    },
-                                    "margin": {
-                                      "unit": "px",
-                                      "top": "0",
-                                      "right": "0",
-                                      "bottom": "0",
-                                      "left": "0",
-                                      "isLinked": true
-                                    },
-                                    "_title": "متن — REPLACE: ۱ مرحله"
-                                  },
-                                  "elements": []
-                                }
-                              ]
-                            },
-                            {
-                              "id": "3qfw5dd",
-                              "elType": "container",
-                              "isInner": false,
-                              "settings": {
-                                "content_width": "full",
-                                "flex_direction": "column",
-                                "flex_gap": {
-                                  "column": "0",
-                                  "row": "0",
-                                  "unit": "px",
-                                  "size": 0,
-                                  "isLinked": true
-                                },
-                                "css_classes": "az-inline-badge",
-                                "_title": "متا — REPLACE: ۱ دوره",
-                                "_css_classes": "az-inline-badge"
-                              },
-                              "elements": [
-                                {
-                                  "id": "cpaquj9",
-                                  "elType": "widget",
-                                  "isInner": false,
-                                  "widgetType": "text-editor",
-                                  "settings": {
-                                    "editor": "<p dir=\"rtl\">REPLACE: ۱ دوره</p>",
-                                    "align": "right",
-                                    "text_color": "#6D6A63",
-                                    "typography_typography": "custom",
-                                    "typography_font_family": "Peyda",
-                                    "typography_font_size": {
-                                      "unit": "px",
-                                      "size": 13,
-                                      "sizes": []
-                                    },
-                                    "typography_font_weight": "400",
-                                    "typography_line_height": {
-                                      "unit": "em",
-                                      "size": 1.95,
-                                      "sizes": []
-                                    },
-                                    "margin": {
-                                      "unit": "px",
-                                      "top": "0",
-                                      "right": "0",
-                                      "bottom": "0",
-                                      "left": "0",
-                                      "isLinked": true
-                                    },
-                                    "_title": "متن — REPLACE: ۱ دوره"
-                                  },
-                                  "elements": []
-                                }
-                              ]
-                            },
-                            {
-                              "id": "1kroy1w",
-                              "elType": "container",
-                              "isInner": false,
-                              "settings": {
-                                "content_width": "full",
-                                "flex_direction": "column",
-                                "flex_gap": {
-                                  "column": "0",
-                                  "row": "0",
-                                  "unit": "px",
-                                  "size": 0,
-                                  "isLinked": true
-                                },
-                                "css_classes": "az-inline-badge",
-                                "_title": "متا — REPLACE: ۲ ماه",
-                                "_css_classes": "az-inline-badge"
-                              },
-                              "elements": [
-                                {
-                                  "id": "18hx0oi",
-                                  "elType": "widget",
-                                  "isInner": false,
-                                  "widgetType": "text-editor",
-                                  "settings": {
-                                    "editor": "<p dir=\"rtl\">REPLACE: ۲ ماه</p>",
-                                    "align": "right",
-                                    "text_color": "#6D6A63",
-                                    "typography_typography": "custom",
-                                    "typography_font_family": "Peyda",
-                                    "typography_font_size": {
-                                      "unit": "px",
-                                      "size": 13,
-                                      "sizes": []
-                                    },
-                                    "typography_font_weight": "400",
-                                    "typography_line_height": {
-                                      "unit": "em",
-                                      "size": 1.95,
-                                      "sizes": []
-                                    },
-                                    "margin": {
-                                      "unit": "px",
-                                      "top": "0",
-                                      "right": "0",
-                                      "bottom": "0",
-                                      "left": "0",
-                                      "isLinked": true
-                                    },
-                                    "_title": "متن — REPLACE: ۲ ماه"
-                                  },
-                                  "elements": []
-                                }
-                              ]
-                            }
-                          ]
-                        },
-                        {
-                          "id": "1tggw13",
-                          "elType": "container",
-                          "isInner": false,
-                          "settings": {
-                            "content_width": "full",
-                            "flex_direction": "row",
-                            "flex_wrap": "wrap",
-                            "flex_gap": {
-                              "column": "8",
-                              "row": "8",
-                              "unit": "px",
-                              "size": 8,
-                              "isLinked": true
-                            },
-                            "flex_direction_mobile": "column",
-                            "css_classes": "az-row az-card__actions",
-                            "_title": "اقدام‌های کارت 4",
-                            "_css_classes": "az-row az-card__actions"
-                          },
-                          "elements": [
-                            {
-                              "id": "1par7fi",
-                              "elType": "widget",
-                              "isInner": false,
-                              "widgetType": "button",
-                              "settings": {
-                                "text": "مشاهدهٔ مسیر",
-                                "link": {
-                                  "url": "/learning-paths/natural-dyeing-path",
-                                  "is_external": "",
-                                  "nofollow": "",
-                                  "custom_attributes": ""
-                                },
-                                "size": "sm",
-                                "align": "right",
-                                "button_type": "info",
-                                "text_color": "#FFFFFF",
-                                "background_color": "#193B5C",
-                                "border_border": "solid",
-                                "border_width": {
-                                  "unit": "px",
-                                  "top": "1",
-                                  "right": "1",
-                                  "bottom": "1",
-                                  "left": "1",
-                                  "isLinked": false
-                                },
-                                "border_color": "#193B5C",
-                                "border_radius": {
-                                  "unit": "px",
-                                  "top": "13",
-                                  "right": "13",
-                                  "bottom": "13",
-                                  "left": "13",
-                                  "isLinked": false
-                                },
-                                "typography_typography": "custom",
-                                "typography_font_family": "Peyda",
-                                "typography_font_size": {
-                                  "unit": "px",
-                                  "size": 15,
-                                  "sizes": []
-                                },
-                                "typography_font_weight": "700",
-                                "button_text_padding": {
-                                  "unit": "px",
-                                  "top": "13",
-                                  "right": "22",
-                                  "bottom": "13",
-                                  "left": "22",
-                                  "isLinked": false
-                                },
-                                "align_mobile": "center",
-                                "_title": "CTA — مشاهدهٔ مسیر 4",
-                                "_css_classes": "az-btn az-btn--primary"
-                              },
-                              "elements": []
-                            }
-                          ]
                         }
                       ]
                     },
                     {
-                      "id": "bejgvcl",
+                      "id": "1we0tjt",
                       "elType": "container",
                       "isInner": false,
                       "settings": {
                         "content_width": "full",
                         "flex_direction": "column",
-                        "flex_justify_content": "space-between",
                         "flex_gap": {
-                          "column": "12",
-                          "row": "12",
+                          "column": "0",
+                          "row": "0",
                           "unit": "px",
-                          "size": 12,
+                          "size": 0,
                           "isLinked": true
                         },
-                        "css_classes": "az-card az-card--navy",
-                        "_title": "کارت مسیر — مرمت و رفو",
-                        "_css_classes": "az-card az-card--navy",
+                        "css_classes": "az-cell",
+                        "_title": "سلول — کارت مسیر — مرمت و رفو",
+                        "_css_classes": "az-cell",
                         "width": {
                           "unit": "%",
                           "size": "33.3333"
@@ -2591,326 +1418,34 @@
                       },
                       "elements": [
                         {
-                          "id": "sbak431",
+                          "id": "bejgvcl",
                           "elType": "widget",
                           "isInner": false,
-                          "widgetType": "heading",
+                          "widgetType": "bdt-interactive-card",
                           "settings": {
-                            "title": "مرمت و رفو",
-                            "header_size": "h3",
-                            "align": "right",
+                            "title_text": "مرمت و رفو",
+                            "sub_title_text": "REPLACE: ۲ مرحله",
+                            "description_text": "<p dir=\"rtl\">مسیر تخصصی برای هنرجویان باتجربه که می‌خواهند وارد کار مرمت حرفه‌ای شوند.<br><span dir=\"rtl\">REPLACE: ۲ دوره · REPLACE: ۵ ماه</span></p>",
+                            "readmore_text": "مشاهدهٔ مسیر",
+                            "readmore": {
+                              "url": "/learning-paths/restoration-path",
+                              "is_external": "",
+                              "nofollow": "",
+                              "custom_attributes": ""
+                            },
+                            "badge_text": "REPLACE: ۲ دوره",
+                            "image": {
+                              "url": "",
+                              "id": "",
+                              "size": "",
+                              "alt": "مرمت و رفو",
+                              "source": "library"
+                            },
                             "title_color": "#193B5C",
-                            "typography_typography": "custom",
-                            "typography_font_family": "Neirizi",
-                            "typography_font_weight": "400",
-                            "typography_font_size": {
-                              "unit": "px",
-                              "size": 28,
-                              "sizes": []
-                            },
-                            "typography_line_height": {
-                              "unit": "em",
-                              "size": 1.45,
-                              "sizes": []
-                            },
-                            "_title": "H3 — مرمت و رفو",
-                            "_css_classes": "az-card__title"
+                            "_title": "کارت مسیر — مرمت و رفو",
+                            "_css_classes": "az-ep-card az-ep-card--navy"
                           },
                           "elements": []
-                        },
-                        {
-                          "id": "18madct",
-                          "elType": "widget",
-                          "isInner": false,
-                          "widgetType": "text-editor",
-                          "settings": {
-                            "editor": "<p dir=\"rtl\">مسیر تخصصی برای هنرجویان باتجربه که می‌خواهند وارد کار مرمت حرفه‌ای شوند.</p>",
-                            "align": "right",
-                            "text_color": "#6D6A63",
-                            "typography_typography": "custom",
-                            "typography_font_family": "Peyda",
-                            "typography_font_size": {
-                              "unit": "px",
-                              "size": 14.5,
-                              "sizes": []
-                            },
-                            "typography_font_weight": "400",
-                            "typography_line_height": {
-                              "unit": "em",
-                              "size": 1.95,
-                              "sizes": []
-                            },
-                            "_title": "توضیح کارت 5"
-                          },
-                          "elements": []
-                        },
-                        {
-                          "id": "on9yk6n",
-                          "elType": "container",
-                          "isInner": false,
-                          "settings": {
-                            "content_width": "full",
-                            "flex_direction": "row",
-                            "flex_wrap": "wrap",
-                            "flex_gap": {
-                              "column": "8",
-                              "row": "8",
-                              "unit": "px",
-                              "size": 8,
-                              "isLinked": true
-                            },
-                            "css_classes": "az-row",
-                            "_title": "متادادهٔ کارت 5",
-                            "_css_classes": "az-row"
-                          },
-                          "elements": [
-                            {
-                              "id": "1ekr3tr",
-                              "elType": "container",
-                              "isInner": false,
-                              "settings": {
-                                "content_width": "full",
-                                "flex_direction": "column",
-                                "flex_gap": {
-                                  "column": "0",
-                                  "row": "0",
-                                  "unit": "px",
-                                  "size": 0,
-                                  "isLinked": true
-                                },
-                                "css_classes": "az-inline-badge",
-                                "_title": "متا — REPLACE: ۲ مرحله 3",
-                                "_css_classes": "az-inline-badge"
-                              },
-                              "elements": [
-                                {
-                                  "id": "7x5gwf1",
-                                  "elType": "widget",
-                                  "isInner": false,
-                                  "widgetType": "text-editor",
-                                  "settings": {
-                                    "editor": "<p dir=\"rtl\">REPLACE: ۲ مرحله</p>",
-                                    "align": "right",
-                                    "text_color": "#6D6A63",
-                                    "typography_typography": "custom",
-                                    "typography_font_family": "Peyda",
-                                    "typography_font_size": {
-                                      "unit": "px",
-                                      "size": 13,
-                                      "sizes": []
-                                    },
-                                    "typography_font_weight": "400",
-                                    "typography_line_height": {
-                                      "unit": "em",
-                                      "size": 1.95,
-                                      "sizes": []
-                                    },
-                                    "margin": {
-                                      "unit": "px",
-                                      "top": "0",
-                                      "right": "0",
-                                      "bottom": "0",
-                                      "left": "0",
-                                      "isLinked": true
-                                    },
-                                    "_title": "متن — REPLACE: ۲ مرحله 3"
-                                  },
-                                  "elements": []
-                                }
-                              ]
-                            },
-                            {
-                              "id": "hol8tkr",
-                              "elType": "container",
-                              "isInner": false,
-                              "settings": {
-                                "content_width": "full",
-                                "flex_direction": "column",
-                                "flex_gap": {
-                                  "column": "0",
-                                  "row": "0",
-                                  "unit": "px",
-                                  "size": 0,
-                                  "isLinked": true
-                                },
-                                "css_classes": "az-inline-badge",
-                                "_title": "متا — REPLACE: ۲ دوره 3",
-                                "_css_classes": "az-inline-badge"
-                              },
-                              "elements": [
-                                {
-                                  "id": "a74yoov",
-                                  "elType": "widget",
-                                  "isInner": false,
-                                  "widgetType": "text-editor",
-                                  "settings": {
-                                    "editor": "<p dir=\"rtl\">REPLACE: ۲ دوره</p>",
-                                    "align": "right",
-                                    "text_color": "#6D6A63",
-                                    "typography_typography": "custom",
-                                    "typography_font_family": "Peyda",
-                                    "typography_font_size": {
-                                      "unit": "px",
-                                      "size": 13,
-                                      "sizes": []
-                                    },
-                                    "typography_font_weight": "400",
-                                    "typography_line_height": {
-                                      "unit": "em",
-                                      "size": 1.95,
-                                      "sizes": []
-                                    },
-                                    "margin": {
-                                      "unit": "px",
-                                      "top": "0",
-                                      "right": "0",
-                                      "bottom": "0",
-                                      "left": "0",
-                                      "isLinked": true
-                                    },
-                                    "_title": "متن — REPLACE: ۲ دوره 3"
-                                  },
-                                  "elements": []
-                                }
-                              ]
-                            },
-                            {
-                              "id": "4lor791",
-                              "elType": "container",
-                              "isInner": false,
-                              "settings": {
-                                "content_width": "full",
-                                "flex_direction": "column",
-                                "flex_gap": {
-                                  "column": "0",
-                                  "row": "0",
-                                  "unit": "px",
-                                  "size": 0,
-                                  "isLinked": true
-                                },
-                                "css_classes": "az-inline-badge",
-                                "_title": "متا — REPLACE: ۵ ماه",
-                                "_css_classes": "az-inline-badge"
-                              },
-                              "elements": [
-                                {
-                                  "id": "wmtlut4",
-                                  "elType": "widget",
-                                  "isInner": false,
-                                  "widgetType": "text-editor",
-                                  "settings": {
-                                    "editor": "<p dir=\"rtl\">REPLACE: ۵ ماه</p>",
-                                    "align": "right",
-                                    "text_color": "#6D6A63",
-                                    "typography_typography": "custom",
-                                    "typography_font_family": "Peyda",
-                                    "typography_font_size": {
-                                      "unit": "px",
-                                      "size": 13,
-                                      "sizes": []
-                                    },
-                                    "typography_font_weight": "400",
-                                    "typography_line_height": {
-                                      "unit": "em",
-                                      "size": 1.95,
-                                      "sizes": []
-                                    },
-                                    "margin": {
-                                      "unit": "px",
-                                      "top": "0",
-                                      "right": "0",
-                                      "bottom": "0",
-                                      "left": "0",
-                                      "isLinked": true
-                                    },
-                                    "_title": "متن — REPLACE: ۵ ماه"
-                                  },
-                                  "elements": []
-                                }
-                              ]
-                            }
-                          ]
-                        },
-                        {
-                          "id": "1cvqxq2",
-                          "elType": "container",
-                          "isInner": false,
-                          "settings": {
-                            "content_width": "full",
-                            "flex_direction": "row",
-                            "flex_wrap": "wrap",
-                            "flex_gap": {
-                              "column": "8",
-                              "row": "8",
-                              "unit": "px",
-                              "size": 8,
-                              "isLinked": true
-                            },
-                            "flex_direction_mobile": "column",
-                            "css_classes": "az-row az-card__actions",
-                            "_title": "اقدام‌های کارت 5",
-                            "_css_classes": "az-row az-card__actions"
-                          },
-                          "elements": [
-                            {
-                              "id": "1un5h3n",
-                              "elType": "widget",
-                              "isInner": false,
-                              "widgetType": "button",
-                              "settings": {
-                                "text": "مشاهدهٔ مسیر",
-                                "link": {
-                                  "url": "/learning-paths/restoration-path",
-                                  "is_external": "",
-                                  "nofollow": "",
-                                  "custom_attributes": ""
-                                },
-                                "size": "sm",
-                                "align": "right",
-                                "button_type": "info",
-                                "text_color": "#FFFFFF",
-                                "background_color": "#193B5C",
-                                "border_border": "solid",
-                                "border_width": {
-                                  "unit": "px",
-                                  "top": "1",
-                                  "right": "1",
-                                  "bottom": "1",
-                                  "left": "1",
-                                  "isLinked": false
-                                },
-                                "border_color": "#193B5C",
-                                "border_radius": {
-                                  "unit": "px",
-                                  "top": "13",
-                                  "right": "13",
-                                  "bottom": "13",
-                                  "left": "13",
-                                  "isLinked": false
-                                },
-                                "typography_typography": "custom",
-                                "typography_font_family": "Peyda",
-                                "typography_font_size": {
-                                  "unit": "px",
-                                  "size": 15,
-                                  "sizes": []
-                                },
-                                "typography_font_weight": "700",
-                                "button_text_padding": {
-                                  "unit": "px",
-                                  "top": "13",
-                                  "right": "22",
-                                  "bottom": "13",
-                                  "left": "22",
-                                  "isLinked": false
-                                },
-                                "align_mobile": "center",
-                                "_title": "CTA — مشاهدهٔ مسیر 5",
-                                "_css_classes": "az-btn az-btn--primary"
-                              },
-                              "elements": []
-                            }
-                          ]
                         }
                       ]
                     }
@@ -3302,7 +1837,7 @@
                           "id": "122tkzr",
                           "elType": "widget",
                           "isInner": false,
-                          "widgetType": "button",
+                          "widgetType": "bdt-advanced-button",
                           "settings": {
                             "text": "از کجا شروع کنم؟",
                             "link": {
@@ -3311,13 +1846,15 @@
                               "nofollow": "",
                               "custom_attributes": ""
                             },
-                            "size": "md",
-                            "align": "center",
-                            "button_type": "info",
-                            "text_color": "#FFFFFF",
-                            "background_color": "#9D382C",
-                            "border_border": "solid",
-                            "border_width": {
+                            "button_icon": {
+                              "value": "fas fa-chevron-left",
+                              "library": "fa-solid"
+                            },
+                            "advanced_button_text_color": "#FFFFFF",
+                            "button_background_background": "classic",
+                            "button_background_color": "#9D382C",
+                            "button_border_style": "solid",
+                            "button_border_width": {
                               "unit": "px",
                               "top": "1",
                               "right": "1",
@@ -3325,8 +1862,8 @@
                               "left": "1",
                               "isLinked": false
                             },
-                            "border_color": "#9D382C",
-                            "border_radius": {
+                            "button_border_color": "#9D382C",
+                            "advanced_button_radius": {
                               "unit": "px",
                               "top": "13",
                               "right": "13",
@@ -3334,26 +1871,22 @@
                               "left": "13",
                               "isLinked": false
                             },
-                            "typography_typography": "custom",
-                            "typography_font_family": "Peyda",
-                            "typography_font_size": {
+                            "advanced_button_typography_typography": "custom",
+                            "advanced_button_typography_font_family": "Peyda",
+                            "advanced_button_typography_font_size": {
                               "unit": "px",
                               "size": 15,
                               "sizes": []
                             },
-                            "typography_font_weight": "700",
-                            "button_text_padding": {
-                              "unit": "px",
-                              "top": "13",
-                              "right": "22",
-                              "bottom": "13",
-                              "left": "22",
-                              "isLinked": false
-                            },
-                            "button_full_width": "yes",
-                            "align_mobile": "center",
+                            "advanced_button_typography_font_weight": "700",
+                            "advanced_button_hover_text_color": "#FFFFFF",
+                            "button_hover_background_background": "classic",
+                            "button_hover_background_color": "#B24739",
+                            "advanced_button_icon_color": "#FFFFFF",
+                            "advanced_button_full_width": "yes",
+                            "advanced_button_align_mobile": "center",
                             "_title": "CTA — از کجا شروع کنم؟",
-                            "_css_classes": "az-btn az-btn--accent az-btn--block"
+                            "_css_classes": "az-btn az-ep-btn az-ep-btn--primary az-btn--block"
                           },
                           "elements": []
                         }

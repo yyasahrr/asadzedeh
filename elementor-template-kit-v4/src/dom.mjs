@@ -183,7 +183,10 @@ export function grid(doc, seed, children, opts = {}) {
   const tCols = tablet ?? (cols >= 3 ? 2 : cols);
   const items = children
     .filter(Boolean)
-    .map((child, i) => withWidth(child, cell(cols, { tablet: tCols, mobile: 100 / mobile })));
+    // a widget cannot carry a width inside a flex container, so wrap it —
+    // otherwise grid children collapse instead of forming columns
+    .map((child) => (child.elType === 'container' ? child : container(doc, `${child.id}-cell`, [child], { title: `سلول — ${child.settings?._title || child.widgetType}`, cls: 'az-cell', g: 0 })))
+    .map((child) => withWidth(child, cell(cols, { tablet: tCols, mobile: 100 / mobile })));
   return container(doc, seed, items, {
     title,
     cls: `${cls} az-grid--${String(cols)}`,
@@ -592,6 +595,125 @@ export function progressBar(doc, seed, opts = {}) {
 export function shortcodeWidget(doc, seed, code, opts = {}) {
   const { title = 'اتصال افزونه', cls = 'az-mount' } = opts;
   return widget(doc, seed, 'shortcode', { shortcode: code }, { title: `${title} — ${code.slice(0, 34)}`, cls });
+}
+
+/* ---------------------------------------------- BDThemes Element Pack Pro
+ *
+ * The control names below are taken from the widget schemas observed on the
+ * customer install (recorded by the previous kit, DESIGN.md: "widgetهای واقعی
+ * مشاهده‌شده در نصب مبنا استفاده شده‌اند"). They are still marked UNVERIFIED in
+ * src/schema.mjs until tools/analyze-export.mjs confirms them against a real
+ * export — if a control turns out to be wrong, Elementor falls back to the
+ * widget default, so the page degrades cosmetically instead of breaking.
+ */
+
+/** bdt-advanced-button: used for the primary CTA of a page. */
+export function epButton(doc, seed, label, url = '#', opts = {}) {
+  const { variant = 'primary', cls = '', title, block = true, icon = { value: 'fas fa-chevron-left', library: 'fa-solid' } } = opts;
+  const primary = variant === 'primary';
+  const settings = {
+    text: label,
+    link: { url, is_external: '', nofollow: '', custom_attributes: '' },
+    button_icon: icon,
+    advanced_button_text_color: primary ? C.white : C.navy,
+    button_background_background: 'classic',
+    button_background_color: primary ? C.red : C.surface,
+    button_border_style: 'solid',
+    button_border_width: edge(1),
+    button_border_color: primary ? C.red : C.navy,
+    advanced_button_radius: edge(LAYOUT.btnRadius),
+    advanced_button_typography_typography: 'custom',
+    advanced_button_typography_font_family: FONT.ui,
+    advanced_button_typography_font_size: { unit: 'px', size: 15, sizes: [] },
+    advanced_button_typography_font_weight: '700',
+    advanced_button_hover_text_color: C.white,
+    button_hover_background_background: 'classic',
+    button_hover_background_color: primary ? C.redHover : C.navy,
+    advanced_button_icon_color: primary ? C.white : C.navy,
+    ...(block ? { advanced_button_full_width: 'yes' } : {}),
+    ...resp({}, { mobile: { advanced_button_align: 'center' } }),
+  };
+  return widget(doc, seed, 'bdt-advanced-button', settings, {
+    title: title || `CTA (Element Pack) — ${label}`,
+    cls: `az-btn az-ep-btn az-ep-btn--${variant}${block ? ' az-btn--block' : ''} ${cls}`.trim(),
+  });
+}
+
+/** bdt-advanced-heading: editorial accent only — never the page H1/H2. */
+export function epHeading(doc, seed, label, opts = {}) {
+  const { cls = 'az-kicker', title, tone = 'cream' } = opts;
+  const palette = {
+    cream: { fg: C.navy, bg: C.cream, border: C.line },
+    red: { fg: C.red, bg: '#F6E3DE', border: '#E7C4BC' },
+    teal: { fg: '#1D5A6B', bg: '#E1F0F1', border: '#B2D6D8' },
+    navy: { fg: '#FFF3E1', bg: C.navy, border: C.navy },
+  }[tone];
+  return widget(
+    doc,
+    seed,
+    'bdt-advanced-heading',
+    {
+      sub_heading: '',
+      main_heading: label,
+      split_text: '',
+      header_size: 'span',
+      advanced_heading_visibility: '',
+      main_heading_color: palette.fg,
+      main_heading_background: palette.bg,
+      main_heading_border_border: 'solid',
+      main_heading_border_width: edge(1),
+      main_heading_border_color: palette.border,
+      main_heading_radius: edge(10),
+      main_heading_typography_typography: 'custom',
+      main_heading_typography_font_family: FONT.ui,
+      main_heading_typography_font_size: { unit: 'px', size: 12.5, sizes: [] },
+      main_heading_typography_font_weight: '700',
+    },
+    { title: title || `برچسب (Element Pack) — ${label}`, cls }
+  );
+}
+
+/** bdt-interactive-card: used where a card benefits from hover/badge affordances. */
+export function epCard(doc, seed, opts = {}) {
+  const { title = '', subtitle = '', description = '', cta = 'مشاهده', url = '#', badge = '', tone = 'navy', navTitle = 'کارت تعاملی' } = opts;
+  const accent = { navy: C.navy, red: C.red, teal: C.teal, cream: C.cream }[tone] || C.navy;
+  return widget(
+    doc,
+    seed,
+    'bdt-interactive-card',
+    {
+      title_text: title,
+      sub_title_text: subtitle,
+      description_text: `<p dir="rtl">${description}</p>`,
+      readmore_text: cta,
+      readmore: { url, is_external: '', nofollow: '', custom_attributes: '' },
+      badge_text: badge,
+      image: { url: '', id: '', size: '', alt: title, source: 'library' },
+      title_color: accent,
+    },
+    { title: navTitle, cls: `az-ep-card az-ep-card--${tone}` }
+  );
+}
+
+/** bdt-advanced-image-gallery: masonry-ish gallery for workshop/student work. */
+export function epGallery(doc, seed, opts = {}) {
+  const { columns = 3, limit = 8, navTitle = 'گالری (Element Pack)', cls = 'az-ep-gallery', ratio = '1:1' } = opts;
+  return widget(
+    doc,
+    seed,
+    'bdt-advanced-image-gallery',
+    {
+      gallery_images: [],
+      columns: String(columns),
+      columns_tablet: '2',
+      columns_mobile: '1',
+      item_limit: String(limit),
+      image_ratio: ratio,
+      show_lightbox: 'yes',
+      gap: { unit: 'px', size: 14, sizes: [] },
+    },
+    { title: navTitle, cls }
+  );
 }
 
 /** Elementor Pro form widget wrapped in a styled card. */

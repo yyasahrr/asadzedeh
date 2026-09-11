@@ -5,7 +5,7 @@ section-hero.json,بخش قابل‌استفاده — Hero,section,هر صفح�
 section-cta.json,بخش قابل‌استفاده — دعوت به اقدام,section,هر صفحه,elementor,,,ندارد (درج دستی در صفحات),از طریق کتابخانهٔ المنتور در هر صفحه درج شود.,READY,9,4,5,
 section-empty-state.json,بخش قابل‌استفاده — وضعیت خالی,section,هر صفحه,elementor,,,ندارد (درج دستی در صفحات),برای وضعیت‌های بدون داده در پنل هنرجو استفاده شود.,READY,10,4,4,
 section-trust.json,بخش قابل‌استفاده — نوار اعتماد,section,هر صفحه,elementor,,,ندارد (درج دستی در صفحات),متن موارد را با مزایای واقعی کارگاه جایگزین کنید؛ عمداً بدون عدد است.,READY — NEEDS REAL CONTENT,15,6,2,
-home.json,خانه,page,صفحهٔ اصلی,elementor + elementor-pro + learndash-lms,LearnDash course list + آخرین نوشته‌ها,/,تنظیم به‌عنوان صفحهٔ اصلی وردپرس,تصویر Hero و تصاویر گالری را جایگزین کنید.,READY — NEEDS REAL CONTENT,251,113,105,ld_course_list
+home.json,خانه,page,صفحهٔ اصلی,elementor + elementor-pro + learndash-lms,LearnDash course list + آخرین نوشته‌ها,/,تنظیم به‌عنوان صفحهٔ اصلی وردپرس,تصویر Hero و تصاویر گالری را جایگزین کنید.,READY — NEEDS REAL CONTENT,254,113,111,ld_course_list
 start-here.json,از کجا شروع کنم؟,page,/start-here,elementor,,/start-here,,,READY — NEEDS REAL CONTENT,72,36,41,
 about.json,دربارهٔ کارگاه,page,/about,elementor,,/about,,روایت کارگاه و بخش «نسبت فن با سنت» با اطلاعات واقعی تکمیل شود.,READY — NEEDS REAL CONTENT,130,54,48,
 contact.json,تماس با ما,page,/contact,elementor + elementor-pro,فرم المنتور پرو (در صورت نصب افزونه نقشه: ویجت نقشه),/contact,,Action After Submit فرم و کلید API نقشه را تنظیم کنید.,READY — NEEDS REAL CONTENT,78,34,20,az_workshop_meta
@@ -15,7 +15,7 @@ blog.json,مجله,page,/blog,elementor,ویجت Posts,/blog,,اگر از Theme 
 single-post.json,تک‌نوشته,single,نوشته‌ها,elementor-pro,محتوای نوشته,/blog/{slug},Theme Builder → Single → Posts,,READY,36,12,15,
 instructors.json,مدرسان,page,/instructors,elementor + bdthemes-element-pack-pro,Dynamic Grid روی CPT instructor,/instructors,,در صورت استفاده از CPT مدرس، Loop Item مربوط را انتخاب کنید.,READY — NEEDS DYNAMIC BINDING,66,29,30,
 single-instructor.json,تک‌مدرس,single,CPT instructor,elementor-pro,ACF: specialty/experience/biography/featured_courses,/instructors/{slug},Theme Builder → Single → Instructor,فیلدهای ACF را متصل کنید.,READY — NEEDS DYNAMIC BINDING,71,27,28,az_instructor_courses
-gallery.json,گالری کارگاه,page,/gallery,elementor,,/gallery,,تصاویر واقعی کارگاه را جایگزین کنید.,READY — NEEDS REAL CONTENT,30,8,17,
+gallery.json,گالری کارگاه,page,/gallery,elementor,,/gallery,,تصاویر واقعی کارگاه را جایگزین کنید.,READY — NEEDS REAL CONTENT,38,11,22,
 faq.json,پرسش‌های پرتکرار,page,/faq,elementor,,/faq,,پرسش‌ها را با پرسش‌های واقعی کارگاه تکمیل کنید.,READY — NEEDS REAL CONTENT,40,15,14,
 support.json,پشتیبانی,page,/support,elementor,,/support,,روش واقعی پاسخ‌گویی را جایگزین کنید.,READY — NEEDS REAL CONTENT,45,21,24,
 verify.json,استعلام گواهی,page,/verify,kit-php,فرم استعلام با nonce,/verify,,نیازمند backend/asadzadeh-kit-shortcodes.php,NEEDS CUSTOM BACKEND,40,19,15,az_certificate_verify
@@ -30,7 +30,7 @@ lesson.json,درس,single,sfwd-lessons,elementor-pro + learndash-lms + kit-php,�
 topic.json,موضوع,single,sfwd-topic,elementor-pro + learndash-lms,محتوای موضوع,/topics/{slug},Theme Builder → Single → Topics (sfwd-topic),,READY,17,6,5,learndash_course_progress
 quiz.json,آزمون,single,sfwd-quiz,elementor-pro + learndash-lms,آزمون LearnDash,/quiz/{slug},Theme Builder → Single → Quizzes (sfwd-quiz),,READY,33,15,10,course_content
 enrolled-course.json,پخش‌کنندهٔ دوره (در حال یادگیری),page,/dashboard/courses/{id}/player,learndash-lms + kit-php,course_content + az_course_curriculum,/learn/{course},,این صفحه باید به مسیر یادگیری LearnDash متصل شود.,NEEDS CUSTOM BACKEND,51,24,10,learndash_course_progress az_course_curriculum
-learning-paths.json,مسیرهای یادگیری — فهرست,page,/learning-paths,elementor + acf-pro + kit-php,CPT learning_path,/learning-paths,,در صورت نبود CPT، فهرست ثابت نمایش داده می‌شود.,READY — NEEDS DYNAMIC BINDING,111,50,40,az_path_courses
+learning-paths.json,مسیرهای یادگیری — فهرست,page,/learning-paths,elementor + acf-pro + kit-php,CPT learning_path,/learning-paths,,در صورت نبود CPT، فهرست ثابت نمایش داده می‌شود.,READY — NEEDS DYNAMIC BINDING,61,25,30,az_path_courses
 learning-path-single.json,تک‌مسیر یادگیری,single,CPT learning_path,elementor-pro + acf-pro + kit-php,ACF path_courses / outcomes / faq,/learning-paths/{slug},Theme Builder → Single → Learning Path,Slugهای فارسی باید با تنظیمات پیوند یکتا (UTF-8) بررسی شوند.,NEEDS CUSTOM BACKEND,119,53,31,az_path_courses
 workshops.json,کلاس‌های حضوری — فهرست,page,/workshops,woocommerce,products category=workshop,/workshops,,دستهٔ محصول با slug دقیق workshop ایجاد شود.,READY — NEEDS REAL CONTENT,135,56,41,products
 class-single.json,تک‌کلاس حضوری,product,محصول دستهٔ workshop,elementor-pro + woocommerce + kit-php,ویجت‌های ووکامرس + az_workshop_meta,/product/{slug},Theme Builder → Single Product → In Product Category: workshop,ظرفیت = موجودی محصول.,NEEDS CUSTOM BACKEND,73,32,15,az_workshop_meta

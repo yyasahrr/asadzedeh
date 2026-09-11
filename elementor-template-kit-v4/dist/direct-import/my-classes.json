@@ -1941,7 +1941,7 @@
                                           "id": "fp76sb1",
                                           "elType": "widget",
                                           "isInner": false,
-                                          "widgetType": "button",
+                                          "widgetType": "bdt-advanced-button",
                                           "settings": {
                                             "text": "مشاهدهٔ کلاس‌ها",
                                             "link": {
@@ -1950,13 +1950,15 @@
                                               "nofollow": "",
                                               "custom_attributes": ""
                                             },
-                                            "size": "md",
-                                            "align": "center",
-                                            "button_type": "info",
-                                            "text_color": "#FFFFFF",
-                                            "background_color": "#9D382C",
-                                            "border_border": "solid",
-                                            "border_width": {
+                                            "button_icon": {
+                                              "value": "fas fa-chevron-left",
+                                              "library": "fa-solid"
+                                            },
+                                            "advanced_button_text_color": "#FFFFFF",
+                                            "button_background_background": "classic",
+                                            "button_background_color": "#9D382C",
+                                            "button_border_style": "solid",
+                                            "button_border_width": {
                                               "unit": "px",
                                               "top": "1",
                                               "right": "1",
@@ -1964,8 +1966,8 @@
                                               "left": "1",
                                               "isLinked": false
                                             },
-                                            "border_color": "#9D382C",
-                                            "border_radius": {
+                                            "button_border_color": "#9D382C",
+                                            "advanced_button_radius": {
                                               "unit": "px",
                                               "top": "13",
                                               "right": "13",
@@ -1973,26 +1975,22 @@
                                               "left": "13",
                                               "isLinked": false
                                             },
-                                            "typography_typography": "custom",
-                                            "typography_font_family": "Peyda",
-                                            "typography_font_size": {
+                                            "advanced_button_typography_typography": "custom",
+                                            "advanced_button_typography_font_family": "Peyda",
+                                            "advanced_button_typography_font_size": {
                                               "unit": "px",
                                               "size": 15,
                                               "sizes": []
                                             },
-                                            "typography_font_weight": "700",
-                                            "button_text_padding": {
-                                              "unit": "px",
-                                              "top": "13",
-                                              "right": "22",
-                                              "bottom": "13",
-                                              "left": "22",
-                                              "isLinked": false
-                                            },
-                                            "button_full_width": "yes",
-                                            "align_mobile": "center",
+                                            "advanced_button_typography_font_weight": "700",
+                                            "advanced_button_hover_text_color": "#FFFFFF",
+                                            "button_hover_background_background": "classic",
+                                            "button_hover_background_color": "#B24739",
+                                            "advanced_button_icon_color": "#FFFFFF",
+                                            "advanced_button_full_width": "yes",
+                                            "advanced_button_align_mobile": "center",
                                             "_title": "CTA — مشاهدهٔ کلاس‌ها 2",
-                                            "_css_classes": "az-btn az-btn--accent az-btn--block"
+                                            "_css_classes": "az-btn az-ep-btn az-ep-btn--primary az-btn--block"
                                           },
                                           "elements": []
                                         }

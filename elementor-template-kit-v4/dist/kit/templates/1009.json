@@ -643,15 +643,17 @@
                       "id": "41eyui7",
                       "elType": "widget",
                       "isInner": false,
-                      "widgetType": "heading",
+                      "widgetType": "bdt-advanced-heading",
                       "settings": {
-                        "title": "رویکرد آموزشی",
+                        "sub_heading": "",
+                        "main_heading": "رویکرد آموزشی",
+                        "split_text": "",
                         "header_size": "span",
-                        "align": "right",
-                        "title_color": "#193B5C",
-                        "background_color": "#E8D8B8",
-                        "border_border": "solid",
-                        "border_width": {
+                        "advanced_heading_visibility": "",
+                        "main_heading_color": "#193B5C",
+                        "main_heading_background": "#E8D8B8",
+                        "main_heading_border_border": "solid",
+                        "main_heading_border_width": {
                           "unit": "px",
                           "top": "1",
                           "right": "1",
@@ -659,8 +661,8 @@
                           "left": "1",
                           "isLinked": false
                         },
-                        "border_color": "#193B5C1F",
-                        "border_radius": {
+                        "main_heading_border_color": "#193B5C1F",
+                        "main_heading_radius": {
                           "unit": "px",
                           "top": "10",
                           "right": "10",
@@ -668,22 +670,14 @@
                           "left": "10",
                           "isLinked": false
                         },
-                        "padding": {
-                          "unit": "px",
-                          "top": "5",
-                          "right": "12",
-                          "bottom": "5",
-                          "left": "12",
-                          "isLinked": false
-                        },
-                        "typography_typography": "custom",
-                        "typography_font_family": "Peyda",
-                        "typography_font_size": {
+                        "main_heading_typography_typography": "custom",
+                        "main_heading_typography_font_family": "Peyda",
+                        "main_heading_typography_font_size": {
                           "unit": "px",
                           "size": 12.5,
                           "sizes": []
                         },
-                        "typography_font_weight": "700",
+                        "main_heading_typography_font_weight": "700",
                         "_title": "برچسب — رویکرد آموزشی",
                         "_css_classes": "az-kicker"
                       },
@@ -3784,7 +3778,7 @@
                           "id": "1vh7i96",
                           "elType": "widget",
                           "isInner": false,
-                          "widgetType": "button",
+                          "widgetType": "bdt-advanced-button",
                           "settings": {
                             "text": "تماس با کارگاه",
                             "link": {
@@ -3793,13 +3787,15 @@
                               "nofollow": "",
                               "custom_attributes": ""
                             },
-                            "size": "md",
-                            "align": "center",
-                            "button_type": "info",
-                            "text_color": "#FFFFFF",
-                            "background_color": "#9D382C",
-                            "border_border": "solid",
-                            "border_width": {
+                            "button_icon": {
+                              "value": "fas fa-chevron-left",
+                              "library": "fa-solid"
+                            },
+                            "advanced_button_text_color": "#FFFFFF",
+                            "button_background_background": "classic",
+                            "button_background_color": "#9D382C",
+                            "button_border_style": "solid",
+                            "button_border_width": {
                               "unit": "px",
                               "top": "1",
                               "right": "1",
@@ -3807,8 +3803,8 @@
                               "left": "1",
                               "isLinked": false
                             },
-                            "border_color": "#9D382C",
-                            "border_radius": {
+                            "button_border_color": "#9D382C",
+                            "advanced_button_radius": {
                               "unit": "px",
                               "top": "13",
                               "right": "13",
@@ -3816,26 +3812,22 @@
                               "left": "13",
                               "isLinked": false
                             },
-                            "typography_typography": "custom",
-                            "typography_font_family": "Peyda",
-                            "typography_font_size": {
+                            "advanced_button_typography_typography": "custom",
+                            "advanced_button_typography_font_family": "Peyda",
+                            "advanced_button_typography_font_size": {
                               "unit": "px",
                               "size": 15,
                               "sizes": []
                             },
-                            "typography_font_weight": "700",
-                            "button_text_padding": {
-                              "unit": "px",
-                              "top": "13",
-                              "right": "22",
-                              "bottom": "13",
-                              "left": "22",
-                              "isLinked": false
-                            },
-                            "button_full_width": "yes",
-                            "align_mobile": "center",
+                            "advanced_button_typography_font_weight": "700",
+                            "advanced_button_hover_text_color": "#FFFFFF",
+                            "button_hover_background_background": "classic",
+                            "button_hover_background_color": "#B24739",
+                            "advanced_button_icon_color": "#FFFFFF",
+                            "advanced_button_full_width": "yes",
+                            "advanced_button_align_mobile": "center",
                             "_title": "CTA — تماس با کارگاه",
-                            "_css_classes": "az-btn az-btn--accent az-btn--block"
+                            "_css_classes": "az-btn az-ep-btn az-ep-btn--primary az-btn--block"
                           },
                           "elements": []
                         },

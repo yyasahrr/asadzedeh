@@ -255,6 +255,237 @@
           ]
         },
         {
+          "id": "5j5qk07",
+          "elType": "container",
+          "isInner": false,
+          "settings": {
+            "content_width": "full",
+            "flex_direction": "column",
+            "flex_gap": {
+              "column": "24",
+              "row": "24",
+              "unit": "px",
+              "size": 24,
+              "isLinked": true
+            },
+            "padding": {
+              "unit": "px",
+              "top": "64",
+              "right": "0",
+              "bottom": "64",
+              "left": "0",
+              "isLinked": false
+            },
+            "padding_tablet": {
+              "unit": "px",
+              "top": "48",
+              "right": "0",
+              "bottom": "48",
+              "left": "0",
+              "isLinked": false
+            },
+            "padding_mobile": {
+              "unit": "px",
+              "top": "34",
+              "right": "0",
+              "bottom": "34",
+              "left": "0",
+              "isLinked": false
+            },
+            "css_classes": "az-section az-section--tight",
+            "_title": "Gallery — گرید داینامیک",
+            "_css_classes": "az-section az-section--tight"
+          },
+          "elements": [
+            {
+              "id": "19jh7nz",
+              "elType": "container",
+              "isInner": false,
+              "settings": {
+                "content_width": "boxed",
+                "flex_direction": "column",
+                "width": {
+                  "unit": "px",
+                  "size": 1240,
+                  "sizes": []
+                },
+                "flex_gap": {
+                  "column": "22",
+                  "row": "22",
+                  "unit": "px",
+                  "size": 22,
+                  "isLinked": true
+                },
+                "css_classes": "az-wrap",
+                "_title": "Gallery — گرید داینامیک — محتوا",
+                "_css_classes": "az-wrap"
+              },
+              "elements": [
+                {
+                  "id": "13ra86j",
+                  "elType": "container",
+                  "isInner": false,
+                  "settings": {
+                    "content_width": "full",
+                    "flex_direction": "column",
+                    "flex_align_items": "right",
+                    "flex_gap": {
+                      "column": "12",
+                      "row": "12",
+                      "unit": "px",
+                      "size": 12,
+                      "isLinked": true
+                    },
+                    "css_classes": "az-section-head",
+                    "_title": "سربرگ بخش",
+                    "_css_classes": "az-section-head"
+                  },
+                  "elements": [
+                    {
+                      "id": "quemrlt",
+                      "elType": "widget",
+                      "isInner": false,
+                      "widgetType": "heading",
+                      "settings": {
+                        "title": "گالری تصاویر",
+                        "header_size": "h2",
+                        "align": "right",
+                        "title_color": "#193B5C",
+                        "typography_typography": "custom",
+                        "typography_font_family": "Neirizi",
+                        "typography_font_weight": "400",
+                        "typography_font_size": {
+                          "unit": "px",
+                          "size": 44,
+                          "sizes": []
+                        },
+                        "typography_line_height": {
+                          "unit": "em",
+                          "size": 1.34,
+                          "sizes": []
+                        },
+                        "_title": "H2 — گالری تصاویر"
+                      },
+                      "elements": []
+                    },
+                    {
+                      "id": "h2nqx3q",
+                      "elType": "widget",
+                      "isInner": false,
+                      "widgetType": "text-editor",
+                      "settings": {
+                        "editor": "<p dir=\"rtl\">این گرید از Element Pack Pro تغذیه می‌شود؛ تصاویر را در ویجت اضافه کنید.</p>",
+                        "align": "right",
+                        "text_color": "#6D6A63",
+                        "typography_typography": "custom",
+                        "typography_font_family": "Peyda",
+                        "typography_font_size": {
+                          "unit": "px",
+                          "size": 16,
+                          "sizes": []
+                        },
+                        "typography_font_weight": "400",
+                        "typography_line_height": {
+                          "unit": "em",
+                          "size": 1.95,
+                          "sizes": []
+                        },
+                        "_title": "متن معرفی بخش",
+                        "_css_classes": "az-lead"
+                      },
+                      "elements": []
+                    },
+                    {
+                      "id": "lmrckb1",
+                      "elType": "container",
+                      "isInner": false,
+                      "settings": {
+                        "content_width": "full",
+                        "flex_direction": "column",
+                        "flex_gap": {
+                          "column": "24",
+                          "row": "24",
+                          "unit": "px",
+                          "size": 24,
+                          "isLinked": true
+                        },
+                        "border_radius": {
+                          "unit": "px",
+                          "top": "999",
+                          "right": "999",
+                          "bottom": "999",
+                          "left": "999",
+                          "isLinked": false
+                        },
+                        "background_background": "classic",
+                        "background_color": "#E8D8B8",
+                        "min_height": {
+                          "unit": "px",
+                          "size": 10,
+                          "sizes": []
+                        },
+                        "min_height_mobile": {
+                          "unit": "px",
+                          "size": 10,
+                          "sizes": []
+                        },
+                        "css_classes": "az-rule az-rule--short",
+                        "_title": "نوار بافت",
+                        "_css_classes": "az-rule az-rule--short"
+                      },
+                      "elements": []
+                    }
+                  ]
+                },
+                {
+                  "id": "1mrzj5p",
+                  "elType": "container",
+                  "isInner": false,
+                  "settings": {
+                    "content_width": "full",
+                    "flex_direction": "column",
+                    "flex_gap": {
+                      "column": "0",
+                      "row": "0",
+                      "unit": "px",
+                      "size": 0,
+                      "isLinked": true
+                    },
+                    "css_classes": "az-mount",
+                    "_title": "گرید داینامیک",
+                    "_css_classes": "az-mount"
+                  },
+                  "elements": [
+                    {
+                      "id": "ym1d651",
+                      "elType": "widget",
+                      "isInner": false,
+                      "widgetType": "bdt-advanced-image-gallery",
+                      "settings": {
+                        "gallery_images": [],
+                        "columns": "4",
+                        "columns_tablet": "2",
+                        "columns_mobile": "1",
+                        "item_limit": "16",
+                        "image_ratio": "1:1",
+                        "show_lightbox": "yes",
+                        "gap": {
+                          "unit": "px",
+                          "size": 14,
+                          "sizes": []
+                        },
+                        "_title": "گالری داینامیک (Element Pack)",
+                        "_css_classes": "az-ep-gallery"
+                      },
+                      "elements": []
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
           "id": "11qimai",
           "elType": "container",
           "isInner": false,
@@ -339,7 +570,7 @@
                       "isLinked": true
                     },
                     "css_classes": "az-section-head",
-                    "_title": "سربرگ بخش",
+                    "_title": "سربرگ بخش 2",
                     "_css_classes": "az-section-head"
                   },
                   "elements": [
@@ -405,7 +636,7 @@
                           "sizes": []
                         },
                         "css_classes": "az-rule az-rule--short",
-                        "_title": "نوار بافت",
+                        "_title": "نوار بافت 2",
                         "_css_classes": "az-rule az-rule--short"
                       },
                       "elements": []
@@ -852,7 +1083,7 @@
                           "id": "11gev4c",
                           "elType": "widget",
                           "isInner": false,
-                          "widgetType": "button",
+                          "widgetType": "bdt-advanced-button",
                           "settings": {
                             "text": "مشاهدهٔ کلاس‌ها",
                             "link": {
@@ -861,13 +1092,15 @@
                               "nofollow": "",
                               "custom_attributes": ""
                             },
-                            "size": "md",
-                            "align": "center",
-                            "button_type": "info",
-                            "text_color": "#FFFFFF",
-                            "background_color": "#9D382C",
-                            "border_border": "solid",
-                            "border_width": {
+                            "button_icon": {
+                              "value": "fas fa-chevron-left",
+                              "library": "fa-solid"
+                            },
+                            "advanced_button_text_color": "#FFFFFF",
+                            "button_background_background": "classic",
+                            "button_background_color": "#9D382C",
+                            "button_border_style": "solid",
+                            "button_border_width": {
                               "unit": "px",
                               "top": "1",
                               "right": "1",
@@ -875,8 +1108,8 @@
                               "left": "1",
                               "isLinked": false
                             },
-                            "border_color": "#9D382C",
-                            "border_radius": {
+                            "button_border_color": "#9D382C",
+                            "advanced_button_radius": {
                               "unit": "px",
                               "top": "13",
                               "right": "13",
@@ -884,26 +1117,22 @@
                               "left": "13",
                               "isLinked": false
                             },
-                            "typography_typography": "custom",
-                            "typography_font_family": "Peyda",
-                            "typography_font_size": {
+                            "advanced_button_typography_typography": "custom",
+                            "advanced_button_typography_font_family": "Peyda",
+                            "advanced_button_typography_font_size": {
                               "unit": "px",
                               "size": 15,
                               "sizes": []
                             },
-                            "typography_font_weight": "700",
-                            "button_text_padding": {
-                              "unit": "px",
-                              "top": "13",
-                              "right": "22",
-                              "bottom": "13",
-                              "left": "22",
-                              "isLinked": false
-                            },
-                            "button_full_width": "yes",
-                            "align_mobile": "center",
+                            "advanced_button_typography_font_weight": "700",
+                            "advanced_button_hover_text_color": "#FFFFFF",
+                            "button_hover_background_background": "classic",
+                            "button_hover_background_color": "#B24739",
+                            "advanced_button_icon_color": "#FFFFFF",
+                            "advanced_button_full_width": "yes",
+                            "advanced_button_align_mobile": "center",
                             "_title": "CTA — مشاهدهٔ کلاس‌ها",
-                            "_css_classes": "az-btn az-btn--accent az-btn--block"
+                            "_css_classes": "az-btn az-ep-btn az-ep-btn--primary az-btn--block"
                           },
                           "elements": []
                         }

@@ -30,8 +30,16 @@ for (const r of [registerGlobal, registerPublic, registerLearn, registerDashboar
 const templates = getTemplates();
 mkdirSync(docsDir, { recursive: true });
 
+// Widget usage is recorded while the templates are BUILT, so build them here —
+// otherwise the dependency report would silently come out empty.
+const { buildAll } = await import('../src/emit.mjs');
+const bundle = buildAll();
+if (bundle.errors.length) {
+  console.error('build errors:', bundle.errors);
+}
+
 /* ------------------------------------------------------------ stats pass */
-resetUsage();
+// NOTE: no resetUsage() here — buildAll() resets and then records usage
 const statsBySlug = new Map();
 for (const file of readdirSync(directDir).filter((f) => f.endsWith('.json'))) {
   const doc = JSON.parse(readFileSync(path.join(directDir, file), 'utf8'));
@@ -203,6 +211,22 @@ ${[...byPlugin.entries()]
   .sort((a, b) => b[1].reduce((n, u) => n + u.count, 0) - a[1].reduce((n, u) => n + u.count, 0))
   .map(([plugin, list]) => `| \`${plugin}\` | ${list.reduce((n, u) => n + u.count, 0)} | ${list.map((u) => `\`${u.type}\``).join('، ')} |`)
   .join('\n')}
+
+## استفادهٔ عامدانه از Element Pack Pro (مادهٔ ۵)
+
+| ویجت | کجا استفاده شده | چرا |
+|---|---|---|
+| \`bdt-advanced-button\` | دکمهٔ اصلی در باندهای دعوت به اقدام | آیکون و حالت hover بهتری نسبت به دکمهٔ معمولی دارد |
+| \`bdt-advanced-heading\` | برچسب/eyebrow بالای سربرگ بخش‌ها | دقیقاً کاربرد «برچسب ادیتوریال»؛ هرگز برای H1/H2 استفاده نشده |
+| \`bdt-interactive-card\` | کارت‌های مسیر یادگیری | مقایسهٔ چند مسیر با hover و badge واقعاً بهتر می‌شود |
+| \`bdt-dynamic-grid\` | آثار هنرجویان و مدرسان | گرید داینامیک روی CPT |
+| \`bdt-advanced-image-gallery\` | گالری کارگاه | لایت‌باکس و نسبت تصویر یکپارچه |
+
+**عمداً استفاده نشده:**
+- \`bdt-advanced-counter\` — فقط برای آمار واقعی مجاز است (مادهٔ ۵: «Never use fake
+  statistics»). هیچ عدد تأییدشده‌ای در اختیار نیست، بنابراین استفاده نشده است.
+- \`bdt-step-flow\` — در پیاده‌سازی‌های قبلی پیکان‌های بیش‌ازحد بزرگ تولید می‌کرد؛
+  نقشهٔ راه با کانتینرهای معمولی ساخته شده تا کنترل بصری حفظ شود.
 
 ## جزئیات ریسک هر ویجت
 

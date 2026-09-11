@@ -15,6 +15,7 @@ import {
   accordion,
   imageWidget,
   mediaFrame,
+  epGallery,
   shortcodeWidget,
   htmlBlock,
   divider,
@@ -894,6 +895,15 @@ function galleryBuild(doc) {
       lead: 'دارها، ابزار، رنگ‌ها و قطعاتی که در کارگاه ساخته شده‌اند.',
       navTitle: 'Gallery — سربرگ',
     }),
+    section(
+      doc,
+      'gal-dynamic',
+      [
+        sectionHead(doc, 'gal-dynamic', { title: 'گالری تصاویر', lead: 'این گرید از Element Pack Pro تغذیه می‌شود؛ تصاویر را در ویجت اضافه کنید.' }),
+        container(doc, 'gal-dynamic-wrap', [epGallery(doc, 'gal-dynamic-widget', { columns: 4, limit: 16, navTitle: 'گالری داینامیک (Element Pack)' })], { title: 'گرید داینامیک', cls: 'az-mount', g: 0 }),
+      ],
+      { title: 'Gallery — گرید داینامیک', cls: 'az-section az-section--tight', innerCls: 'az-wrap' }
+    ),
     galleryBlock(doc, 'gal-main', [
       { label: 'دار قالی', note: 'کارگاه' }, { label: 'رنگرزی', note: 'مواد گیاهی' }, { label: 'گلیم', note: 'بافت' },
       { label: 'نقشه', note: 'طراحی' }, { label: 'ابزار', note: 'وسایل' }, { label: 'آثار', note: 'خروجی دوره' },

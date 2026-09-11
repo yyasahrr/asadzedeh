@@ -5,9 +5,9 @@
 ورود با رمز یک‌بارمصرف (Digits)، پنل هنرجو، گواهی‌ها و وضعیت‌های خطا/خالی.
 
 تعداد قالب‌ها: **70**
-تعداد المان‌ها: **3389**
-تعداد ویجت‌ها: **1510**
-تعداد overrideهای ریسپانسیو: **1157**
+تعداد المان‌ها: **3350**
+تعداد ویجت‌ها: **1488**
+تعداد overrideهای ریسپانسیو: **1158**
 
 ## چرا از نسخهٔ قبلی متفاوت است
 
@@ -62,7 +62,7 @@
 | section-cta.json | بخش قابل‌استفاده — دعوت به اقدام | section | 9 | READY |
 | section-empty-state.json | بخش قابل‌استفاده — وضعیت خالی | section | 10 | READY |
 | section-trust.json | بخش قابل‌استفاده — نوار اعتماد | section | 15 | READY — NEEDS REAL CONTENT |
-| home.json | خانه | page | 251 | READY — NEEDS REAL CONTENT |
+| home.json | خانه | page | 254 | READY — NEEDS REAL CONTENT |
 | start-here.json | از کجا شروع کنم؟ | page | 72 | READY — NEEDS REAL CONTENT |
 | about.json | دربارهٔ کارگاه | page | 130 | READY — NEEDS REAL CONTENT |
 | contact.json | تماس با ما | page | 78 | READY — NEEDS REAL CONTENT |
@@ -72,7 +72,7 @@
 | single-post.json | تک‌نوشته | single | 36 | READY |
 | instructors.json | مدرسان | page | 66 | READY — NEEDS DYNAMIC BINDING |
 | single-instructor.json | تک‌مدرس | single | 71 | READY — NEEDS DYNAMIC BINDING |
-| gallery.json | گالری کارگاه | page | 30 | READY — NEEDS REAL CONTENT |
+| gallery.json | گالری کارگاه | page | 38 | READY — NEEDS REAL CONTENT |
 | faq.json | پرسش‌های پرتکرار | page | 40 | READY — NEEDS REAL CONTENT |
 | support.json | پشتیبانی | page | 45 | READY — NEEDS REAL CONTENT |
 | verify.json | استعلام گواهی | page | 40 | NEEDS CUSTOM BACKEND |
@@ -87,7 +87,7 @@
 | topic.json | موضوع | single | 17 | READY |
 | quiz.json | آزمون | single | 33 | READY |
 | enrolled-course.json | پخش‌کنندهٔ دوره (در حال یادگیری) | page | 51 | NEEDS CUSTOM BACKEND |
-| learning-paths.json | مسیرهای یادگیری — فهرست | page | 111 | READY — NEEDS DYNAMIC BINDING |
+| learning-paths.json | مسیرهای یادگیری — فهرست | page | 61 | READY — NEEDS DYNAMIC BINDING |
 | learning-path-single.json | تک‌مسیر یادگیری | single | 119 | NEEDS CUSTOM BACKEND |
 | workshops.json | کلاس‌های حضوری — فهرست | page | 135 | READY — NEEDS REAL CONTENT |
 | class-single.json | تک‌کلاس حضوری | product | 73 | NEEDS CUSTOM BACKEND |

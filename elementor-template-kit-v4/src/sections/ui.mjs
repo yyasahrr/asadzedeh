@@ -31,6 +31,10 @@ import {
   htmlBlock,
   linkText,
   searchForm,
+  epButton,
+  epHeading,
+  epCard,
+  epGallery,
   cell,
   section,
 } from '../dom.mjs';
@@ -58,12 +62,12 @@ export function breadcrumbs(doc, seed, items, opts = {}) {
 }
 
 export function sectionHead(doc, seed, opts = {}) {
-  const { kicker: k, title, lead, link = null, align = 'right', cls = '', showRule = true } = opts;
+  const { kicker: k, title, lead, link = null, align = 'right', cls = '', showRule = true, kickerTone = 'cream' } = opts;
   return container(
     doc,
     `${seed}-head`,
     [
-      k ? kicker(doc, `${seed}-kicker`, k) : null,
+      k ? epHeading(doc, `${seed}-kicker`, k, { title: `برچسب — ${k}`, tone: kickerTone }) : null,
       title ? heading(doc, `${seed}-title`, title, { level: 'h2', title: `H2 — ${title}` }) : null,
       lead ? paragraph(doc, `${seed}-lead`, lead, { color: C.muted, size: 16, cls: 'az-lead', title: 'متن معرفی بخش' }) : null,
       showRule ? patternStrip(doc, `${seed}-rule`) : null,
@@ -277,13 +281,17 @@ export function courseCard(doc, seed, course, opts = {}) {
 }
 
 export function pathCard(doc, seed, path, opts = {}) {
-  return card(doc, seed, {
+  // Element Pack interactive card: the path card is the one place where a
+  // hover/badge affordance genuinely helps the user compare paths.
+  return epCard(doc, seed, {
     navTitle: `کارت مسیر — ${path.title}`,
-    variant: `az-card--${path.accent === 'navy' ? 'navy' : path.accent === 'red' ? 'cream' : ''}`.trim(),
     title: path.title,
-    lead: path.summary,
-    meta: [path.stages, path.courseCount, path.totalDuration],
-    actions: [{ label: 'مشاهدهٔ مسیر', url: `/learning-paths/${path.slug}`, variant: 'primary' }],
+    subtitle: path.stages,
+    description: `${path.summary}<br><span dir="rtl">${path.courseCount} · ${path.totalDuration}</span>`,
+    cta: 'مشاهدهٔ مسیر',
+    url: `/learning-paths/${path.slug}`,
+    badge: path.courseCount,
+    tone: ['navy', 'red', 'teal', 'cream'].includes(path.accent) ? path.accent : 'navy',
     ...opts,
   });
 }
@@ -448,7 +456,7 @@ export function ctaBand(doc, seed, opts = {}) {
           container(
             doc,
             `${seed}-actions`,
-            [primary ? button(doc, `${seed}-p`, primary.label, primary.url || '#', { variant: 'accent', block: true, title: `CTA — ${primary.label}` }) : null,
+            [primary ? epButton(doc, `${seed}-p`, primary.label, primary.url || '#', { variant: 'primary', block: true, title: `CTA — ${primary.label}` }) : null,
              secondary ? button(doc, `${seed}-s`, secondary.label, secondary.url || '#', { variant: 'ghost', block: true, title: `CTA — ${secondary.label}` }) : null].filter(Boolean),
             { title: 'دکمه‌ها', cls: 'az-row', direction: 'row', wrap: 'wrap', g: 12, responsive: { mobile: { flex_direction: 'column' } } }
           ),

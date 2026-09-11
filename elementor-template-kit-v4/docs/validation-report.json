@@ -1,9 +1,9 @@
 {
   "summary": {
     "templates": 70,
-    "totalElements": 3389,
-    "totalWidgets": 1510,
-    "totalResponsiveOverrides": 1157,
+    "totalElements": 3350,
+    "totalWidgets": 1488,
+    "totalResponsiveOverrides": 1158,
     "errors": 0,
     "warnings": 0
   },
@@ -239,10 +239,10 @@
       "file": "gallery.json",
       "title": "گالری کارگاه",
       "type": "page",
-      "elements": 30,
-      "widgets": 8,
+      "elements": 38,
+      "widgets": 11,
       "h1": 1,
-      "responsive": 17,
+      "responsive": 22,
       "shortcodes": []
     },
     {
@@ -269,10 +269,10 @@
       "file": "home.json",
       "title": "خانه",
       "type": "page",
-      "elements": 251,
+      "elements": 254,
       "widgets": 113,
       "h1": 1,
-      "responsive": 105,
+      "responsive": 111,
       "shortcodes": [
         "ld_course_list"
       ]
@@ -303,10 +303,10 @@
       "file": "learning-paths.json",
       "title": "مسیرهای یادگیری — فهرست",
       "type": "page",
-      "elements": 111,
-      "widgets": 50,
+      "elements": 61,
+      "widgets": 25,
       "h1": 1,
-      "responsive": 40,
+      "responsive": 30,
       "shortcodes": [
         "az_path_courses"
       ]

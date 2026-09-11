@@ -20,7 +20,20 @@ node generator.mjs
 
 | ویجت | افزونه | ریسک | توضیح |
 |---|---|---|---|
-- (همه تأیید شده‌اند)
+| `bdt-advanced-button` | bdthemes-element-pack-pro | medium | نیازمند تأیید روی نصب واقعی |
+| `bdt-advanced-heading` | bdthemes-element-pack-pro | medium | نیازمند تأیید روی نصب واقعی |
+| `bdt-interactive-card` | bdthemes-element-pack-pro | medium | نیازمند تأیید روی نصب واقعی |
+| `woocommerce-product-price` | elementor-pro | medium | نیازمند تأیید روی نصب واقعی |
+| `bdt-dynamic-grid` | bdthemes-element-pack-pro | medium | template_id must be reselected after import |
+| `woocommerce-product-images` | elementor-pro | medium | نیازمند تأیید روی نصب واقعی |
+| `woocommerce-product-add-to-cart` | elementor-pro | medium | نیازمند تأیید روی نصب واقعی |
+| `woocommerce-product-data-tabs` | elementor-pro | medium | نیازمند تأیید روی نصب واقعی |
+| `woocommerce-product-related` | elementor-pro | medium | نیازمند تأیید روی نصب واقعی |
+| `bdt-advanced-image-gallery` | bdthemes-element-pack-pro | medium | نیازمند تأیید روی نصب واقعی |
+| `woocommerce-product-title` | elementor-pro | medium | نیازمند تأیید روی نصب واقعی |
+| `woocommerce-product-rating` | elementor-pro | medium | نیازمند تأیید روی نصب واقعی |
+| `woocommerce-product-stock` | elementor-pro | medium | نیازمند تأیید روی نصب واقعی |
+| `woocommerce-product-meta` | elementor-pro | medium | نیازمند تأیید روی نصب واقعی |
 
 ## ۳. شورتکدهایی که باید روی سایت بررسی شوند
 

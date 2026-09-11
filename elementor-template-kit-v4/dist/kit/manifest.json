@@ -12,12 +12,12 @@
       "version": ">=3.21.0"
     },
     {
-      "plugin": "elementor-pro",
-      "version": ">=3.21.0"
-    },
-    {
       "plugin": "bdthemes-element-pack-pro",
       "version": "installed"
+    },
+    {
+      "plugin": "elementor-pro",
+      "version": ">=3.21.0"
     }
   ],
   "site-settings": {},

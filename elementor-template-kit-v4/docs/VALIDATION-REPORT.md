@@ -1,8 +1,8 @@
 # گزارش اعتبارسنجی
 
 تاریخ ساخت: 2026-09-11
-تعداد قالب‌ها: **70** · تعداد المان‌ها: **3389** · تعداد ویجت‌ها: **1510**
-تعداد overrideهای ریسپانسیو: **1157**
+تعداد قالب‌ها: **70** · تعداد المان‌ها: **3350** · تعداد ویجت‌ها: **1488**
+تعداد overrideهای ریسپانسیو: **1158**
 خطاها: **0** · هشدارها: **0**
 
 ## خطاها
@@ -34,13 +34,13 @@
 | enrolled-course.json | پخش‌کنندهٔ دوره (در حال یادگیری) | page | 51 | 24 | 1 | 10 | learndash_course_progress، az_course_curriculum |
 | faq.json | پرسش‌های پرتکرار | page | 40 | 15 | 1 | 14 | — |
 | footer.json | پابرگ — کل سایت | footer | 51 | 21 | 0 | 11 | — |
-| gallery.json | گالری کارگاه | page | 30 | 8 | 1 | 17 | — |
+| gallery.json | گالری کارگاه | page | 38 | 11 | 1 | 22 | — |
 | generic-error.json | خطای عمومی | page | 15 | 7 | 1 | 5 | — |
 | header.json | سربرگ — کل سایت | header | 22 | 8 | 0 | 13 | — |
-| home.json | خانه | page | 251 | 113 | 1 | 105 | ld_course_list |
+| home.json | خانه | page | 254 | 113 | 1 | 111 | ld_course_list |
 | instructors.json | مدرسان | page | 66 | 29 | 1 | 30 | — |
 | learning-path-single.json | تک‌مسیر یادگیری | single | 119 | 53 | 1 | 31 | az_path_courses |
-| learning-paths.json | مسیرهای یادگیری — فهرست | page | 111 | 50 | 1 | 40 | az_path_courses |
+| learning-paths.json | مسیرهای یادگیری — فهرست | page | 61 | 25 | 1 | 30 | az_path_courses |
 | lesson.json | درس | single | 37 | 17 | 1 | 9 | learndash_course_progress، az_course_cta، az_course_curriculum |
 | loop-artwork.json | Loop — اثر | loop-item | 7 | 4 | 0 | 3 | — |
 | loop-course.json | Loop — دوره | loop-item | 9 | 5 | 0 | 3 | az_course_meta |

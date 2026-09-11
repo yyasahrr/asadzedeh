@@ -1162,15 +1162,17 @@
                       "id": "ig3u211",
                       "elType": "widget",
                       "isInner": false,
-                      "widgetType": "heading",
+                      "widgetType": "bdt-advanced-heading",
                       "settings": {
-                        "title": "نقطهٔ شروع",
+                        "sub_heading": "",
+                        "main_heading": "نقطهٔ شروع",
+                        "split_text": "",
                         "header_size": "span",
-                        "align": "right",
-                        "title_color": "#193B5C",
-                        "background_color": "#E8D8B8",
-                        "border_border": "solid",
-                        "border_width": {
+                        "advanced_heading_visibility": "",
+                        "main_heading_color": "#193B5C",
+                        "main_heading_background": "#E8D8B8",
+                        "main_heading_border_border": "solid",
+                        "main_heading_border_width": {
                           "unit": "px",
                           "top": "1",
                           "right": "1",
@@ -1178,8 +1180,8 @@
                           "left": "1",
                           "isLinked": false
                         },
-                        "border_color": "#193B5C1F",
-                        "border_radius": {
+                        "main_heading_border_color": "#193B5C1F",
+                        "main_heading_radius": {
                           "unit": "px",
                           "top": "10",
                           "right": "10",
@@ -1187,22 +1189,14 @@
                           "left": "10",
                           "isLinked": false
                         },
-                        "padding": {
-                          "unit": "px",
-                          "top": "5",
-                          "right": "12",
-                          "bottom": "5",
-                          "left": "12",
-                          "isLinked": false
-                        },
-                        "typography_typography": "custom",
-                        "typography_font_family": "Peyda",
-                        "typography_font_size": {
+                        "main_heading_typography_typography": "custom",
+                        "main_heading_typography_font_family": "Peyda",
+                        "main_heading_typography_font_size": {
                           "unit": "px",
                           "size": 12.5,
                           "sizes": []
                         },
-                        "typography_font_weight": "700",
+                        "main_heading_typography_font_weight": "700",
                         "_title": "برچسب — نقطهٔ شروع",
                         "_css_classes": "az-kicker"
                       },
@@ -2090,15 +2084,17 @@
                       "id": "cns1kjn",
                       "elType": "widget",
                       "isInner": false,
-                      "widgetType": "heading",
+                      "widgetType": "bdt-advanced-heading",
                       "settings": {
-                        "title": "دوره‌های آنلاین",
+                        "sub_heading": "",
+                        "main_heading": "دوره‌های آنلاین",
+                        "split_text": "",
                         "header_size": "span",
-                        "align": "right",
-                        "title_color": "#193B5C",
-                        "background_color": "#E8D8B8",
-                        "border_border": "solid",
-                        "border_width": {
+                        "advanced_heading_visibility": "",
+                        "main_heading_color": "#193B5C",
+                        "main_heading_background": "#E8D8B8",
+                        "main_heading_border_border": "solid",
+                        "main_heading_border_width": {
                           "unit": "px",
                           "top": "1",
                           "right": "1",
@@ -2106,8 +2102,8 @@
                           "left": "1",
                           "isLinked": false
                         },
-                        "border_color": "#193B5C1F",
-                        "border_radius": {
+                        "main_heading_border_color": "#193B5C1F",
+                        "main_heading_radius": {
                           "unit": "px",
                           "top": "10",
                           "right": "10",
@@ -2115,22 +2111,14 @@
                           "left": "10",
                           "isLinked": false
                         },
-                        "padding": {
-                          "unit": "px",
-                          "top": "5",
-                          "right": "12",
-                          "bottom": "5",
-                          "left": "12",
-                          "isLinked": false
-                        },
-                        "typography_typography": "custom",
-                        "typography_font_family": "Peyda",
-                        "typography_font_size": {
+                        "main_heading_typography_typography": "custom",
+                        "main_heading_typography_font_family": "Peyda",
+                        "main_heading_typography_font_size": {
                           "unit": "px",
                           "size": 12.5,
                           "sizes": []
                         },
-                        "typography_font_weight": "700",
+                        "main_heading_typography_font_weight": "700",
                         "_title": "برچسب — دوره‌های آنلاین",
                         "_css_classes": "az-kicker"
                       },
@@ -3962,15 +3950,17 @@
                       "id": "im50m81",
                       "elType": "widget",
                       "isInner": false,
-                      "widgetType": "heading",
+                      "widgetType": "bdt-advanced-heading",
                       "settings": {
-                        "title": "مدرسان",
+                        "sub_heading": "",
+                        "main_heading": "مدرسان",
+                        "split_text": "",
                         "header_size": "span",
-                        "align": "right",
-                        "title_color": "#193B5C",
-                        "background_color": "#E8D8B8",
-                        "border_border": "solid",
-                        "border_width": {
+                        "advanced_heading_visibility": "",
+                        "main_heading_color": "#193B5C",
+                        "main_heading_background": "#E8D8B8",
+                        "main_heading_border_border": "solid",
+                        "main_heading_border_width": {
                           "unit": "px",
                           "top": "1",
                           "right": "1",
@@ -3978,8 +3968,8 @@
                           "left": "1",
                           "isLinked": false
                         },
-                        "border_color": "#193B5C1F",
-                        "border_radius": {
+                        "main_heading_border_color": "#193B5C1F",
+                        "main_heading_radius": {
                           "unit": "px",
                           "top": "10",
                           "right": "10",
@@ -3987,22 +3977,14 @@
                           "left": "10",
                           "isLinked": false
                         },
-                        "padding": {
-                          "unit": "px",
-                          "top": "5",
-                          "right": "12",
-                          "bottom": "5",
-                          "left": "12",
-                          "isLinked": false
-                        },
-                        "typography_typography": "custom",
-                        "typography_font_family": "Peyda",
-                        "typography_font_size": {
+                        "main_heading_typography_typography": "custom",
+                        "main_heading_typography_font_family": "Peyda",
+                        "main_heading_typography_font_size": {
                           "unit": "px",
                           "size": 12.5,
                           "sizes": []
                         },
-                        "typography_font_weight": "700",
+                        "main_heading_typography_font_weight": "700",
                         "_title": "برچسب — مدرسان",
                         "_css_classes": "az-kicker"
                       },
@@ -5641,15 +5623,17 @@
                       "id": "1fxa6fn",
                       "elType": "widget",
                       "isInner": false,
-                      "widgetType": "heading",
+                      "widgetType": "bdt-advanced-heading",
                       "settings": {
-                        "title": "آثار هنرجویان",
+                        "sub_heading": "",
+                        "main_heading": "آثار هنرجویان",
+                        "split_text": "",
                         "header_size": "span",
-                        "align": "right",
-                        "title_color": "#193B5C",
-                        "background_color": "#E8D8B8",
-                        "border_border": "solid",
-                        "border_width": {
+                        "advanced_heading_visibility": "",
+                        "main_heading_color": "#193B5C",
+                        "main_heading_background": "#E8D8B8",
+                        "main_heading_border_border": "solid",
+                        "main_heading_border_width": {
                           "unit": "px",
                           "top": "1",
                           "right": "1",
@@ -5657,8 +5641,8 @@
                           "left": "1",
                           "isLinked": false
                         },
-                        "border_color": "#193B5C1F",
-                        "border_radius": {
+                        "main_heading_border_color": "#193B5C1F",
+                        "main_heading_radius": {
                           "unit": "px",
                           "top": "10",
                           "right": "10",
@@ -5666,22 +5650,14 @@
                           "left": "10",
                           "isLinked": false
                         },
-                        "padding": {
-                          "unit": "px",
-                          "top": "5",
-                          "right": "12",
-                          "bottom": "5",
-                          "left": "12",
-                          "isLinked": false
-                        },
-                        "typography_typography": "custom",
-                        "typography_font_family": "Peyda",
-                        "typography_font_size": {
+                        "main_heading_typography_typography": "custom",
+                        "main_heading_typography_font_family": "Peyda",
+                        "main_heading_typography_font_size": {
                           "unit": "px",
                           "size": 12.5,
                           "sizes": []
                         },
-                        "typography_font_weight": "700",
+                        "main_heading_typography_font_weight": "700",
                         "_title": "برچسب — آثار هنرجویان",
                         "_css_classes": "az-kicker"
                       },
@@ -7038,103 +7014,202 @@
                   },
                   "elements": [
                     {
-                      "id": "15jx0qv",
-                      "elType": "widget",
+                      "id": "5a6gud1",
+                      "elType": "container",
                       "isInner": false,
-                      "widgetType": "testimonial",
                       "settings": {
-                        "testimonial_content": "<p dir=\"rtl\">REPLACE: متن تأییدیهٔ هنرجو — جمله‌ای دربارهٔ روند آموزش و بازخورد مدرس.</p>",
-                        "testimonial_name": "هنرجوی دورهٔ فرش‌بافی",
-                        "testimonial_job": "REPLACE: دوره/سال",
-                        "testimonial_alignment": "right",
-                        "content_typography_typography": "custom",
-                        "content_typography_font_family": "Peyda",
-                        "content_typography_font_size": {
+                        "content_width": "full",
+                        "flex_direction": "column",
+                        "flex_gap": {
+                          "column": "0",
+                          "row": "0",
                           "unit": "px",
-                          "size": 15.5,
-                          "sizes": []
+                          "size": 0,
+                          "isLinked": true
                         },
-                        "content_typography_line_height": {
-                          "unit": "em",
-                          "size": 1.95,
-                          "sizes": []
+                        "css_classes": "az-cell",
+                        "_title": "سلول — تأییدیه 1",
+                        "_css_classes": "az-cell",
+                        "width": {
+                          "unit": "%",
+                          "size": "33.3333"
                         },
-                        "content_color": "#45423D",
-                        "name_typography_typography": "custom",
-                        "name_typography_font_family": "Peyda",
-                        "name_typography_font_weight": "700",
-                        "name_color": "#193B5C",
-                        "job_color": "#6D6A63",
-                        "_title": "تأییدیه 1",
-                        "_css_classes": "az-card az-card--flat"
+                        "width_tablet": {
+                          "unit": "%",
+                          "size": "50.0000"
+                        },
+                        "width_mobile": {
+                          "unit": "%",
+                          "size": "1.0000"
+                        }
                       },
-                      "elements": []
+                      "elements": [
+                        {
+                          "id": "15jx0qv",
+                          "elType": "widget",
+                          "isInner": false,
+                          "widgetType": "testimonial",
+                          "settings": {
+                            "testimonial_content": "<p dir=\"rtl\">REPLACE: متن تأییدیهٔ هنرجو — جمله‌ای دربارهٔ روند آموزش و بازخورد مدرس.</p>",
+                            "testimonial_name": "هنرجوی دورهٔ فرش‌بافی",
+                            "testimonial_job": "REPLACE: دوره/سال",
+                            "testimonial_alignment": "right",
+                            "content_typography_typography": "custom",
+                            "content_typography_font_family": "Peyda",
+                            "content_typography_font_size": {
+                              "unit": "px",
+                              "size": 15.5,
+                              "sizes": []
+                            },
+                            "content_typography_line_height": {
+                              "unit": "em",
+                              "size": 1.95,
+                              "sizes": []
+                            },
+                            "content_color": "#45423D",
+                            "name_typography_typography": "custom",
+                            "name_typography_font_family": "Peyda",
+                            "name_typography_font_weight": "700",
+                            "name_color": "#193B5C",
+                            "job_color": "#6D6A63",
+                            "_title": "تأییدیه 1",
+                            "_css_classes": "az-card az-card--flat"
+                          },
+                          "elements": []
+                        }
+                      ]
                     },
                     {
-                      "id": "17twij4",
-                      "elType": "widget",
+                      "id": "15vu0da",
+                      "elType": "container",
                       "isInner": false,
-                      "widgetType": "testimonial",
                       "settings": {
-                        "testimonial_content": "<p dir=\"rtl\">REPLACE: متن تأییدیهٔ هنرجو — جمله‌ای دربارهٔ فضای کارگاه و ابزار در دسترس.</p>",
-                        "testimonial_name": "هنرجوی کلاس حضوری گلیم",
-                        "testimonial_job": "REPLACE: دوره/سال",
-                        "testimonial_alignment": "right",
-                        "content_typography_typography": "custom",
-                        "content_typography_font_family": "Peyda",
-                        "content_typography_font_size": {
+                        "content_width": "full",
+                        "flex_direction": "column",
+                        "flex_gap": {
+                          "column": "0",
+                          "row": "0",
                           "unit": "px",
-                          "size": 15.5,
-                          "sizes": []
+                          "size": 0,
+                          "isLinked": true
                         },
-                        "content_typography_line_height": {
-                          "unit": "em",
-                          "size": 1.95,
-                          "sizes": []
+                        "css_classes": "az-cell",
+                        "_title": "سلول — تأییدیه 2",
+                        "_css_classes": "az-cell",
+                        "width": {
+                          "unit": "%",
+                          "size": "33.3333"
                         },
-                        "content_color": "#45423D",
-                        "name_typography_typography": "custom",
-                        "name_typography_font_family": "Peyda",
-                        "name_typography_font_weight": "700",
-                        "name_color": "#193B5C",
-                        "job_color": "#6D6A63",
-                        "_title": "تأییدیه 2",
-                        "_css_classes": "az-card az-card--flat"
+                        "width_tablet": {
+                          "unit": "%",
+                          "size": "50.0000"
+                        },
+                        "width_mobile": {
+                          "unit": "%",
+                          "size": "1.0000"
+                        }
                       },
-                      "elements": []
+                      "elements": [
+                        {
+                          "id": "17twij4",
+                          "elType": "widget",
+                          "isInner": false,
+                          "widgetType": "testimonial",
+                          "settings": {
+                            "testimonial_content": "<p dir=\"rtl\">REPLACE: متن تأییدیهٔ هنرجو — جمله‌ای دربارهٔ فضای کارگاه و ابزار در دسترس.</p>",
+                            "testimonial_name": "هنرجوی کلاس حضوری گلیم",
+                            "testimonial_job": "REPLACE: دوره/سال",
+                            "testimonial_alignment": "right",
+                            "content_typography_typography": "custom",
+                            "content_typography_font_family": "Peyda",
+                            "content_typography_font_size": {
+                              "unit": "px",
+                              "size": 15.5,
+                              "sizes": []
+                            },
+                            "content_typography_line_height": {
+                              "unit": "em",
+                              "size": 1.95,
+                              "sizes": []
+                            },
+                            "content_color": "#45423D",
+                            "name_typography_typography": "custom",
+                            "name_typography_font_family": "Peyda",
+                            "name_typography_font_weight": "700",
+                            "name_color": "#193B5C",
+                            "job_color": "#6D6A63",
+                            "_title": "تأییدیه 2",
+                            "_css_classes": "az-card az-card--flat"
+                          },
+                          "elements": []
+                        }
+                      ]
                     },
                     {
-                      "id": "ur00wtg",
-                      "elType": "widget",
+                      "id": "w5na7ps",
+                      "elType": "container",
                       "isInner": false,
-                      "widgetType": "testimonial",
                       "settings": {
-                        "testimonial_content": "<p dir=\"rtl\">REPLACE: متن تأییدیهٔ هنرجو — جمله‌ای دربارهٔ پیشرفت از صفر تا قطعهٔ کامل.</p>",
-                        "testimonial_name": "هنرجوی مسیر شروع فرش‌بافی",
-                        "testimonial_job": "REPLACE: دوره/سال",
-                        "testimonial_alignment": "right",
-                        "content_typography_typography": "custom",
-                        "content_typography_font_family": "Peyda",
-                        "content_typography_font_size": {
+                        "content_width": "full",
+                        "flex_direction": "column",
+                        "flex_gap": {
+                          "column": "0",
+                          "row": "0",
                           "unit": "px",
-                          "size": 15.5,
-                          "sizes": []
+                          "size": 0,
+                          "isLinked": true
                         },
-                        "content_typography_line_height": {
-                          "unit": "em",
-                          "size": 1.95,
-                          "sizes": []
+                        "css_classes": "az-cell",
+                        "_title": "سلول — تأییدیه 3",
+                        "_css_classes": "az-cell",
+                        "width": {
+                          "unit": "%",
+                          "size": "33.3333"
                         },
-                        "content_color": "#45423D",
-                        "name_typography_typography": "custom",
-                        "name_typography_font_family": "Peyda",
-                        "name_typography_font_weight": "700",
-                        "name_color": "#193B5C",
-                        "job_color": "#6D6A63",
-                        "_title": "تأییدیه 3",
-                        "_css_classes": "az-card az-card--flat"
+                        "width_tablet": {
+                          "unit": "%",
+                          "size": "50.0000"
+                        },
+                        "width_mobile": {
+                          "unit": "%",
+                          "size": "1.0000"
+                        }
                       },
-                      "elements": []
+                      "elements": [
+                        {
+                          "id": "ur00wtg",
+                          "elType": "widget",
+                          "isInner": false,
+                          "widgetType": "testimonial",
+                          "settings": {
+                            "testimonial_content": "<p dir=\"rtl\">REPLACE: متن تأییدیهٔ هنرجو — جمله‌ای دربارهٔ پیشرفت از صفر تا قطعهٔ کامل.</p>",
+                            "testimonial_name": "هنرجوی مسیر شروع فرش‌بافی",
+                            "testimonial_job": "REPLACE: دوره/سال",
+                            "testimonial_alignment": "right",
+                            "content_typography_typography": "custom",
+                            "content_typography_font_family": "Peyda",
+                            "content_typography_font_size": {
+                              "unit": "px",
+                              "size": 15.5,
+                              "sizes": []
+                            },
+                            "content_typography_line_height": {
+                              "unit": "em",
+                              "size": 1.95,
+                              "sizes": []
+                            },
+                            "content_color": "#45423D",
+                            "name_typography_typography": "custom",
+                            "name_typography_font_family": "Peyda",
+                            "name_typography_font_weight": "700",
+                            "name_color": "#193B5C",
+                            "job_color": "#6D6A63",
+                            "_title": "تأییدیه 3",
+                            "_css_classes": "az-card az-card--flat"
+                          },
+                          "elements": []
+                        }
+                      ]
                     }
                   ]
                 }
@@ -7235,15 +7310,17 @@
                       "id": "kyahdj1",
                       "elType": "widget",
                       "isInner": false,
-                      "widgetType": "heading",
+                      "widgetType": "bdt-advanced-heading",
                       "settings": {
-                        "title": "مجله",
+                        "sub_heading": "",
+                        "main_heading": "مجله",
+                        "split_text": "",
                         "header_size": "span",
-                        "align": "right",
-                        "title_color": "#193B5C",
-                        "background_color": "#E8D8B8",
-                        "border_border": "solid",
-                        "border_width": {
+                        "advanced_heading_visibility": "",
+                        "main_heading_color": "#193B5C",
+                        "main_heading_background": "#E8D8B8",
+                        "main_heading_border_border": "solid",
+                        "main_heading_border_width": {
                           "unit": "px",
                           "top": "1",
                           "right": "1",
@@ -7251,8 +7328,8 @@
                           "left": "1",
                           "isLinked": false
                         },
-                        "border_color": "#193B5C1F",
-                        "border_radius": {
+                        "main_heading_border_color": "#193B5C1F",
+                        "main_heading_radius": {
                           "unit": "px",
                           "top": "10",
                           "right": "10",
@@ -7260,22 +7337,14 @@
                           "left": "10",
                           "isLinked": false
                         },
-                        "padding": {
-                          "unit": "px",
-                          "top": "5",
-                          "right": "12",
-                          "bottom": "5",
-                          "left": "12",
-                          "isLinked": false
-                        },
-                        "typography_typography": "custom",
-                        "typography_font_family": "Peyda",
-                        "typography_font_size": {
+                        "main_heading_typography_typography": "custom",
+                        "main_heading_typography_font_family": "Peyda",
+                        "main_heading_typography_font_size": {
                           "unit": "px",
                           "size": 12.5,
                           "sizes": []
                         },
-                        "typography_font_weight": "700",
+                        "main_heading_typography_font_weight": "700",
                         "_title": "برچسب — مجله",
                         "_css_classes": "az-kicker"
                       },
@@ -7619,7 +7688,7 @@
                           "id": "uetowq1",
                           "elType": "widget",
                           "isInner": false,
-                          "widgetType": "button",
+                          "widgetType": "bdt-advanced-button",
                           "settings": {
                             "text": "از کجا شروع کنم؟",
                             "link": {
@@ -7628,13 +7697,15 @@
                               "nofollow": "",
                               "custom_attributes": ""
                             },
-                            "size": "md",
-                            "align": "center",
-                            "button_type": "info",
-                            "text_color": "#FFFFFF",
-                            "background_color": "#9D382C",
-                            "border_border": "solid",
-                            "border_width": {
+                            "button_icon": {
+                              "value": "fas fa-chevron-left",
+                              "library": "fa-solid"
+                            },
+                            "advanced_button_text_color": "#FFFFFF",
+                            "button_background_background": "classic",
+                            "button_background_color": "#9D382C",
+                            "button_border_style": "solid",
+                            "button_border_width": {
                               "unit": "px",
                               "top": "1",
                               "right": "1",
@@ -7642,8 +7713,8 @@
                               "left": "1",
                               "isLinked": false
                             },
-                            "border_color": "#9D382C",
-                            "border_radius": {
+                            "button_border_color": "#9D382C",
+                            "advanced_button_radius": {
                               "unit": "px",
                               "top": "13",
                               "right": "13",
@@ -7651,26 +7722,22 @@
                               "left": "13",
                               "isLinked": false
                             },
-                            "typography_typography": "custom",
-                            "typography_font_family": "Peyda",
-                            "typography_font_size": {
+                            "advanced_button_typography_typography": "custom",
+                            "advanced_button_typography_font_family": "Peyda",
+                            "advanced_button_typography_font_size": {
                               "unit": "px",
                               "size": 15,
                               "sizes": []
                             },
-                            "typography_font_weight": "700",
-                            "button_text_padding": {
-                              "unit": "px",
-                              "top": "13",
-                              "right": "22",
-                              "bottom": "13",
-                              "left": "22",
-                              "isLinked": false
-                            },
-                            "button_full_width": "yes",
-                            "align_mobile": "center",
+                            "advanced_button_typography_font_weight": "700",
+                            "advanced_button_hover_text_color": "#FFFFFF",
+                            "button_hover_background_background": "classic",
+                            "button_hover_background_color": "#B24739",
+                            "advanced_button_icon_color": "#FFFFFF",
+                            "advanced_button_full_width": "yes",
+                            "advanced_button_align_mobile": "center",
                             "_title": "CTA — از کجا شروع کنم؟ 2",
-                            "_css_classes": "az-btn az-btn--accent az-btn--block"
+                            "_css_classes": "az-btn az-ep-btn az-ep-btn--primary az-btn--block"
                           },
                           "elements": []
                         },
