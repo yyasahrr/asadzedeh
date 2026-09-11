@@ -1,2 +1,9 @@
-# Generated archives (rebuild with generator.mjs)
+# Generated archives (rebuild with node tools/build-zip.mjs)
 dist/*.zip
+dist/zips/
+
+# Raw customer exports must never be committed (may contain site data)
+reference/incoming/*
+!reference/incoming/README.md
+reference/*.zip
+reference/site-settings.raw.json

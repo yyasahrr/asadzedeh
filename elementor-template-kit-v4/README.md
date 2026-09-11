@@ -1,35 +1,54 @@
-# کیت حرفه‌ای Elementor اسدزاده — V4
+# کیت المنتور آکادمی اسدزاده — V5
 
-این فولدر یک خروجی مستقل و قابل بازتولید از کیت Elementor است. خروجی Website Kit در `dist/asadzadeh-elementor-v4.zip` و خروجی Saved Templates در `dist/asadzadeh-elementor-v4-direct-import.zip` ساخته می‌شود.
+مستندات کامل: **[docs/README-FA.md](docs/README-FA.md)**
 
-## محتوا
+## ساختار
 
-- ۵۶ تمپلیت غیرخالی، شامل ۴ Loop Item داینامیک
-- Header و Footer
-- صفحات Public، Student، Auth و System
-- Single templateهای LearnDash، WooCommerce و Blog
-- ویجت‌های واقعی Element Pack Pro: Advanced Button، Advanced Heading، Interactive Card و Dynamic Grid
-- فرم حرفه‌ای Elementor Pro و جایگاه نقشه نشان در صفحه تماس
-- Loop item برای دوره، محصول، مقاله و اثر هنرجو
-- Site Settings و Design Tokens فارسی/RTL
-- بدون فایل فونت داخل ZIP
-- سازگاری افزونه‌ها و shortcodeهای رسمی مطابق `COMPATIBILITY.md`
-
-## نصب
-
-1. Elementor، Elementor Pro و Element Pack Pro را فعال کنید.
-2. برای قابلیت‌های واقعی، WooCommerce، LearnDash و Digits را نصب/فعال کنید.
-3. ZIP اصلی را از مسیر Elementor > Tools > Import/Export Kit وارد کنید. اگر میزبان شما Website Kit را نمی‌پذیرد، ZIP نوع Direct Import را از Templates > Saved Templates > Import Templates وارد کنید.
-4. Display Conditions قالب‌های Header/Footer و Singleها را تنظیم کنید.
-5. فونت‌های Neirizi و Peyda را در Elementor Custom Fonts با همین نام ثبت کنید.
-
-## ساخت مجدد
-
-```powershell
-node generator.mjs
-node validate.mjs
-Compress-Archive -Path dist\kit\* -DestinationPath dist\asadzadeh-elementor-v4.zip -Force
-Compress-Archive -Path dist\direct-import\* -DestinationPath dist\asadzadeh-elementor-v4-direct-import.zip -Force
+```
+elementor-template-kit-v4/
+  generator.mjs          ساخت خروجی (node generator.mjs)
+  src/                   مولّد: توکن‌ها، CSS، DOM، schema، محتوا، بخش‌ها، صفحات
+  dist/
+    direct-import/       ۷۰ قالب JSON برای Import مستقیم  ← روش اصلی
+    kit/                 بستهٔ Website Kit (ثانویه)
+    zips/                سه بستهٔ ZIP (ساخته می‌شود، در گیت نیست)
+  backend/               کد PHP مورد نیاز (شورتکدها، CPTها، فیلدهای ACF)
+  docs/                  نقشهٔ قالب‌ها، گزارش اعتبارسنجی، شرایط Theme Builder و...
+  reference/
+    incoming/            ← خروجی واقعی المنتور سایت را اینجا بگذارید
+  tools/                 تحلیل اکسپورت، اعتبارسنجی، تولید مستندات، ZIP، بررسی import
+  legacy/                کیت V4 قدیمی (فقط برای مرجع)
 ```
 
-جزئیات اتصال shortcodeها و شرایط نمایش در `INSTALL.md` آمده است.
+## ترتیب اجرا
+
+```bash
+node generator.mjs                 استخراج ۷۰ قالب
+node tools/validate.mjs            اعتبارسنجی سخت‌گیرانه
+node tools/build-docs.mjs          تولید مستندات
+node tools/build-zip.mjs           ساخت بسته‌های ZIP
+```
+
+با داشتن خروجی واقعی سایت:
+
+```bash
+node tools/analyze-export.mjs reference/incoming/<export.zip>
+node generator.mjs
+```
+
+پس از import روی استیج:
+
+```bash
+node tools/qa-import.mjs <export-after-import.zip>
+```
+
+## وضعیت فعلی
+
+- ۷۰ قالب، ۳۳۸۹ المان، ۱۵۱۰ ویجت، ۱۱۵۷ override ریسپانسیو
+- صفر المان بدون عنوان · صفر خطا و صفر هشدار در اعتبارسنجی
+- ۲۴ شورتکد سفارشیِ پیاده‌سازی‌شده در `backend/`
+- بدون فایل فونت، بدون `__globals__`، بدون overwrite تنظیمات سراسری
+
+موارد باقی‌مانده در **[docs/UNRESOLVED-INTEGRATIONS.md](docs/UNRESOLVED-INTEGRATIONS.md)**
+به‌طور صریح فهرست شده‌اند؛ مهم‌ترین آن‌ها این است که **تست import واقعی هنوز
+انجام نشده** و نیازمند اکسپورت واقعی سایت شماست.
