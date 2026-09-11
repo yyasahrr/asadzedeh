@@ -1,0 +1,805 @@
+{
+  "summary": {
+    "templates": 70,
+    "totalElements": 3389,
+    "totalWidgets": 1510,
+    "totalResponsiveOverrides": 1157,
+    "errors": 0,
+    "warnings": 0
+  },
+  "errors": [],
+  "warnings": [],
+  "rows": [
+    {
+      "file": "about.json",
+      "title": "دربارهٔ کارگاه",
+      "type": "page",
+      "elements": 130,
+      "widgets": 54,
+      "h1": 1,
+      "responsive": 48,
+      "shortcodes": []
+    },
+    {
+      "file": "account-security.json",
+      "title": "امنیت حساب",
+      "type": "page",
+      "elements": 43,
+      "widgets": 22,
+      "h1": 1,
+      "responsive": 12,
+      "shortcodes": [
+        "az_security_sessions"
+      ]
+    },
+    {
+      "file": "assignments.json",
+      "title": "تکالیف",
+      "type": "page",
+      "elements": 66,
+      "widgets": 33,
+      "h1": 1,
+      "responsive": 17,
+      "shortcodes": [
+        "az_assignments",
+        "az_assignment_upload"
+      ]
+    },
+    {
+      "file": "auth-error.json",
+      "title": "خطای ورود",
+      "type": "page",
+      "elements": 22,
+      "widgets": 12,
+      "h1": 1,
+      "responsive": 7,
+      "shortcodes": [
+        "dm-login-page"
+      ]
+    },
+    {
+      "file": "auth.json",
+      "title": "ورود / ثبت‌نام",
+      "type": "page",
+      "elements": 22,
+      "widgets": 12,
+      "h1": 1,
+      "responsive": 5,
+      "shortcodes": [
+        "dm-page"
+      ]
+    },
+    {
+      "file": "blog.json",
+      "title": "مجله",
+      "type": "page",
+      "elements": 20,
+      "widgets": 8,
+      "h1": 1,
+      "responsive": 10,
+      "shortcodes": []
+    },
+    {
+      "file": "cart-empty.json",
+      "title": "سبد خرید — خالی",
+      "type": "page",
+      "elements": 41,
+      "widgets": 18,
+      "h1": 1,
+      "responsive": 23,
+      "shortcodes": []
+    },
+    {
+      "file": "cart.json",
+      "title": "سبد خرید",
+      "type": "page",
+      "elements": 74,
+      "widgets": 34,
+      "h1": 1,
+      "responsive": 26,
+      "shortcodes": [
+        "woocommerce_cart"
+      ]
+    },
+    {
+      "file": "certificate-single.json",
+      "title": "جزئیات گواهی",
+      "type": "page",
+      "elements": 29,
+      "widgets": 14,
+      "h1": 1,
+      "responsive": 11,
+      "shortcodes": [
+        "az_certificate_detail"
+      ]
+    },
+    {
+      "file": "certificates.json",
+      "title": "گواهی‌های من",
+      "type": "page",
+      "elements": 71,
+      "widgets": 30,
+      "h1": 1,
+      "responsive": 23,
+      "shortcodes": [
+        "az_my_certificates"
+      ]
+    },
+    {
+      "file": "checkout-error.json",
+      "title": "تسویه‌حساب — خطا",
+      "type": "page",
+      "elements": 26,
+      "widgets": 12,
+      "h1": 1,
+      "responsive": 6,
+      "shortcodes": [
+        "woocommerce_checkout"
+      ]
+    },
+    {
+      "file": "checkout.json",
+      "title": "تسویه‌حساب",
+      "type": "page",
+      "elements": 26,
+      "widgets": 12,
+      "h1": 1,
+      "responsive": 6,
+      "shortcodes": [
+        "woocommerce_checkout"
+      ]
+    },
+    {
+      "file": "class-single.json",
+      "title": "تک‌کلاس حضوری",
+      "type": "product",
+      "elements": 73,
+      "widgets": 32,
+      "h1": 1,
+      "responsive": 15,
+      "shortcodes": [
+        "az_workshop_meta"
+      ]
+    },
+    {
+      "file": "contact.json",
+      "title": "تماس با ما",
+      "type": "page",
+      "elements": 78,
+      "widgets": 34,
+      "h1": 1,
+      "responsive": 20,
+      "shortcodes": [
+        "az_workshop_meta"
+      ]
+    },
+    {
+      "file": "courses.json",
+      "title": "دوره‌های آنلاین — فهرست",
+      "type": "page",
+      "elements": 101,
+      "widgets": 43,
+      "h1": 1,
+      "responsive": 35,
+      "shortcodes": [
+        "ld_course_list"
+      ]
+    },
+    {
+      "file": "dashboard.json",
+      "title": "داشبورد هنرجو",
+      "type": "page",
+      "elements": 110,
+      "widgets": 50,
+      "h1": 1,
+      "responsive": 42,
+      "shortcodes": [
+        "az_dashboard_stats",
+        "az_continue_learning",
+        "az_my_courses",
+        "az_assignments",
+        "az_my_certificates",
+        "az_my_orders"
+      ]
+    },
+    {
+      "file": "enrolled-course.json",
+      "title": "پخش‌کنندهٔ دوره (در حال یادگیری)",
+      "type": "page",
+      "elements": 51,
+      "widgets": 24,
+      "h1": 1,
+      "responsive": 10,
+      "shortcodes": [
+        "learndash_course_progress",
+        "az_course_curriculum"
+      ]
+    },
+    {
+      "file": "faq.json",
+      "title": "پرسش‌های پرتکرار",
+      "type": "page",
+      "elements": 40,
+      "widgets": 15,
+      "h1": 1,
+      "responsive": 14,
+      "shortcodes": []
+    },
+    {
+      "file": "footer.json",
+      "title": "پابرگ — کل سایت",
+      "type": "footer",
+      "elements": 51,
+      "widgets": 21,
+      "h1": 0,
+      "responsive": 11,
+      "shortcodes": []
+    },
+    {
+      "file": "gallery.json",
+      "title": "گالری کارگاه",
+      "type": "page",
+      "elements": 30,
+      "widgets": 8,
+      "h1": 1,
+      "responsive": 17,
+      "shortcodes": []
+    },
+    {
+      "file": "generic-error.json",
+      "title": "خطای عمومی",
+      "type": "page",
+      "elements": 15,
+      "widgets": 7,
+      "h1": 1,
+      "responsive": 5,
+      "shortcodes": []
+    },
+    {
+      "file": "header.json",
+      "title": "سربرگ — کل سایت",
+      "type": "header",
+      "elements": 22,
+      "widgets": 8,
+      "h1": 0,
+      "responsive": 13,
+      "shortcodes": []
+    },
+    {
+      "file": "home.json",
+      "title": "خانه",
+      "type": "page",
+      "elements": 251,
+      "widgets": 113,
+      "h1": 1,
+      "responsive": 105,
+      "shortcodes": [
+        "ld_course_list"
+      ]
+    },
+    {
+      "file": "instructors.json",
+      "title": "مدرسان",
+      "type": "page",
+      "elements": 66,
+      "widgets": 29,
+      "h1": 1,
+      "responsive": 30,
+      "shortcodes": []
+    },
+    {
+      "file": "learning-path-single.json",
+      "title": "تک‌مسیر یادگیری",
+      "type": "single",
+      "elements": 119,
+      "widgets": 53,
+      "h1": 1,
+      "responsive": 31,
+      "shortcodes": [
+        "az_path_courses"
+      ]
+    },
+    {
+      "file": "learning-paths.json",
+      "title": "مسیرهای یادگیری — فهرست",
+      "type": "page",
+      "elements": 111,
+      "widgets": 50,
+      "h1": 1,
+      "responsive": 40,
+      "shortcodes": [
+        "az_path_courses"
+      ]
+    },
+    {
+      "file": "lesson.json",
+      "title": "درس",
+      "type": "single",
+      "elements": 37,
+      "widgets": 17,
+      "h1": 1,
+      "responsive": 9,
+      "shortcodes": [
+        "learndash_course_progress",
+        "az_course_cta",
+        "az_course_curriculum"
+      ]
+    },
+    {
+      "file": "loop-artwork.json",
+      "title": "Loop — اثر",
+      "type": "loop-item",
+      "elements": 7,
+      "widgets": 4,
+      "h1": 0,
+      "responsive": 3,
+      "shortcodes": []
+    },
+    {
+      "file": "loop-course.json",
+      "title": "Loop — دوره",
+      "type": "loop-item",
+      "elements": 9,
+      "widgets": 5,
+      "h1": 0,
+      "responsive": 3,
+      "shortcodes": [
+        "az_course_meta"
+      ]
+    },
+    {
+      "file": "loop-instructor.json",
+      "title": "Loop — مدرس",
+      "type": "loop-item",
+      "elements": 7,
+      "widgets": 4,
+      "h1": 0,
+      "responsive": 3,
+      "shortcodes": []
+    },
+    {
+      "file": "loop-post.json",
+      "title": "Loop — نوشته",
+      "type": "loop-item",
+      "elements": 7,
+      "widgets": 4,
+      "h1": 0,
+      "responsive": 3,
+      "shortcodes": []
+    },
+    {
+      "file": "loop-product.json",
+      "title": "Loop — محصول / کلاس",
+      "type": "loop-item",
+      "elements": 7,
+      "widgets": 4,
+      "h1": 0,
+      "responsive": 2,
+      "shortcodes": []
+    },
+    {
+      "file": "maintenance.json",
+      "title": "در دست تعمیر",
+      "type": "page",
+      "elements": 15,
+      "widgets": 5,
+      "h1": 1,
+      "responsive": 4,
+      "shortcodes": []
+    },
+    {
+      "file": "my-account.json",
+      "title": "حساب کاربری",
+      "type": "page",
+      "elements": 32,
+      "widgets": 14,
+      "h1": 1,
+      "responsive": 20,
+      "shortcodes": [
+        "woocommerce_my_account"
+      ]
+    },
+    {
+      "file": "my-classes.json",
+      "title": "کلاس‌های حضوری من",
+      "type": "page",
+      "elements": 78,
+      "widgets": 35,
+      "h1": 1,
+      "responsive": 23,
+      "shortcodes": [
+        "az_my_workshops"
+      ]
+    },
+    {
+      "file": "my-courses.json",
+      "title": "دوره‌های من",
+      "type": "page",
+      "elements": 75,
+      "widgets": 33,
+      "h1": 1,
+      "responsive": 22,
+      "shortcodes": [
+        "az_dashboard_stats",
+        "az_my_courses"
+      ]
+    },
+    {
+      "file": "no-results.json",
+      "title": "بدون نتیجه",
+      "type": "page",
+      "elements": 68,
+      "widgets": 31,
+      "h1": 1,
+      "responsive": 23,
+      "shortcodes": [
+        "az_no_results"
+      ]
+    },
+    {
+      "file": "not-found.json",
+      "title": "صفحهٔ ۴۰۴",
+      "type": "page",
+      "elements": 17,
+      "widgets": 9,
+      "h1": 1,
+      "responsive": 6,
+      "shortcodes": []
+    },
+    {
+      "file": "order-detail.json",
+      "title": "جزئیات سفارش",
+      "type": "page",
+      "elements": 33,
+      "widgets": 14,
+      "h1": 1,
+      "responsive": 9,
+      "shortcodes": [
+        "az_order_detail"
+      ]
+    },
+    {
+      "file": "order-tracking.json",
+      "title": "پیگیری سفارش",
+      "type": "page",
+      "elements": 17,
+      "widgets": 7,
+      "h1": 1,
+      "responsive": 4,
+      "shortcodes": [
+        "az_order_tracking",
+        "woocommerce_order_tracking"
+      ]
+    },
+    {
+      "file": "orders.json",
+      "title": "سفارش‌های من",
+      "type": "page",
+      "elements": 42,
+      "widgets": 19,
+      "h1": 1,
+      "responsive": 9,
+      "shortcodes": [
+        "az_my_orders"
+      ]
+    },
+    {
+      "file": "otp.json",
+      "title": "تأیید کد یک‌بارمصرف",
+      "type": "page",
+      "elements": 29,
+      "widgets": 15,
+      "h1": 1,
+      "responsive": 10,
+      "shortcodes": [
+        "dm-page"
+      ]
+    },
+    {
+      "file": "payment-failed.json",
+      "title": "پرداخت ناموفق",
+      "type": "page",
+      "elements": 26,
+      "widgets": 13,
+      "h1": 1,
+      "responsive": 9,
+      "shortcodes": []
+    },
+    {
+      "file": "payment-success.json",
+      "title": "پرداخت موفق",
+      "type": "page",
+      "elements": 24,
+      "widgets": 12,
+      "h1": 1,
+      "responsive": 9,
+      "shortcodes": []
+    },
+    {
+      "file": "preorder.json",
+      "title": "پیش‌خرید / لیست انتظار",
+      "type": "page",
+      "elements": 26,
+      "widgets": 12,
+      "h1": 1,
+      "responsive": 7,
+      "shortcodes": [
+        "az_preorder_form"
+      ]
+    },
+    {
+      "file": "privacy.json",
+      "title": "حریم خصوصی",
+      "type": "page",
+      "elements": 32,
+      "widgets": 16,
+      "h1": 1,
+      "responsive": 8,
+      "shortcodes": []
+    },
+    {
+      "file": "profile.json",
+      "title": "پروفایل",
+      "type": "page",
+      "elements": 42,
+      "widgets": 18,
+      "h1": 1,
+      "responsive": 9,
+      "shortcodes": [
+        "az_profile_form"
+      ]
+    },
+    {
+      "file": "quiz.json",
+      "title": "آزمون",
+      "type": "single",
+      "elements": 33,
+      "widgets": 15,
+      "h1": 1,
+      "responsive": 10,
+      "shortcodes": [
+        "course_content"
+      ]
+    },
+    {
+      "file": "recovery.json",
+      "title": "بازیابی حساب",
+      "type": "page",
+      "elements": 20,
+      "widgets": 11,
+      "h1": 1,
+      "responsive": 5,
+      "shortcodes": [
+        "dm-forgot-password-page"
+      ]
+    },
+    {
+      "file": "refund.json",
+      "title": "شرایط بازگشت وجه",
+      "type": "page",
+      "elements": 29,
+      "widgets": 14,
+      "h1": 1,
+      "responsive": 8,
+      "shortcodes": []
+    },
+    {
+      "file": "rules.json",
+      "title": "قوانین دوره و کلاس",
+      "type": "page",
+      "elements": 29,
+      "widgets": 14,
+      "h1": 1,
+      "responsive": 8,
+      "shortcodes": []
+    },
+    {
+      "file": "search.json",
+      "title": "جست‌وجو",
+      "type": "page",
+      "elements": 38,
+      "widgets": 17,
+      "h1": 1,
+      "responsive": 21,
+      "shortcodes": [
+        "az_search_results"
+      ]
+    },
+    {
+      "file": "section-cta.json",
+      "title": "بخش قابل‌استفاده — دعوت به اقدام",
+      "type": "section",
+      "elements": 9,
+      "widgets": 4,
+      "h1": 0,
+      "responsive": 5,
+      "shortcodes": []
+    },
+    {
+      "file": "section-empty-state.json",
+      "title": "بخش قابل‌استفاده — وضعیت خالی",
+      "type": "section",
+      "elements": 10,
+      "widgets": 4,
+      "h1": 0,
+      "responsive": 4,
+      "shortcodes": []
+    },
+    {
+      "file": "section-hero.json",
+      "title": "بخش قابل‌استفاده — Hero",
+      "type": "section",
+      "elements": 7,
+      "widgets": 3,
+      "h1": 0,
+      "responsive": 2,
+      "shortcodes": []
+    },
+    {
+      "file": "section-trust.json",
+      "title": "بخش قابل‌استفاده — نوار اعتماد",
+      "type": "section",
+      "elements": 15,
+      "widgets": 6,
+      "h1": 0,
+      "responsive": 2,
+      "shortcodes": []
+    },
+    {
+      "file": "shipping.json",
+      "title": "ارسال و تحویل",
+      "type": "page",
+      "elements": 26,
+      "widgets": 12,
+      "h1": 1,
+      "responsive": 8,
+      "shortcodes": []
+    },
+    {
+      "file": "shop.json",
+      "title": "فروشگاه",
+      "type": "product-archive",
+      "elements": 25,
+      "widgets": 10,
+      "h1": 1,
+      "responsive": 12,
+      "shortcodes": [
+        "products"
+      ]
+    },
+    {
+      "file": "single-artwork.json",
+      "title": "تک‌اثر — جزئیات",
+      "type": "single",
+      "elements": 71,
+      "widgets": 27,
+      "h1": 1,
+      "responsive": 29,
+      "shortcodes": []
+    },
+    {
+      "file": "single-course.json",
+      "title": "تک‌دوره — LearnDash",
+      "type": "single",
+      "elements": 192,
+      "widgets": 90,
+      "h1": 1,
+      "responsive": 42,
+      "shortcodes": [
+        "az_course_meta",
+        "learndash_course_progress",
+        "course_content",
+        "az_related_courses",
+        "az_course_cta"
+      ]
+    },
+    {
+      "file": "single-instructor.json",
+      "title": "تک‌مدرس",
+      "type": "single",
+      "elements": 71,
+      "widgets": 27,
+      "h1": 1,
+      "responsive": 28,
+      "shortcodes": [
+        "az_instructor_courses"
+      ]
+    },
+    {
+      "file": "single-post.json",
+      "title": "تک‌نوشته",
+      "type": "single",
+      "elements": 36,
+      "widgets": 12,
+      "h1": 1,
+      "responsive": 15,
+      "shortcodes": []
+    },
+    {
+      "file": "single-product.json",
+      "title": "تک‌محصول",
+      "type": "product",
+      "elements": 31,
+      "widgets": 12,
+      "h1": 1,
+      "responsive": 7,
+      "shortcodes": []
+    },
+    {
+      "file": "start-here.json",
+      "title": "از کجا شروع کنم؟",
+      "type": "page",
+      "elements": 72,
+      "widgets": 36,
+      "h1": 1,
+      "responsive": 41,
+      "shortcodes": []
+    },
+    {
+      "file": "support.json",
+      "title": "پشتیبانی",
+      "type": "page",
+      "elements": 45,
+      "widgets": 21,
+      "h1": 1,
+      "responsive": 24,
+      "shortcodes": []
+    },
+    {
+      "file": "terms.json",
+      "title": "شرایط استفاده",
+      "type": "page",
+      "elements": 32,
+      "widgets": 16,
+      "h1": 1,
+      "responsive": 8,
+      "shortcodes": []
+    },
+    {
+      "file": "topic.json",
+      "title": "موضوع",
+      "type": "single",
+      "elements": 17,
+      "widgets": 6,
+      "h1": 1,
+      "responsive": 5,
+      "shortcodes": [
+        "learndash_course_progress"
+      ]
+    },
+    {
+      "file": "verify.json",
+      "title": "استعلام گواهی",
+      "type": "page",
+      "elements": 40,
+      "widgets": 19,
+      "h1": 1,
+      "responsive": 15,
+      "shortcodes": [
+        "az_certificate_verify"
+      ]
+    },
+    {
+      "file": "works.json",
+      "title": "آثار هنرجویان",
+      "type": "page",
+      "elements": 88,
+      "widgets": 39,
+      "h1": 1,
+      "responsive": 40,
+      "shortcodes": []
+    },
+    {
+      "file": "workshops.json",
+      "title": "کلاس‌های حضوری — فهرست",
+      "type": "page",
+      "elements": 135,
+      "widgets": 56,
+      "h1": 1,
+      "responsive": 41,
+      "shortcodes": [
+        "products"
+      ]
+    }
+  ]
+}

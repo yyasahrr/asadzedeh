@@ -1,1 +1,446 @@
-{"name":"asadzadeh-elementor-v4","title":"Asadzadeh Academy — Complete Elementor Kit V4","description":"کیت حرفه‌ای RTL آموزش هنر با Element Pack Pro، Elementor Pro، LearnDash، WooCommerce، Digits و پنل هنرجو","author":"Asadzadeh","version":"4.0.0","elementor_version":"4.2.3","created":"2026-09-10T22:14:47.899Z","thumbnail":false,"site":"https://asadzadehacademy.ir","experiments":["additional_custom_breakpoints","container","theme_builder_v2","nested-elements"],"site-settings":{"theme":true,"globalColors":true,"globalFonts":true,"themeStyleSettings":true,"generalSettings":true,"experiments":true,"customCode":false,"customIcons":false,"customFonts":false,"classes":false,"variables":false,"classesCount":0,"variablesCount":0},"plugins":[{"name":"Elementor","plugin":"elementor/elementor","pluginUri":"","version":"4.2.3"},{"name":"Elementor Pro","plugin":"elementor-pro/elementor-pro","pluginUri":"","version":"4.2.2"},{"name":"Element Pack Pro","plugin":"bdthemes-element-pack/bdthemes-element-pack","pluginUri":"https://elementpack.pro/","version":"9.9.1"},{"name":"LearnDash LMS","plugin":"sfwd-lms/sfwd_lms","pluginUri":"","version":"4.20.0.3"},{"name":"WooCommerce","plugin":"woocommerce/woocommerce","pluginUri":"","version":"11.1.0"},{"name":"DIGITS","plugin":"digits/digit","pluginUri":"","version":"9.2"}],"templates":{"1001":{"title":"سربرگ اصلی — Asadzadeh V4","doc_type":"header","thumbnail":false,"location":"header"},"1002":{"title":"پابرگ اصلی — Asadzadeh V4","doc_type":"footer","thumbnail":false,"location":"footer"},"1003":{"title":"Loop Item — course","doc_type":"loop-item","thumbnail":false,"location":""},"1004":{"title":"Loop Item — product","doc_type":"loop-item","thumbnail":false,"location":""},"1005":{"title":"Loop Item — artwork","doc_type":"loop-item","thumbnail":false,"location":""},"1006":{"title":"Loop Item — post","doc_type":"loop-item","thumbnail":false,"location":""},"1007":{"title":"صفحه اصلی — کامل","doc_type":"page","thumbnail":false,"location":""},"1008":{"title":"درباره کارگاه","doc_type":"page","thumbnail":false,"location":""},"1009":{"title":"تماس با کارگاه","doc_type":"page","thumbnail":false,"location":""},"1010":{"title":"دوره‌های آنلاین","doc_type":"page","thumbnail":false,"location":""},"1011":{"title":"مسیرهای یادگیری","doc_type":"page","thumbnail":false,"location":""},"1012":{"title":"مسیر یادگیری — جزئیات","doc_type":"page","thumbnail":false,"location":""},"1013":{"title":"کلاس‌های حضوری","doc_type":"page","thumbnail":false,"location":""},"1014":{"title":"کلاس حضوری — جزئیات","doc_type":"page","thumbnail":false,"location":""},"1015":{"title":"مدرس‌ها","doc_type":"page","thumbnail":false,"location":""},"1016":{"title":"پروفایل مدرس","doc_type":"page","thumbnail":false,"location":""},"1017":{"title":"آثار هنرجویان","doc_type":"page","thumbnail":false,"location":""},"1018":{"title":"گالری آثار","doc_type":"page","thumbnail":false,"location":""},"1019":{"title":"مجله کارگاه","doc_type":"page","thumbnail":false,"location":""},"1020":{"title":"فروشگاه","doc_type":"page","thumbnail":false,"location":""},"1021":{"title":"پیش‌فروش","doc_type":"page","thumbnail":false,"location":""},"1022":{"title":"سبد خرید","doc_type":"page","thumbnail":false,"location":""},"1023":{"title":"پرداخت","doc_type":"page","thumbnail":false,"location":""},"1024":{"title":"حساب کاربری فروشگاه","doc_type":"page","thumbnail":false,"location":""},"1025":{"title":"پرداخت موفق","doc_type":"page","thumbnail":false,"location":""},"1026":{"title":"پرداخت ناموفق","doc_type":"page","thumbnail":false,"location":""},"1027":{"title":"پرسش‌های متداول","doc_type":"page","thumbnail":false,"location":""},"1028":{"title":"حریم خصوصی","doc_type":"page","thumbnail":false,"location":""},"1029":{"title":"شرایط استفاده","doc_type":"page","thumbnail":false,"location":""},"1030":{"title":"قوانین کارگاه","doc_type":"page","thumbnail":false,"location":""},"1031":{"title":"استعلام گواهی","doc_type":"page","thumbnail":false,"location":""},"1032":{"title":"نتایج جست‌وجو","doc_type":"page","thumbnail":false,"location":""},"1033":{"title":"صفحه ۴۰۴","doc_type":"page","thumbnail":false,"location":""},"1034":{"title":"خطای عمومی","doc_type":"page","thumbnail":false,"location":""},"1035":{"title":"ورود و ثبت‌نام","doc_type":"page","thumbnail":false,"location":""},"1036":{"title":"تأیید رمز یک‌بارمصرف","doc_type":"page","thumbnail":false,"location":""},"1037":{"title":"بازیابی حساب","doc_type":"page","thumbnail":false,"location":""},"1038":{"title":"خطای ورود","doc_type":"page","thumbnail":false,"location":""},"1039":{"title":"داشبورد هنرجو","doc_type":"page","thumbnail":false,"location":""},"1040":{"title":"دوره‌های من","doc_type":"page","thumbnail":false,"location":""},"1041":{"title":"دوره ثبت‌نام‌شده","doc_type":"page","thumbnail":false,"location":""},"1042":{"title":"پخش درس","doc_type":"page","thumbnail":false,"location":""},"1043":{"title":"کلاس‌های حضوری من","doc_type":"page","thumbnail":false,"location":""},"1044":{"title":"کلاس ثبت‌نام‌شده","doc_type":"page","thumbnail":false,"location":""},"1045":{"title":"تکالیف","doc_type":"page","thumbnail":false,"location":""},"1046":{"title":"گواهی‌ها","doc_type":"page","thumbnail":false,"location":""},"1047":{"title":"گواهی — جزئیات","doc_type":"page","thumbnail":false,"location":""},"1048":{"title":"سفارش‌های من","doc_type":"page","thumbnail":false,"location":""},"1049":{"title":"پروفایل هنرجو","doc_type":"page","thumbnail":false,"location":""},"1050":{"title":"امنیت حساب","doc_type":"page","thumbnail":false,"location":""},"1051":{"title":"Single Course — LearnDash","doc_type":"sfwd-courses","thumbnail":false,"location":"single"},"1052":{"title":"Single Lesson — LearnDash","doc_type":"sfwd-lessons","thumbnail":false,"location":"single"},"1053":{"title":"Single Topic — LearnDash","doc_type":"sfwd-topic","thumbnail":false,"location":"single"},"1054":{"title":"Single Quiz — LearnDash","doc_type":"sfwd-quiz","thumbnail":false,"location":"single"},"1055":{"title":"Single Product — WooCommerce","doc_type":"product","thumbnail":false,"location":"single"},"1056":{"title":"Single Post — Blog","doc_type":"post","thumbnail":false,"location":"single"}},"taxonomies":{},"content":{"post":[],"page":{}},"wp-content":{"post":{},"page":{},"product":[],"sfwd-courses":[],"sfwd-lessons":[],"sfwd-topic":[],"sfwd-quiz":[]},"custom-post-type-title":{"product":{"name":"product","label":"محصولات"},"sfwd-courses":{"name":"sfwd-courses","label":"دوره‌ها"},"sfwd-lessons":{"name":"sfwd-lessons","label":"درس‌ها"},"sfwd-topic":{"name":"sfwd-topic","label":"موضوع‌ها"},"sfwd-quiz":{"name":"sfwd-quiz","label":"آزمون‌ها"}},"custom-fonts":{}}
+{
+  "name": "آکادمی اسدزاده — Elementor Kit V5",
+  "description": "کیت کامل المنتور برای آکادمی اسدزاده: صفحات عمومی، آموزش، کلاس حضوری، فروشگاه، پنل هنرجو و وضعیت‌های خطا/خالی.",
+  "author": "آکادمی اسدزاده",
+  "version": "0.4",
+  "elementor_version": "3.21.0",
+  "manifest_version": "2.0",
+  "has_site_settings": false,
+  "plugins": [
+    {
+      "plugin": "elementor",
+      "version": ">=3.21.0"
+    },
+    {
+      "plugin": "elementor-pro",
+      "version": ">=3.21.0"
+    },
+    {
+      "plugin": "bdthemes-element-pack-pro",
+      "version": "installed"
+    }
+  ],
+  "site-settings": {},
+  "templates": {
+    "1001": {
+      "title": "سربرگ — کل سایت",
+      "doc_type": "header",
+      "slug": "header",
+      "file": "templates/1001.json"
+    },
+    "1002": {
+      "title": "پابرگ — کل سایت",
+      "doc_type": "footer",
+      "slug": "footer",
+      "file": "templates/1002.json"
+    },
+    "1003": {
+      "title": "بخش قابل‌استفاده — Hero",
+      "doc_type": "section",
+      "slug": "section-hero",
+      "file": "templates/1003.json"
+    },
+    "1004": {
+      "title": "بخش قابل‌استفاده — دعوت به اقدام",
+      "doc_type": "section",
+      "slug": "section-cta",
+      "file": "templates/1004.json"
+    },
+    "1005": {
+      "title": "بخش قابل‌استفاده — وضعیت خالی",
+      "doc_type": "section",
+      "slug": "section-empty-state",
+      "file": "templates/1005.json"
+    },
+    "1006": {
+      "title": "بخش قابل‌استفاده — نوار اعتماد",
+      "doc_type": "section",
+      "slug": "section-trust",
+      "file": "templates/1006.json"
+    },
+    "1007": {
+      "title": "خانه",
+      "doc_type": "page",
+      "slug": "home",
+      "file": "templates/1007.json"
+    },
+    "1008": {
+      "title": "از کجا شروع کنم؟",
+      "doc_type": "page",
+      "slug": "start-here",
+      "file": "templates/1008.json"
+    },
+    "1009": {
+      "title": "دربارهٔ کارگاه",
+      "doc_type": "page",
+      "slug": "about",
+      "file": "templates/1009.json"
+    },
+    "1010": {
+      "title": "تماس با ما",
+      "doc_type": "page",
+      "slug": "contact",
+      "file": "templates/1010.json"
+    },
+    "1011": {
+      "title": "آثار هنرجویان",
+      "doc_type": "page",
+      "slug": "works",
+      "file": "templates/1011.json"
+    },
+    "1012": {
+      "title": "تک‌اثر — جزئیات",
+      "doc_type": "single",
+      "slug": "single-artwork",
+      "file": "templates/1012.json"
+    },
+    "1013": {
+      "title": "مجله",
+      "doc_type": "page",
+      "slug": "blog",
+      "file": "templates/1013.json"
+    },
+    "1014": {
+      "title": "تک‌نوشته",
+      "doc_type": "single",
+      "slug": "single-post",
+      "file": "templates/1014.json"
+    },
+    "1015": {
+      "title": "مدرسان",
+      "doc_type": "page",
+      "slug": "instructors",
+      "file": "templates/1015.json"
+    },
+    "1016": {
+      "title": "تک‌مدرس",
+      "doc_type": "single",
+      "slug": "single-instructor",
+      "file": "templates/1016.json"
+    },
+    "1017": {
+      "title": "گالری کارگاه",
+      "doc_type": "page",
+      "slug": "gallery",
+      "file": "templates/1017.json"
+    },
+    "1018": {
+      "title": "پرسش‌های پرتکرار",
+      "doc_type": "page",
+      "slug": "faq",
+      "file": "templates/1018.json"
+    },
+    "1019": {
+      "title": "پشتیبانی",
+      "doc_type": "page",
+      "slug": "support",
+      "file": "templates/1019.json"
+    },
+    "1020": {
+      "title": "استعلام گواهی",
+      "doc_type": "page",
+      "slug": "verify",
+      "file": "templates/1020.json"
+    },
+    "1021": {
+      "title": "حریم خصوصی",
+      "doc_type": "page",
+      "slug": "privacy",
+      "file": "templates/1021.json"
+    },
+    "1022": {
+      "title": "شرایط استفاده",
+      "doc_type": "page",
+      "slug": "terms",
+      "file": "templates/1022.json"
+    },
+    "1023": {
+      "title": "قوانین دوره و کلاس",
+      "doc_type": "page",
+      "slug": "rules",
+      "file": "templates/1023.json"
+    },
+    "1024": {
+      "title": "شرایط بازگشت وجه",
+      "doc_type": "page",
+      "slug": "refund",
+      "file": "templates/1024.json"
+    },
+    "1025": {
+      "title": "ارسال و تحویل",
+      "doc_type": "page",
+      "slug": "shipping",
+      "file": "templates/1025.json"
+    },
+    "1026": {
+      "title": "دوره‌های آنلاین — فهرست",
+      "doc_type": "page",
+      "slug": "courses",
+      "file": "templates/1026.json"
+    },
+    "1027": {
+      "title": "تک‌دوره — LearnDash",
+      "doc_type": "single",
+      "slug": "single-course",
+      "file": "templates/1027.json"
+    },
+    "1028": {
+      "title": "درس",
+      "doc_type": "single",
+      "slug": "lesson",
+      "file": "templates/1028.json"
+    },
+    "1029": {
+      "title": "موضوع",
+      "doc_type": "single",
+      "slug": "topic",
+      "file": "templates/1029.json"
+    },
+    "1030": {
+      "title": "آزمون",
+      "doc_type": "single",
+      "slug": "quiz",
+      "file": "templates/1030.json"
+    },
+    "1031": {
+      "title": "پخش‌کنندهٔ دوره (در حال یادگیری)",
+      "doc_type": "page",
+      "slug": "enrolled-course",
+      "file": "templates/1031.json"
+    },
+    "1032": {
+      "title": "مسیرهای یادگیری — فهرست",
+      "doc_type": "page",
+      "slug": "learning-paths",
+      "file": "templates/1032.json"
+    },
+    "1033": {
+      "title": "تک‌مسیر یادگیری",
+      "doc_type": "single",
+      "slug": "learning-path-single",
+      "file": "templates/1033.json"
+    },
+    "1034": {
+      "title": "کلاس‌های حضوری — فهرست",
+      "doc_type": "page",
+      "slug": "workshops",
+      "file": "templates/1034.json"
+    },
+    "1035": {
+      "title": "تک‌کلاس حضوری",
+      "doc_type": "product",
+      "slug": "class-single",
+      "file": "templates/1035.json"
+    },
+    "1036": {
+      "title": "فروشگاه",
+      "doc_type": "product-archive",
+      "slug": "shop",
+      "file": "templates/1036.json"
+    },
+    "1037": {
+      "title": "تک‌محصول",
+      "doc_type": "product",
+      "slug": "single-product",
+      "file": "templates/1037.json"
+    },
+    "1038": {
+      "title": "داشبورد هنرجو",
+      "doc_type": "page",
+      "slug": "dashboard",
+      "file": "templates/1038.json"
+    },
+    "1039": {
+      "title": "دوره‌های من",
+      "doc_type": "page",
+      "slug": "my-courses",
+      "file": "templates/1039.json"
+    },
+    "1040": {
+      "title": "کلاس‌های حضوری من",
+      "doc_type": "page",
+      "slug": "my-classes",
+      "file": "templates/1040.json"
+    },
+    "1041": {
+      "title": "تکالیف",
+      "doc_type": "page",
+      "slug": "assignments",
+      "file": "templates/1041.json"
+    },
+    "1042": {
+      "title": "گواهی‌های من",
+      "doc_type": "page",
+      "slug": "certificates",
+      "file": "templates/1042.json"
+    },
+    "1043": {
+      "title": "جزئیات گواهی",
+      "doc_type": "page",
+      "slug": "certificate-single",
+      "file": "templates/1043.json"
+    },
+    "1044": {
+      "title": "سفارش‌های من",
+      "doc_type": "page",
+      "slug": "orders",
+      "file": "templates/1044.json"
+    },
+    "1045": {
+      "title": "جزئیات سفارش",
+      "doc_type": "page",
+      "slug": "order-detail",
+      "file": "templates/1045.json"
+    },
+    "1046": {
+      "title": "پروفایل",
+      "doc_type": "page",
+      "slug": "profile",
+      "file": "templates/1046.json"
+    },
+    "1047": {
+      "title": "امنیت حساب",
+      "doc_type": "page",
+      "slug": "account-security",
+      "file": "templates/1047.json"
+    },
+    "1048": {
+      "title": "سبد خرید",
+      "doc_type": "page",
+      "slug": "cart",
+      "file": "templates/1048.json"
+    },
+    "1049": {
+      "title": "سبد خرید — خالی",
+      "doc_type": "page",
+      "slug": "cart-empty",
+      "file": "templates/1049.json"
+    },
+    "1050": {
+      "title": "تسویه‌حساب",
+      "doc_type": "page",
+      "slug": "checkout",
+      "file": "templates/1050.json"
+    },
+    "1051": {
+      "title": "تسویه‌حساب — خطا",
+      "doc_type": "page",
+      "slug": "checkout-error",
+      "file": "templates/1051.json"
+    },
+    "1052": {
+      "title": "پرداخت موفق",
+      "doc_type": "page",
+      "slug": "payment-success",
+      "file": "templates/1052.json"
+    },
+    "1053": {
+      "title": "پرداخت ناموفق",
+      "doc_type": "page",
+      "slug": "payment-failed",
+      "file": "templates/1053.json"
+    },
+    "1054": {
+      "title": "حساب کاربری",
+      "doc_type": "page",
+      "slug": "my-account",
+      "file": "templates/1054.json"
+    },
+    "1055": {
+      "title": "پیگیری سفارش",
+      "doc_type": "page",
+      "slug": "order-tracking",
+      "file": "templates/1055.json"
+    },
+    "1056": {
+      "title": "پیش‌خرید / لیست انتظار",
+      "doc_type": "page",
+      "slug": "preorder",
+      "file": "templates/1056.json"
+    },
+    "1057": {
+      "title": "ورود / ثبت‌نام",
+      "doc_type": "page",
+      "slug": "auth",
+      "file": "templates/1057.json"
+    },
+    "1058": {
+      "title": "تأیید کد یک‌بارمصرف",
+      "doc_type": "page",
+      "slug": "otp",
+      "file": "templates/1058.json"
+    },
+    "1059": {
+      "title": "بازیابی حساب",
+      "doc_type": "page",
+      "slug": "recovery",
+      "file": "templates/1059.json"
+    },
+    "1060": {
+      "title": "خطای ورود",
+      "doc_type": "page",
+      "slug": "auth-error",
+      "file": "templates/1060.json"
+    },
+    "1061": {
+      "title": "جست‌وجو",
+      "doc_type": "page",
+      "slug": "search",
+      "file": "templates/1061.json"
+    },
+    "1062": {
+      "title": "بدون نتیجه",
+      "doc_type": "page",
+      "slug": "no-results",
+      "file": "templates/1062.json"
+    },
+    "1063": {
+      "title": "صفحهٔ ۴۰۴",
+      "doc_type": "page",
+      "slug": "not-found",
+      "file": "templates/1063.json"
+    },
+    "1064": {
+      "title": "خطای عمومی",
+      "doc_type": "page",
+      "slug": "generic-error",
+      "file": "templates/1064.json"
+    },
+    "1065": {
+      "title": "در دست تعمیر",
+      "doc_type": "page",
+      "slug": "maintenance",
+      "file": "templates/1065.json"
+    },
+    "1066": {
+      "title": "Loop — دوره",
+      "doc_type": "loop-item",
+      "slug": "loop-course",
+      "file": "templates/1066.json"
+    },
+    "1067": {
+      "title": "Loop — محصول / کلاس",
+      "doc_type": "loop-item",
+      "slug": "loop-product",
+      "file": "templates/1067.json"
+    },
+    "1068": {
+      "title": "Loop — نوشته",
+      "doc_type": "loop-item",
+      "slug": "loop-post",
+      "file": "templates/1068.json"
+    },
+    "1069": {
+      "title": "Loop — اثر",
+      "doc_type": "loop-item",
+      "slug": "loop-artwork",
+      "file": "templates/1069.json"
+    },
+    "1070": {
+      "title": "Loop — مدرس",
+      "doc_type": "loop-item",
+      "slug": "loop-instructor",
+      "file": "templates/1070.json"
+    }
+  }
+}

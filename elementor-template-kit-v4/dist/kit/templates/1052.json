@@ -1,1 +1,772 @@
-{"content":[{"id":"381b6b6e","settings":{"content_width":"full","flex_direction":"column","flex_gap":{"column":"18","row":"18","isLinked":true,"unit":"px","size":18},"css_classes":"az-page"},"elements":[{"id":"8bd1d99d","settings":{"content_width":"full","flex_direction":"row","flex_gap":{"column":"18","row":"18","isLinked":true,"unit":"px","size":18},"css_classes":"az-section az-single"},"elements":[{"id":"690b8a56","settings":{"content_width":"full","flex_direction":"column","flex_gap":{"column":"18","row":"18","isLinked":true,"unit":"px","size":18},"css_classes":"az-block"},"elements":[{"id":"637a2667","settings":{"editor":"<div dir=\"rtl\">درس دوره</div>","align":"right","text_color":"#45423D","typography_typography":"custom","typography_font_family":"Peyda","typography_font_size":{"unit":"px","size":16,"sizes":[]},"typography_line_height":{"unit":"em","size":1.95,"sizes":[]},"_css_classes":"az-meta"},"elements":[],"isInner":false,"widgetType":"text-editor","elType":"widget"},{"id":"fe1461e6","settings":{"header_size":"h1","align":"right","title_color":"#193B5C","typography_typography":"custom","typography_font_family":"Neirizi","typography_font_weight":"400","_css_classes":"az-dynamic-title"},"elements":[],"isInner":false,"widgetType":"theme-post-title","elType":"widget"},{"id":"7a6c8c96","settings":{"shortcode":"[learndash_course_progress]","_css_classes":"az-mount"},"elements":[],"isInner":false,"widgetType":"shortcode","elType":"widget"},{"id":"b2f4fb8f","settings":{"text_color":"#45423D","typography_typography":"custom","typography_font_family":"Peyda","_css_classes":"az-dynamic-content"},"elements":[],"isInner":false,"widgetType":"theme-post-content","elType":"widget"}],"isInner":true,"elType":"container"},{"id":"f795ed50","settings":{"content_width":"full","flex_direction":"column","flex_gap":{"column":"18","row":"18","isLinked":true,"unit":"px","size":18},"css_classes":"az-single__aside az-panel"},"elements":[{"id":"86be8ca5","settings":{"title":"اطلاعات و اقدام","header_size":"h3","align":"right","title_color":"#193B5C","typography_typography":"custom","typography_font_family":"Peyda","typography_font_weight":"700","_css_classes":""},"elements":[],"isInner":false,"widgetType":"heading","elType":"widget"},{"id":"c8dc090f","settings":{"icon_list":[{"_id":"bea6f701","text":"وضعیت دسترسی","selected_icon":{"value":"fas fa-check","library":"fa-solid"}},{"_id":"c4d9d787","text":"جزئیات و پیش‌نیاز","selected_icon":{"value":"fas fa-check","library":"fa-solid"}},{"_id":"3b11cc6a","text":"پشتیبانی کارگاه","selected_icon":{"value":"fas fa-check","library":"fa-solid"}}],"icon_color":"#2F8C87","text_color":"#45423D","icon_size":{"unit":"px","size":15,"sizes":[]},"space_between":{"unit":"px","size":12,"sizes":[]},"_css_classes":"az-list"},"elements":[],"isInner":false,"widgetType":"icon-list","elType":"widget"},{"id":"c874231e","settings":{"text":"ادامه / ثبت‌نام","link":{"url":"#","is_external":"","nofollow":"","custom_attributes":""},"size":"md","align":"right","typography_typography":"custom","typography_font_family":"Peyda","typography_font_weight":"700","text_color":"#FFFFFF","background_color":"#193B5C","border_border":"solid","border_width":{"unit":"px","top":"1","right":"1","bottom":"1","left":"1","isLinked":true},"border_color":"#193B5C","border_radius":{"unit":"px","top":"14","right":"14","bottom":"14","left":"14","isLinked":true},"button_text_padding":{"unit":"px","top":"14","right":"24","bottom":"14","left":"24","isLinked":false},"_css_classes":"az-btn az-btn--primary"},"elements":[],"isInner":false,"widgetType":"button","elType":"widget"}],"isInner":true,"elType":"container"}],"isInner":true,"elType":"container"}],"isInner":true,"elType":"container"}],"settings":{"template":"elementor_canvas","custom_css":"\n.az-page{--az-bg:#F3E9D6;--az-surface:#FFF8EC;--az-navy:#193B5C;--az-red:#9D382C;--az-teal:#2F8C87;--az-text:#45423D;--az-muted:#6D6A63;direction:rtl;background:var(--az-bg);color:var(--az-text);overflow:hidden;min-height:100vh;font-family:\"Peyda\",Tahoma,sans-serif}\n.az-page *{box-sizing:border-box}.az-section{width:min(1240px,calc(100% - 64px));margin-inline:auto;padding:72px 0}.az-panel{background:rgba(255,248,236,.86);border:1px solid rgba(25,59,92,.10);border-radius:20px}.az-hero{display:grid!important;grid-template-columns:minmax(0,1.05fr) minmax(360px,.95fr);gap:20px;align-items:stretch}.az-hero__copy{padding:52px 46px;justify-content:center;min-height:560px}.az-hero__title .elementor-heading-title{font-size:clamp(42px,5vw,68px);line-height:1.38}.az-lead{max-width:62ch}.az-visual{position:relative;min-height:560px;overflow:hidden;border-radius:20px;background:#E8D8B8}.az-image,.az-image .elementor-widget-container{height:100%;min-height:inherit;width:100%}.az-image .elementor-widget-container{display:flex}.az-art-placeholder{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;width:100%;min-height:inherit;overflow:hidden;color:var(--az-navy);background:repeating-linear-gradient(90deg,rgba(25,59,92,.07) 0 1px,transparent 1px 22px),repeating-linear-gradient(0deg,rgba(157,56,44,.05) 0 1px,transparent 1px 22px),#E8D8B8}.az-art-placeholder:before{content:\"\";position:absolute;width:66%;aspect-ratio:1;border:1px solid rgba(25,59,92,.18);transform:rotate(45deg)}.az-art-placeholder span,.az-art-placeholder small{position:relative;z-index:1}.az-art-placeholder span{font-size:clamp(20px,3vw,34px);letter-spacing:.16em}.az-art-placeholder small{font-family:\"Peyda\",Tahoma,sans-serif}.az-visual-note{position:absolute!important;inset:auto 22px 22px 22px;width:auto!important;padding:18px;background:rgba(255,248,236,.92);border:1px solid rgba(25,59,92,.1);border-radius:14px}.az-actions{display:flex!important;gap:10px}.az-btn a{min-height:48px;transition:transform .2s ease,background .2s ease}.az-block{border-top:1px solid rgba(25,59,92,.14)}.az-block:before{content:\"\";display:block;width:84px;height:4px;margin-bottom:26px;background:repeating-linear-gradient(90deg,var(--az-red) 0 8px,transparent 8px 12px,var(--az-teal) 12px 20px,transparent 20px 24px)}.az-section__title .elementor-heading-title{font-size:clamp(32px,4vw,48px);line-height:1.45}.az-section__lead{max-width:68ch;margin-bottom:24px}.az-grid{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.az-card{padding:24px;background:var(--az-surface);border:1px solid rgba(25,59,92,.1);border-radius:20px;min-height:190px}.az-card h3{font-size:21px}.az-meta{margin-top:auto;color:var(--az-muted)}.az-plugin-mount{padding:28px;margin-top:18px;min-height:180px}.az-mount__hint{padding-bottom:14px;border-bottom:1px solid rgba(25,59,92,.1);color:var(--az-muted)}.az-list .elementor-icon-list-item{padding:8px 0;border-bottom:1px solid rgba(25,59,92,.08)}.az-dark{background:var(--az-navy);color:white}.az-dark .elementor-heading-title,.az-dark p{color:white!important}.az-status{border-right:4px solid var(--az-teal)}.az-status--error{border-right-color:var(--az-red)}.az-dashboard-hero{display:grid!important;grid-template-columns:1.4fr .6fr;gap:16px}.az-auth{max-width:920px}.az-auth .az-plugin-mount{max-width:560px}.az-single{display:grid!important;grid-template-columns:minmax(0,1.3fr) minmax(300px,.7fr);gap:20px}.az-single__aside{position:sticky;top:28px;align-self:start;padding:26px}.az-footer-grid{display:grid!important;grid-template-columns:1.4fr repeat(3,1fr);gap:24px}.az-header{padding:14px 24px;background:rgba(255,248,236,.94);border-bottom:1px solid rgba(25,59,92,.1)}.az-header-inner{width:min(1240px,100%);margin:auto;display:flex!important;flex-direction:row!important;align-items:center;justify-content:space-between}.az-skeleton{min-height:18px;border-radius:8px;background:linear-gradient(90deg,rgba(25,59,92,.06),rgba(25,59,92,.12),rgba(25,59,92,.06));background-size:200% 100%;animation:az-shimmer 1.5s infinite}@keyframes az-shimmer{to{background-position:-200% 0}}@media(hover:hover){.az-card,.az-btn a{transition:transform .2s ease,border-color .2s ease}.az-card:hover{transform:translateY(-3px);border-color:rgba(25,59,92,.22)}.az-btn a:hover{transform:translateY(-2px)}.az-btn a:active{transform:translateY(1px)}}.az-page :focus-visible{outline:3px solid var(--az-teal);outline-offset:3px}.az-page [aria-disabled=\"true\"],.az-page .is-disabled{opacity:.48;pointer-events:none}.az-page :where(input,select,textarea){min-height:48px;border:1px solid rgba(25,59,92,.18);border-radius:12px;background:var(--az-surface);color:var(--az-text);font-family:\"Peyda\",Tahoma,sans-serif}.az-page :where(.learndash-wrapper,.woocommerce,.dig_wrapper,.digits_login_form,.elementor-widget-form){font-family:\"Peyda\",Tahoma,sans-serif;direction:rtl}.az-page .learndash-wrapper :where(.ld-item-list-item,.ld-profile-summary,.ld-table-list){border-color:rgba(25,59,92,.12);border-radius:14px;background:var(--az-surface)}.az-page .learndash-wrapper :where(.ld-button,.ld-primary-color){background-color:var(--az-navy)!important;border-radius:12px;color:#fff!important}.az-page .woocommerce :where(button.button,a.button,.checkout-button){min-height:46px;border-radius:12px!important;background:var(--az-navy)!important;color:#fff!important;font-family:\"Peyda\",Tahoma,sans-serif!important}.az-page .woocommerce :where(.woocommerce-error,.woocommerce-info,.woocommerce-message){border-top-color:var(--az-teal);background:var(--az-surface);color:var(--az-text)}.az-page :where(.dig_wrapper,.digits_login_form,.dig_ma-box){max-width:560px;margin-inline:auto!important;background:transparent!important;box-shadow:none!important}.az-page :where(.dig_wrapper,.digits_login_form) :where(input,button){font-family:\"Peyda\",Tahoma,sans-serif!important}.az-page :where(.bdt-button,.premium-button){font-family:\"Peyda\",Tahoma,sans-serif}.az-dynamic-title .elementor-heading-title{font-size:clamp(42px,5vw,66px);line-height:1.4}.az-dynamic-content{line-height:2}.az-woo-widget{width:100%}.az-search-widget{max-width:760px}.az-page .persian-number,.az-page .woocommerce-Price-amount,.az-page .ld-progress-percentage{font-variant-numeric:tabular-nums}@media(max-width:1024px){.az-section{width:min(100% - 44px,960px);padding:56px 0}.az-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.az-hero__copy{padding:36px 28px}.az-footer-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:767px){.az-section{width:calc(100% - 28px);padding:42px 0}.az-hero,.az-single,.az-dashboard-hero{grid-template-columns:1fr!important}.az-hero__copy{min-height:auto;padding:28px 20px}.az-visual{min-height:360px}.az-grid,.az-footer-grid{grid-template-columns:1fr}.az-actions{flex-direction:column!important}.az-actions>.elementor-element,.az-actions a{width:100%!important}.az-single__aside{position:static}.az-header-inner{align-items:flex-start}.az-header .az-actions{width:auto}.az-header .az-actions>:last-child{display:none}}@media(max-width:420px){.az-section{width:calc(100% - 20px)}.az-visual{min-height:300px}.az-card,.az-plugin-mount{padding:20px}}@media(prefers-reduced-motion:reduce){.az-page *{animation:none!important;transition:none!important;scroll-behavior:auto!important}}\n/* Homepage: mature learning-product architecture in the Asadzadeh visual language. */\n.az-home-hero{display:grid!important;grid-template-columns:minmax(0,1.12fr) minmax(390px,.88fr);gap:18px;align-items:stretch;padding-top:34px;padding-bottom:54px}.az-home-hero__copy{justify-content:center;padding:68px 48px 68px 0}.az-home-hero__visual{min-height:610px;border-radius:28px 28px 110px 28px}.az-home-proof{max-width:520px;margin-top:14px;padding-top:18px;border-top:1px solid rgba(25,59,92,.14);color:var(--az-muted)}.az-ep-kicker{width:max-content!important;max-width:100%;margin-bottom:4px}.az-ep-kicker .bdt-advanced-heading-main{display:inline-flex;padding:8px 12px;border-radius:10px;background:#E8D8B8;color:var(--az-navy)}.az-ep-btn{width:auto!important}.az-ep-btn .bdt-advanced-button{display:inline-flex;min-height:48px;align-items:center;gap:10px;padding:0 22px!important;transition:transform .2s ease,background-color .2s ease}.az-ep-btn .bdt-advanced-button-text{font-family:\"Peyda\",Tahoma,sans-serif}.az-entry-grid{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.az-ep-card{min-height:290px;border:1px solid rgba(25,59,92,.12);border-radius:20px;overflow:hidden;background:var(--az-surface)}.az-ep-card .bdt-interactive-card{height:100%;padding:26px!important}.az-ep-card--navy{border-top:5px solid var(--az-navy)}.az-ep-card--teal{border-top:5px solid var(--az-teal)}.az-ep-card--red{border-top:5px solid var(--az-red)}.az-ep-card :where(.bdt-interactive-card-title,.bdt-interactive-card-sub-title,.bdt-interactive-card-description,.bdt-interactive-card-readmore){font-family:\"Peyda\",Tahoma,sans-serif!important}.az-course-grid .ld-course-list-items{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.az-course-grid .ld_course_grid{width:100%!important;margin:0!important}.az-course-grid .thumbnail.course{height:100%;overflow:hidden;border:1px solid rgba(25,59,92,.12)!important;border-radius:18px!important;background:var(--az-surface)!important;box-shadow:none!important}.az-course-grid .caption{padding:22px!important}.az-course-grid :where(h3,.entry-title){font-family:\"Peyda\",Tahoma,sans-serif!important;color:var(--az-navy)!important;line-height:1.65!important}.az-course-grid :where(.btn,.ld_course_grid_button a){border:0!important;border-radius:10px!important;background:var(--az-navy)!important;color:white!important;font-family:\"Peyda\",Tahoma,sans-serif!important}.az-section-action{align-items:flex-end;margin-top:12px}.az-path-layout,.az-workshop-layout{display:grid!important;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:18px}.az-path-copy,.az-workshop-copy{justify-content:center;padding:38px;background:var(--az-surface);border:1px solid rgba(25,59,92,.1);border-radius:20px}.az-path-steps{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;padding:1px;overflow:hidden;border-radius:20px;background:rgba(25,59,92,.14)}.az-path-steps>.elementor-element{justify-content:flex-end;min-height:180px;padding:26px;background:var(--az-bg)}.az-path-steps>.elementor-element:nth-child(1){background:var(--az-navy)}.az-path-steps>.elementor-element:nth-child(1) .elementor-heading-title{color:white}.az-workshop-layout>.az-image{min-height:500px;border-radius:20px;overflow:hidden}.az-home-final{margin-block:72px;padding:64px;border-radius:24px;background:var(--az-navy);color:white;align-items:center;text-align:center}.az-home-final .elementor-heading-title,.az-home-final p{color:white!important}.az-home-final .az-actions{justify-content:center}.az-ep-dynamic-grid{width:100%}.az-loop-card{height:100%;padding:14px;background:var(--az-surface);border:1px solid rgba(25,59,92,.1);border-radius:18px}.az-loop-image{overflow:hidden;border-radius:14px}.az-loop-label{color:var(--az-red)}.az-loop-title .elementor-heading-title{font-family:\"Peyda\",Tahoma,sans-serif;font-size:21px;line-height:1.65}.az-loop-excerpt{color:var(--az-muted)}.az-contact-live{display:grid!important;grid-template-columns:minmax(0,1.1fr) minmax(340px,.9fr);gap:18px}.az-contact-form,.az-neshan-map{min-height:520px;padding:30px;background:var(--az-surface);border:1px solid rgba(25,59,92,.1);border-radius:20px}.az-contact-form .elementor-field{padding-inline:14px!important}.az-contact-form .elementor-button{min-height:50px}.az-neshan-map{padding:0;overflow:hidden}.az-neshan-map iframe,.az-neshan-map>div{min-height:520px}.az-post-grid .bdt-dynamic-grid{direction:rtl}.az-header .az-ep-btn .bdt-advanced-button{min-height:42px;padding-inline:16px!important}@media(max-width:1024px){.az-home-hero{grid-template-columns:1fr 1fr}.az-home-hero__copy{padding:44px 26px}.az-entry-grid,.az-course-grid .ld-course-list-items{grid-template-columns:repeat(2,minmax(0,1fr))}.az-path-layout,.az-workshop-layout,.az-contact-live{grid-template-columns:1fr}}@media(max-width:767px){.az-home-hero{grid-template-columns:1fr!important}.az-home-hero__copy{padding:28px 6px}.az-home-hero__visual{min-height:390px;border-radius:20px 20px 70px 20px}.az-entry-grid,.az-course-grid .ld-course-list-items,.az-path-steps{grid-template-columns:1fr}.az-ep-card{min-height:240px}.az-path-copy,.az-workshop-copy{padding:24px}.az-path-steps>.elementor-element{min-height:120px}.az-home-final{margin-block:36px;padding:38px 22px}.az-contact-form,.az-neshan-map{min-height:420px;padding:22px}}\n/* Each product family has its own composition. */\n.az-hero--editorial{grid-template-columns:minmax(0,1.5fr) minmax(260px,.5fr);align-items:end}.az-hero--editorial .az-hero__copy{min-height:440px;background:transparent;border:0;padding-right:0}.az-hero--editorial .az-visual{min-height:440px;border-radius:180px 180px 20px 20px}.az-hero--gallery{grid-template-columns:minmax(0,1.35fr) minmax(320px,.65fr)}.az-hero--gallery .az-visual{min-height:680px}.az-hero--gallery .az-hero__copy{min-height:420px;align-self:end;margin-right:-72px;z-index:2}.az-hero--commerce{grid-template-columns:minmax(340px,.78fr) minmax(0,1.22fr)}.az-hero--commerce .az-hero__copy{order:2;min-height:500px;border-radius:20px 120px 20px 20px}.az-hero--commerce .az-visual{order:1;min-height:500px}.az-hero--workshop .az-visual{clip-path:polygon(0 0,92% 0,100% 9%,100% 100%,0 100%)}.az-hero--learning{grid-template-columns:minmax(0,1.3fr) minmax(290px,.7fr);padding-top:44px}.az-hero--learning .az-hero__copy{min-height:500px;border-radius:20px 20px 120px 20px}.az-hero__outline{padding:34px;justify-content:flex-end;background:var(--az-navy);color:white;border:0}.az-hero__outline .elementor-heading-title,.az-hero__outline p,.az-hero__outline .elementor-icon-list-text{color:white!important}.az-hero--contact{grid-template-columns:minmax(0,1.2fr) minmax(330px,.8fr)}.az-hero--contact .az-hero__copy{background:transparent;border:0;padding-right:0}.az-hero__contact{padding:36px;align-self:center;border-right:5px solid var(--az-red)}.az-hero--dashboard{grid-template-columns:minmax(0,1.45fr) minmax(270px,.55fr);padding-block:34px}.az-hero--dashboard .az-hero__copy{min-height:330px}.az-hero__summary{padding:30px;border-top:5px solid var(--az-teal);background:var(--az-surface);border-radius:20px;justify-content:center}.az-hero__summary h2{font-variant-numeric:tabular-nums}.az-hero--auth{display:block!important;max-width:760px;padding-top:48px}.az-hero--auth .az-hero__copy{min-height:460px;border-top:5px solid var(--az-teal);text-align:center;align-items:center}.az-hero--auth .az-lead{text-align:center}.az-hero--auth .az-actions{justify-content:center}.az-hero--legal{display:block!important;max-width:920px;padding-top:64px}.az-hero--legal .az-hero__copy{min-height:360px;background:transparent;border:0;border-right:5px solid var(--az-red);border-radius:0;padding-block:24px}.az-hero--system{display:block!important;max-width:860px}.az-hero--system .az-hero__copy{min-height:420px;background:var(--az-navy);align-items:center;text-align:center}.az-hero--system .elementor-heading-title,.az-hero--system p{color:white!important}.az-hero--system .az-lead{text-align:center}.az-hero--system .az-actions{justify-content:center}.az-block--1>.az-grid{grid-template-columns:minmax(0,1.4fr) minmax(0,.8fr) minmax(0,.8fr)}.az-block--1>.az-grid>.az-card:first-child{grid-row:span 2;min-height:310px}.az-block--2 .az-grid{display:flex!important;overflow-x:auto;padding-bottom:12px;scroll-snap-type:x proximity}.az-block--2 .az-card{min-width:min(390px,84vw);scroll-snap-align:start}.az-block--3>.az-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.az-block--3 .az-card{border:0;border-top:1px solid rgba(25,59,92,.14);border-radius:0;background:transparent}.az-page--dashboard .az-block{padding-block:36px}.az-page--dashboard .az-grid{grid-template-columns:repeat(3,minmax(220px,1fr))}.az-page--legal .az-grid{grid-template-columns:1fr}.az-page--legal .az-card{min-height:auto;border-width:0 0 1px;border-radius:0;background:transparent}.az-page--gallery .az-grid{grid-template-columns:1.2fr .8fr}.az-page--gallery .az-card:nth-child(3n+1){min-height:320px}.az-page--commerce .az-plugin-mount{background:transparent;border-radius:0;border-width:1px 0}.az-page--auth .az-block{max-width:760px}.az-page--auth .az-grid{grid-template-columns:1fr}.az-page--system .az-block{max-width:860px}\n@media(max-width:767px){.az-hero--editorial,.az-hero--gallery,.az-hero--commerce,.az-hero--learning,.az-hero--contact,.az-hero--dashboard{grid-template-columns:1fr!important}.az-hero--gallery .az-hero__copy{margin:0;order:1}.az-hero--gallery .az-visual{order:2;min-height:420px}.az-hero--commerce .az-hero__copy,.az-hero--commerce .az-visual{order:initial}.az-hero--editorial .az-hero__copy{padding-right:20px}.az-hero--editorial .az-visual{border-radius:120px 120px 20px 20px}.az-hero--legal .az-hero__copy{padding-right:20px}.az-block--1>.az-grid,.az-block--3>.az-grid,.az-page--gallery .az-grid{grid-template-columns:1fr}.az-block--1>.az-grid>.az-card:first-child{grid-row:auto;min-height:190px}.az-page--dashboard .az-grid{display:flex!important;overflow-x:auto}.az-page--dashboard .az-card{min-width:82vw}}\n","background_background":"classic","background_color":"#F3E9D6"},"metadata":{"template_type":"single","include_in_zip":1,"elementor_pro_required":1,"wp_page_template":"elementor_canvas"}}
+{
+  "title": "پرداخت موفق",
+  "type": "page",
+  "version": "0.4",
+  "page_settings": [],
+  "content": [
+    {
+      "id": "pst40v1",
+      "elType": "container",
+      "isInner": false,
+      "settings": {
+        "content_width": "full",
+        "flex_direction": "column",
+        "flex_gap": {
+          "column": "0",
+          "row": "0",
+          "unit": "px",
+          "size": 0,
+          "isLinked": true
+        },
+        "overflow": "hidden",
+        "custom_css": "selector{\n  --az-bg: #F3E9D6;\n  --az-surface: #FFF8EC;\n  --az-surface-alt: #FBEFDD;\n  --az-navy: #193B5C;\n  --az-navy-hover: #244D72;\n  --az-red: #9D382C;\n  --az-red-hover: #B24739;\n  --az-teal: #2F8C87;\n  --az-cream: #E8D8B8;\n  --az-dark: #152F3D;\n  --az-text: #45423D;\n  --az-muted: #6D6A63;\n  --az-line: #193B5C1F;\n  --az-line-strong: #193B5C33;\n  --az-radius-card: 22px;\n  --az-radius-control: 12px;\n  --az-radius-btn: 13px;\n  --az-shadow-soft: 0 1px 2px rgba(21,47,61,.05), 0 10px 30px -18px rgba(21,47,61,.22);\n  --az-shadow-rail: 0 2px 6px rgba(21,47,61,.06), 0 24px 50px -32px rgba(21,47,61,.30);\n  --az-gutter: 32px;\n  --az-font-display: Neirizi, IRANSans, Vazirmatn, Tahoma, sans-serif;\n  --az-font-ui: Peyda, IRANSans, Vazirmatn, Tahoma, sans-serif;\n  direction: rtl;\n  color: var(--az-text);\n  background: var(--az-bg);\n  font-family: var(--az-font-ui);\n  line-height: 1.95;\n  -webkit-text-size-adjust: 100%;\n}\nselector *, selector *::before, selector *::after{ box-sizing: border-box; }\nselector :where(h1,h2,h3,h4,h5,h6){ font-family: var(--az-font-display); color: var(--az-navy); margin: 0 0 .5em; font-weight: 400; }\nselector h1{ font-size: clamp(32px, 0.089rem + 2.593vw, 60px); line-height: 1.28; }\nselector h2{ font-size: clamp(26px, 0.072rem + 1.667vw, 44px); line-height: 1.34; }\nselector h3{ font-size: clamp(21px, 0.058rem + 0.648vw, 28px); line-height: 1.45; }\nselector h4{ font-family: var(--az-font-ui); font-size: clamp(18px, 0.050rem + 0.370vw, 22px); font-weight: 700; color: var(--az-navy); }\nselector p{ margin: 0 0 1em; font-size: clamp(15px, 0.042rem + 0.185vw, 17px); line-height: 1.95; }\nselector a{ color: var(--az-navy); text-decoration: none; }\nselector :where(a,button,input,select,textarea,summary,[tabindex]):focus-visible{\n  outline: 3px solid var(--az-teal);\n  outline-offset: 3px;\n  border-radius: 6px;\n}\nselector img{ max-width: 100%; height: auto; display: block; border-radius: 16px; }\n\n/* ---------- layout primitives ---------- */\nselector .az-wrap{ width: 100%; max-width: 1240px; margin-inline: auto; padding-inline: var(--az-gutter); }\nselector .az-section{ padding-block: clamp(38px, 6vw, 78px); }\nselector .az-section--tight{ padding-block: clamp(26px, 4vw, 46px); }\nselector .az-section--alt{ background: var(--az-surface); }\nselector .az-grid{ display: grid; gap: 22px; }\nselector .az-grid--2{ grid-template-columns: repeat(2, minmax(0,1fr)); }\nselector .az-grid--3{ grid-template-columns: repeat(3, minmax(0,1fr)); }\nselector .az-grid--4{ grid-template-columns: repeat(4, minmax(0,1fr)); }\nselector .az-split{ display: grid; grid-template-columns: minmax(0,1.55fr) minmax(0,1fr); gap: clamp(20px, 3vw, 40px); align-items: start; }\nselector .az-stack{ display: flex; flex-direction: column; gap: 14px; }\nselector .az-row{ display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }\nselector .az-row--end{ justify-content: flex-end; }\nselector .az-visually-hidden{ position:absolute!important; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }\n\n/* ---------- carpet / kilim signature (spec §42: one bold move per page) ---------- */\nselector .az-rule{\n  height: 10px; border-radius: 999px;\n  background-image:\n    repeating-linear-gradient(90deg, var(--az-navy) 0 14px, transparent 14px 22px),\n    repeating-linear-gradient(90deg, var(--az-red) 0 4px, transparent 4px 22px);\n  background-size: 22px 3px, 22px 3px;\n  background-position: 0 0, 0 7px;\n  background-repeat: repeat-x;\n  opacity: .5;\n}\nselector .az-rule--short{ width: 92px; }\nselector .az-kicker{\n  display: inline-flex; align-items: center; gap: 8px;\n  font-family: var(--az-font-ui); font-size: 12.5px; font-weight: 700; letter-spacing: .02em;\n  color: var(--az-navy); background: var(--az-cream);\n  border: 1px solid var(--az-line); border-radius: 10px; padding: 5px 12px;\n}\nselector .az-kicker--red{ background: #F6E3DE; color: var(--az-red); border-color: #E7C4BC; }\nselector .az-kicker--teal{ background: #E1F0F1; color: #1D5A6B; border-color: #B2D6D8; }\nselector .az-section-head{ display: flex; flex-direction: column; gap: 10px; margin-bottom: 26px; }\nselector .az-section-head .az-lead{ color: var(--az-muted); max-width: 62ch; margin: 0; }\n\n/* ---------- cards ---------- */\nselector .az-card{\n  background: var(--az-surface); border: 1px solid var(--az-line);\n  border-radius: var(--az-radius-card); padding: 22px;\n  box-shadow: var(--az-shadow-soft);\n  display: flex; flex-direction: column; gap: 12px; height: 100%;\n}\nselector .az-card--flat{ box-shadow: none; background: transparent; border-style: dashed; }\nselector .az-card--navy{ background: var(--az-navy); border-color: var(--az-navy); color: #EFE6D6; }\nselector .az-card--navy :where(h1,h2,h3,h4), selector .az-card--navy a{ color: #FFF3E1; }\nselector .az-card--navy p{ color: rgba(255,243,225,.82); }\nselector .az-card--cream{ background: var(--az-cream); border-color: #D9C69F; }\nselector .az-card__meta{ display:flex; flex-wrap:wrap; gap:8px 14px; font-size:13.5px; color:var(--az-muted); }\nselector .az-card__title{ font-family: var(--az-font-display); font-size: clamp(19px,2vw,24px); color: var(--az-navy); margin:0; }\nselector .az-card__media{ aspect-ratio: 4/3; overflow:hidden; border-radius:16px; background: linear-gradient(135deg, var(--az-cream), #E3D2B0); }\nselector .az-card--navy .az-card__media{ background: linear-gradient(135deg, #244D72, #152F3D); }\nselector .az-card__media img{ width:100%; height:100%; object-fit:cover; border-radius:0; }\n\n/* ---------- badge / status ---------- */\nselector .az-badge{\n  display:inline-flex; align-items:center; gap:6px;\n  font-family: var(--az-font-ui); font-size:12.5px; font-weight:700;\n  padding:4px 10px; border-radius:999px; border:1px solid var(--az-line); background:var(--az-surface-alt); color:var(--az-muted);\n  line-height:1.8;\n}\nselector .az-badge--success{ color:#1F6B4A; background:#E4F1E7; border-color:#BBDCC6; }\nselector .az-badge--warn{ color:#8A5A12; background:#FBF0DC; border-color:#E7D2A8; }\nselector .az-badge--danger{ color:#8E2F25; background:#F7E4E1; border-color:#E2B9B2; }\nselector .az-badge--info{ color:#1D5A6B; background:#E1F0F1; border-color:#B2D6D8; }\n\n/* ---------- buttons ---------- */\nselector .az-btn{\n  display:inline-flex; align-items:center; justify-content:center; gap:8px;\n  min-height:48px; padding:12px 22px; border-radius: var(--az-radius-btn);\n  font-family: var(--az-font-ui); font-size:15px; font-weight:700; line-height:1.6;\n  border:1px solid transparent; cursor:pointer; transition: background-color .18s ease, color .18s ease, border-color .18s ease, transform .18s ease;\n}\nselector .az-btn--primary{ background: var(--az-navy); color:#FFF8EC; }\nselector .az-btn--accent{ background: var(--az-red); color:#FFF8EC; }\nselector .az-btn--outline{ background: transparent; color: var(--az-navy); border-color: var(--az-line-strong); }\nselector .az-btn--ghost{ background: var(--az-surface); color: var(--az-navy); border-color: var(--az-line); }\nselector .az-btn--block{ width:100%; }\nselector .az-btn[disabled], selector .az-btn--disabled{ opacity:.55; pointer-events:none; }\n\n/* ---------- forms ---------- */\nselector .az-form :where(input,select,textarea){\n  width:100%; font-family: var(--az-font-ui); font-size:16px; line-height:1.7;\n  color: var(--az-text); background: var(--az-surface);\n  border:1px solid var(--az-line-strong); border-radius: var(--az-radius-control);\n  padding:13px 14px; min-height:50px;\n}\nselector .az-form textarea{ min-height:130px; }\nselector .az-form label{ display:block; font-family: var(--az-font-ui); font-size:14.5px; font-weight:700; color:var(--az-navy); margin-bottom:7px; }\nselector .az-form :where(input,select,textarea):focus{ border-color: var(--az-teal); }\nselector .az-form .az-field{ margin-bottom:16px; }\nselector .az-form--inline{ display:flex; gap:12px; flex-wrap:wrap; }\nselector .az-form--inline .az-field{ flex:1 1 220px; margin-bottom:0; }\nselector .az-form-note{ font-size:13.5px; color: var(--az-muted); }\nselector .az-form-error{ color:#8E2F25; background:#F7E4E1; border:1px solid #E2B9B2; border-radius:12px; padding:10px 14px; font-size:14px; }\n\n/* ---------- hero ---------- */\nselector .az-hero{ position:relative; overflow:hidden; background: var(--az-bg); }\nselector .az-hero__grid{ display:grid; grid-template-columns: minmax(0,1.15fr) minmax(0,.85fr); gap: clamp(24px,4vw,54px); align-items:center; }\nselector .az-hero h1{ font-size:clamp(34px, 0.094rem + 2.778vw, 64px); line-height:1.22; margin-bottom:16px; }\nselector .az-hero__lead{ font-size:clamp(16px, 0.044rem + 0.278vw, 19px); color:var(--az-muted); max-width:56ch; }\nselector .az-hero__frame{ position:relative; border-radius:26px; overflow:hidden; aspect-ratio:4/5; background: linear-gradient(160deg,#E8D8B8,#CDB892); box-shadow: var(--az-shadow-rail); }\nselector .az-hero__frame::after{\n  content:\"\"; position:absolute; inset:0;\n  background-image: repeating-linear-gradient(45deg, rgba(25,59,92,.06) 0 2px, transparent 2px 12px);\n  pointer-events:none;\n}\nselector .az-hero__frame img{ width:100%; height:100%; object-fit:cover; border-radius:0; }\n\n/* ---------- breadcrumb ---------- */\nselector .az-crumbs{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; font-size:13.5px; color:var(--az-muted); }\nselector .az-crumbs a{ color:var(--az-muted); }\nselector .az-crumbs .az-sep{ opacity:.6; transform: scaleX(-1); display:inline-block; }\nselector .az-crumbs [aria-current=\"page\"]{ color:var(--az-navy); font-weight:700; }\n\n/* ---------- progress ---------- */\nselector .az-progress{ height:9px; border-radius:999px; background: var(--az-cream); overflow:hidden; }\nselector .az-progress > i{ display:block; height:100%; border-radius:999px; background: var(--az-teal); width:0; }\nselector .az-progress-label{ display:flex; justify-content:space-between; font-size:13px; color:var(--az-muted); }\n\n/* ---------- sticky rail ---------- */\nselector .az-rail{ position:sticky; top:96px; display:flex; flex-direction:column; gap:14px; }\nselector .az-rail .az-card{ box-shadow: var(--az-shadow-rail); }\n\n/* ---------- tables (Woo + LearnDash) ---------- */\nselector .az-table-wrap{ overflow-x:auto; -webkit-overflow-scrolling:touch; border:1px solid var(--az-line); border-radius:16px; background:var(--az-surface); }\nselector .az-table-wrap table{ width:100%; border-collapse:collapse; min-width:560px; font-family:var(--az-font-ui); font-size:15px; }\nselector .az-table-wrap th, selector .az-table-wrap td{ padding:14px 16px; border-bottom:1px solid var(--az-line); text-align:right; }\nselector .az-table-wrap th{ font-weight:700; color:var(--az-navy); background:var(--az-surface-alt); }\nselector .az-table-wrap tr:last-child td{ border-bottom:0; }\n\n/* ---------- empty / error / success states ---------- */\nselector .az-state{ text-align:center; display:flex; flex-direction:column; align-items:center; gap:14px; padding:clamp(34px,6vw,64px) 20px; background:var(--az-surface); border:1px dashed var(--az-line-strong); border-radius:var(--az-radius-card); }\nselector .az-state__icon{ width:64px; height:64px; border-radius:50%; display:grid; place-items:center; background:var(--az-cream); color:var(--az-navy); font-size:26px; }\nselector .az-state--danger .az-state__icon{ background:#F7E4E1; color:#8E2F25; }\nselector .az-state--success .az-state__icon{ background:#E4F1E7; color:#1F6B4A; }\nselector .az-state p{ color:var(--az-muted); max-width:48ch; margin:0; }\n\n/* ---------- plugin mounts (LearnDash / Woo / Digits) ---------- */\nselector .az-mount{ font-family:var(--az-font-ui); font-size:15px; line-height:1.95; color:var(--az-text); }\nselector .az-mount :where(h1,h2,h3,h4){ font-family:var(--az-font-display); color:var(--az-navy); }\nselector .az-mount :where(input,select,textarea){ font-size:16px; min-height:48px; border-radius:var(--az-radius-control); border:1px solid var(--az-line-strong); padding:11px 13px; background:var(--az-surface); width:100%; }\nselector .az-mount :where(button,.button,input[type=submit]){ min-height:48px; border-radius:var(--az-radius-btn); font-family:var(--az-font-ui); font-weight:700; padding:12px 22px; }\nselector .az-mount :where(ul,ol){ padding-inline-start:1.3em; }\nselector .az-mount table{ width:100%; border-collapse:collapse; }\nselector .az-mount table th, selector .az-mount table td{ padding:12px; border-bottom:1px solid var(--az-line); text-align:right; }\n\n/* LearnDash curriculum */\nselector .az-ld-list{ display:flex; flex-direction:column; gap:10px; }\nselector .az-ld-item{ display:flex; align-items:center; gap:12px; padding:14px 16px; background:var(--az-surface); border:1px solid var(--az-line); border-radius:16px; }\nselector .az-ld-item--locked{ background:var(--az-surface-alt); color:var(--az-muted); }\nselector .az-ld-item--current{ border-color:var(--az-teal); box-shadow: inset 3px 0 0 var(--az-teal); }\nselector .az-ld-item__n{ width:34px; height:34px; flex:0 0 34px; border-radius:10px; display:grid; place-items:center; background:var(--az-cream); color:var(--az-navy); font-weight:700; font-size:14px; }\nselector .az-ld-item__grow{ flex:1; }\nselector .az-ld-item__title{ font-weight:700; color:var(--az-navy); }\nselector .az-ld-item__meta{ font-size:13px; color:var(--az-muted); }\n\n/* WooCommerce */\nselector .az-woo :where(.quantity input){ min-height:48px; font-size:16px; }\nselector .az-woo .woocommerce-Price-amount{ font-family:var(--az-font-ui); font-weight:800; color:var(--az-navy); }\nselector .az-woo :where(.button,button.button,input.button){ border-radius:var(--az-radius-btn)!important; min-height:48px; font-family:var(--az-font-ui); font-weight:700; }\nselector .az-woo .woocommerce-error, selector .az-woo .woocommerce-message, selector .az-woo .woocommerce-info{\n  border-radius:14px; border-inline-start:5px solid var(--az-teal); background:var(--az-surface); border-top:1px solid var(--az-line); border-right:1px solid var(--az-line); border-bottom:1px solid var(--az-line); padding:14px 16px; font-family:var(--az-font-ui);\n}\nselector .az-woo .woocommerce-error{ border-inline-start-color:#8E2F25; background:#F7E4E1; }\nselector .az-woo .woocommerce-message{ border-inline-start-color:#1F6B4A; background:#E4F1E7; }\n\n/* Digits / OTP */\nselector .az-otp :where(input){ font-size:22px; letter-spacing:.38em; text-align:center; min-height:58px; font-family:var(--az-font-ui); }\nselector .az-otp .az-otp__hint{ font-size:13.5px; color:var(--az-muted); }\nselector .az-otp .az-otp__resend{ font-family:var(--az-font-ui); font-size:14px; font-weight:700; color:var(--az-navy); background:none; border:0; cursor:pointer; min-height:44px; }\nselector .az-otp .az-otp__resend[disabled]{ color:var(--az-muted); cursor:default; }\n\n/* ---------- roadmap / steps ---------- */\nselector .az-steps{ display:flex; flex-direction:column; gap:0; counter-reset: azstep; }\nselector .az-step{ display:grid; grid-template-columns:54px minmax(0,1fr); gap:16px; padding-block:18px; border-top:1px dashed var(--az-line-strong); }\nselector .az-step:first-child{ border-top:0; }\nselector .az-step__n{ width:44px; height:44px; border-radius:14px; background:var(--az-navy); color:#FFF3E1; display:grid; place-items:center; font-weight:800; font-family:var(--az-font-ui); }\nselector .az-step__body h4{ margin-bottom:4px; }\nselector .az-step__body p{ color:var(--az-muted); margin:0; font-size:15px; }\n\n/* ---------- gallery ---------- */\nselector .az-gallery{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }\nselector .az-gallery > *{ aspect-ratio:1/1; overflow:hidden; border-radius:18px; background:var(--az-cream); }\nselector .az-gallery > * img{ width:100%; height:100%; object-fit:cover; border-radius:0; }\nselector .az-gallery--wide{ grid-template-columns:repeat(4,minmax(0,1fr)); }\nselector .az-gallery--wide > *:first-child{ grid-column:span 2; grid-row:span 2; aspect-ratio:auto; }\n\n/* ---------- certificate ---------- */\nselector .az-cert{ background:var(--az-surface); border:1px solid var(--az-cream); border-radius:20px; padding:clamp(20px,3vw,38px); position:relative; overflow:hidden; }\nselector .az-cert::before{ content:\"\"; position:absolute; inset:10px; border:1px solid var(--az-cream); border-radius:14px; pointer-events:none; }\n\n/* ---------- dashboard ---------- */\nselector .az-dash{ display:grid; grid-template-columns:264px minmax(0,1fr); gap:clamp(18px,3vw,34px); align-items:start; }\nselector .az-dash__nav{ position:sticky; top:96px; background:var(--az-surface); border:1px solid var(--az-line); border-radius:20px; padding:16px; display:flex; flex-direction:column; gap:6px; }\nselector .az-dash__nav a{ display:flex; align-items:center; gap:10px; padding:11px 13px; border-radius:12px; color:var(--az-text); font-family:var(--az-font-ui); font-size:15px; font-weight:600; min-height:44px; }\nselector .az-dash__nav a[aria-current=\"page\"]{ background:var(--az-navy); color:#FFF3E1; }\nselector .az-dash__nav .az-dash__sep{ height:1px; background:var(--az-line); margin:8px 4px; }\nselector .az-tiles{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px; }\nselector .az-tile{ background:var(--az-surface); border:1px solid var(--az-line); border-radius:18px; padding:18px; }\nselector .az-tile__label{ font-size:13px; color:var(--az-muted); }\nselector .az-tile__value{ font-family:var(--az-font-display); font-size:30px; color:var(--az-navy); line-height:1.2; }\n\n/* ---------- responsive (spec §10) ---------- */\n@media (max-width: 1024px){\n  selector .az-grid--4{ grid-template-columns: repeat(2, minmax(0,1fr)); }\n  selector .az-tiles{ grid-template-columns: repeat(2, minmax(0,1fr)); }\n  selector .az-gallery--wide{ grid-template-columns: repeat(3, minmax(0,1fr)); }\n  selector{ --az-gutter: 24px; }\n}\n@media (max-width: 860px){\n  selector .az-split{ grid-template-columns: minmax(0,1fr); }\n  selector .az-hero__grid{ grid-template-columns: minmax(0,1fr); }\n  selector .az-hero__frame{ aspect-ratio: 16/10; }\n  selector .az-dash{ grid-template-columns: minmax(0,1fr); }\n  selector .az-dash__nav{ position:static; }\n  selector .az-rail{ position:static; }\n  selector .az-grid--3{ grid-template-columns: repeat(2, minmax(0,1fr)); }\n}\n@media (max-width: 767px){\n  selector{ --az-gutter: 12px; }\n  selector .az-grid--2, selector .az-grid--3, selector .az-grid--4{ grid-template-columns: minmax(0,1fr); }\n  selector .az-tiles{ grid-template-columns: repeat(2, minmax(0,1fr)); }\n  selector .az-gallery, selector .az-gallery--wide{ grid-template-columns: repeat(2, minmax(0,1fr)); }\n  selector .az-gallery--wide > *:first-child{ grid-column:auto; grid-row:auto; aspect-ratio:1/1; }\n  selector .az-btn{ width:100%; }\n  selector .az-row > .az-btn{ width:100%; }\n  selector .az-form--inline{ flex-direction: column; }\n  selector .az-step{ grid-template-columns:40px minmax(0,1fr); gap:12px; }\n  selector .az-step__n{ width:34px; height:34px; border-radius:11px; font-size:14px; }\n  selector .az-section{ padding-block: 34px; }\n  selector .az-card{ padding:18px; }\n  selector .az-dash__nav{ flex-direction: column; }\n}\n@media (max-width: 420px){\n  selector .az-tiles{ grid-template-columns: minmax(0,1fr); }\n  selector .az-hero h1{ font-size: 32px; }\n  selector .az-card{ padding:16px; }\n}\n@media (max-width: 360px){\n  selector{ --az-gutter: 10px; }\n  selector .az-gallery{ grid-template-columns: minmax(0,1fr); }\n}\n\n/* ---------- hover only where a fine pointer exists (spec §10) ---------- */\n@media (hover:hover) and (pointer:fine){\n  selector .az-card:hover{ border-color: var(--az-line-strong); transform: translateY(-2px); }\n  selector .az-btn:hover{ transform: translateY(-1px); }\n  selector .az-btn--primary:hover{ background: var(--az-navy-hover); }\n  selector .az-btn--accent:hover{ background: var(--az-red-hover); }\n  selector .az-btn--outline:hover{ background: var(--az-surface); border-color: var(--az-navy); }\n  selector .az-dash__nav a:hover{ background: var(--az-surface-alt); }\n}\n\n/* ---------- motion preferences (spec §10, §36) ---------- */\n@media (prefers-reduced-motion: reduce){\n  selector *, selector *::before, selector *::after{ animation-duration:.001ms!important; animation-iteration-count:1!important; transition-duration:.001ms!important; scroll-behavior:auto!important; }\n}",
+        "css_classes": "az-page az-tpl-payment-success",
+        "_title": "ریشه — پرداخت موفق",
+        "_css_classes": "az-page az-tpl-payment-success"
+      },
+      "elements": [
+        {
+          "id": "1x7itdl",
+          "elType": "container",
+          "isInner": false,
+          "settings": {
+            "content_width": "full",
+            "flex_direction": "column",
+            "flex_gap": {
+              "column": "24",
+              "row": "24",
+              "unit": "px",
+              "size": 24,
+              "isLinked": true
+            },
+            "padding": {
+              "unit": "px",
+              "top": "64",
+              "right": "0",
+              "bottom": "64",
+              "left": "0",
+              "isLinked": false
+            },
+            "padding_tablet": {
+              "unit": "px",
+              "top": "48",
+              "right": "0",
+              "bottom": "48",
+              "left": "0",
+              "isLinked": false
+            },
+            "padding_mobile": {
+              "unit": "px",
+              "top": "34",
+              "right": "0",
+              "bottom": "34",
+              "left": "0",
+              "isLinked": false
+            },
+            "css_classes": "az-section az-section--tight az-page-hero",
+            "_title": "پرداخت با موفقیت انجام شد — سربرگ",
+            "_css_classes": "az-section az-section--tight az-page-hero"
+          },
+          "elements": [
+            {
+              "id": "133mbbe",
+              "elType": "container",
+              "isInner": false,
+              "settings": {
+                "content_width": "boxed",
+                "flex_direction": "column",
+                "width": {
+                  "unit": "px",
+                  "size": 1240,
+                  "sizes": []
+                },
+                "flex_gap": {
+                  "column": "22",
+                  "row": "22",
+                  "unit": "px",
+                  "size": 22,
+                  "isLinked": true
+                },
+                "css_classes": "az-wrap",
+                "_title": "پرداخت با موفقیت انجام شد — سربرگ — محتوا 2",
+                "_css_classes": "az-wrap"
+              },
+              "elements": [
+                {
+                  "id": "e94fc21",
+                  "elType": "container",
+                  "isInner": false,
+                  "settings": {
+                    "content_width": "full",
+                    "flex_direction": "column",
+                    "flex_gap": {
+                      "column": "0",
+                      "row": "0",
+                      "unit": "px",
+                      "size": 0,
+                      "isLinked": true
+                    },
+                    "css_classes": "az-crumbs-row",
+                    "_title": "مسیر صفحه 2",
+                    "_css_classes": "az-crumbs-row"
+                  },
+                  "elements": [
+                    {
+                      "id": "bi0ee01",
+                      "elType": "widget",
+                      "isInner": false,
+                      "widgetType": "html",
+                      "settings": {
+                        "html": "<nav class=\"az-crumbs\" aria-label=\"مسیر صفحه\" dir=\"rtl\"><a href=\"/\">خانه</a><span class=\"az-sep\" aria-hidden=\"true\">›</span><span aria-current=\"page\">پرداخت با موفقیت انجام شد</span></nav>",
+                        "_title": "مسیر صفحه",
+                        "_css_classes": "az-crumbs-wrap"
+                      },
+                      "elements": []
+                    }
+                  ]
+                },
+                {
+                  "id": "eg8sf2j",
+                  "elType": "container",
+                  "isInner": false,
+                  "settings": {
+                    "content_width": "full",
+                    "flex_direction": "column",
+                    "flex_gap": {
+                      "column": "14",
+                      "row": "14",
+                      "unit": "px",
+                      "size": 14,
+                      "isLinked": true
+                    },
+                    "css_classes": "az-stack",
+                    "_title": "پرداخت با موفقیت انجام شد — سربرگ — محتوا",
+                    "_css_classes": "az-stack"
+                  },
+                  "elements": [
+                    {
+                      "id": "19qqijb",
+                      "elType": "widget",
+                      "isInner": false,
+                      "widgetType": "heading",
+                      "settings": {
+                        "title": "پرداخت موفق",
+                        "header_size": "span",
+                        "align": "right",
+                        "title_color": "#193B5C",
+                        "background_color": "#E8D8B8",
+                        "border_border": "solid",
+                        "border_width": {
+                          "unit": "px",
+                          "top": "1",
+                          "right": "1",
+                          "bottom": "1",
+                          "left": "1",
+                          "isLinked": false
+                        },
+                        "border_color": "#193B5C1F",
+                        "border_radius": {
+                          "unit": "px",
+                          "top": "10",
+                          "right": "10",
+                          "bottom": "10",
+                          "left": "10",
+                          "isLinked": false
+                        },
+                        "padding": {
+                          "unit": "px",
+                          "top": "5",
+                          "right": "12",
+                          "bottom": "5",
+                          "left": "12",
+                          "isLinked": false
+                        },
+                        "typography_typography": "custom",
+                        "typography_font_family": "Peyda",
+                        "typography_font_size": {
+                          "unit": "px",
+                          "size": 12.5,
+                          "sizes": []
+                        },
+                        "typography_font_weight": "700",
+                        "_title": "برچسب — پرداخت موفق",
+                        "_css_classes": "az-kicker"
+                      },
+                      "elements": []
+                    },
+                    {
+                      "id": "1wkf3gx",
+                      "elType": "widget",
+                      "isInner": false,
+                      "widgetType": "heading",
+                      "settings": {
+                        "title": "پرداخت با موفقیت انجام شد",
+                        "header_size": "h1",
+                        "align": "right",
+                        "title_color": "#193B5C",
+                        "typography_typography": "custom",
+                        "typography_font_family": "Neirizi",
+                        "typography_font_weight": "400",
+                        "typography_font_size": {
+                          "unit": "px",
+                          "size": 60,
+                          "sizes": []
+                        },
+                        "typography_line_height": {
+                          "unit": "em",
+                          "size": 1.28,
+                          "sizes": []
+                        },
+                        "_title": "H1 — عنوان صفحه"
+                      },
+                      "elements": []
+                    },
+                    {
+                      "id": "12u9soo",
+                      "elType": "widget",
+                      "isInner": false,
+                      "widgetType": "text-editor",
+                      "settings": {
+                        "editor": "<p dir=\"rtl\">رسید و جزئیات سفارش در بخش سفارش‌های من در دسترس است.</p>",
+                        "align": "right",
+                        "text_color": "#6D6A63",
+                        "typography_typography": "custom",
+                        "typography_font_family": "Peyda",
+                        "typography_font_size": {
+                          "unit": "px",
+                          "size": 16.5,
+                          "sizes": []
+                        },
+                        "typography_font_weight": "400",
+                        "typography_line_height": {
+                          "unit": "em",
+                          "size": 1.95,
+                          "sizes": []
+                        },
+                        "_title": "متن — رسید و جزئیات سفارش در بخش سفارش‌های من در دسترس است.",
+                        "_css_classes": "az-lead"
+                      },
+                      "elements": []
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "xgkxod1",
+          "elType": "container",
+          "isInner": false,
+          "settings": {
+            "content_width": "full",
+            "flex_direction": "column",
+            "flex_gap": {
+              "column": "24",
+              "row": "24",
+              "unit": "px",
+              "size": 24,
+              "isLinked": true
+            },
+            "padding": {
+              "unit": "px",
+              "top": "64",
+              "right": "0",
+              "bottom": "64",
+              "left": "0",
+              "isLinked": false
+            },
+            "padding_tablet": {
+              "unit": "px",
+              "top": "48",
+              "right": "0",
+              "bottom": "48",
+              "left": "0",
+              "isLinked": false
+            },
+            "padding_mobile": {
+              "unit": "px",
+              "top": "34",
+              "right": "0",
+              "bottom": "34",
+              "left": "0",
+              "isLinked": false
+            },
+            "css_classes": "az-section",
+            "_title": "پرداخت با موفقیت انجام شد — بدنه",
+            "_css_classes": "az-section"
+          },
+          "elements": [
+            {
+              "id": "1b15i46",
+              "elType": "container",
+              "isInner": false,
+              "settings": {
+                "content_width": "boxed",
+                "flex_direction": "column",
+                "width": {
+                  "unit": "px",
+                  "size": 1240,
+                  "sizes": []
+                },
+                "flex_gap": {
+                  "column": "22",
+                  "row": "22",
+                  "unit": "px",
+                  "size": 22,
+                  "isLinked": true
+                },
+                "css_classes": "az-wrap az-narrow",
+                "_title": "پرداخت با موفقیت انجام شد — بدنه — محتوا",
+                "_css_classes": "az-wrap az-narrow"
+              },
+              "elements": [
+                {
+                  "id": "q82mts1",
+                  "elType": "container",
+                  "isInner": false,
+                  "settings": {
+                    "content_width": "full",
+                    "flex_direction": "column",
+                    "flex_align_items": "center",
+                    "flex_gap": {
+                      "column": "14",
+                      "row": "14",
+                      "unit": "px",
+                      "size": 14,
+                      "isLinked": true
+                    },
+                    "css_classes": "az-state az-state--success",
+                    "_title": "وضعیت — پرداخت با موفقیت انجام شد",
+                    "_css_classes": "az-state az-state--success"
+                  },
+                  "elements": [
+                    {
+                      "id": "19vmxwe",
+                      "elType": "container",
+                      "isInner": false,
+                      "settings": {
+                        "content_width": "full",
+                        "flex_direction": "column",
+                        "flex_gap": {
+                          "column": "0",
+                          "row": "0",
+                          "unit": "px",
+                          "size": 0,
+                          "isLinked": true
+                        },
+                        "css_classes": "az-state__icon",
+                        "_title": "آیکون وضعیت 2",
+                        "_css_classes": "az-state__icon"
+                      },
+                      "elements": [
+                        {
+                          "id": "1tzbidz",
+                          "elType": "widget",
+                          "isInner": false,
+                          "widgetType": "html",
+                          "settings": {
+                            "html": "<span aria-hidden=\"true\">✉</span>",
+                            "_title": "آیکون وضعیت",
+                            "_css_classes": "az-state-icon-glyph"
+                          },
+                          "elements": []
+                        }
+                      ]
+                    },
+                    {
+                      "id": "n34itn1",
+                      "elType": "widget",
+                      "isInner": false,
+                      "widgetType": "heading",
+                      "settings": {
+                        "title": "پرداخت با موفقیت انجام شد",
+                        "header_size": "h3",
+                        "align": "center",
+                        "title_color": "#193B5C",
+                        "typography_typography": "custom",
+                        "typography_font_family": "Neirizi",
+                        "typography_font_weight": "400",
+                        "typography_font_size": {
+                          "unit": "px",
+                          "size": 28,
+                          "sizes": []
+                        },
+                        "typography_line_height": {
+                          "unit": "em",
+                          "size": 1.45,
+                          "sizes": []
+                        },
+                        "_title": "H3 — پرداخت با موفقیت انجام شد"
+                      },
+                      "elements": []
+                    },
+                    {
+                      "id": "8jmjn71",
+                      "elType": "widget",
+                      "isInner": false,
+                      "widgetType": "text-editor",
+                      "settings": {
+                        "editor": "<p dir=\"rtl\">رسید و جزئیات سفارش در بخش سفارش‌های من در دسترس است.</p>",
+                        "align": "center",
+                        "text_color": "#6D6A63",
+                        "typography_typography": "custom",
+                        "typography_font_family": "Peyda",
+                        "typography_font_size": {
+                          "unit": "px",
+                          "size": 15,
+                          "sizes": []
+                        },
+                        "typography_font_weight": "400",
+                        "typography_line_height": {
+                          "unit": "em",
+                          "size": 1.95,
+                          "sizes": []
+                        },
+                        "_title": "متن — رسید و جزئیات سفارش در بخش سفارش‌های من در دسترس است. 2"
+                      },
+                      "elements": []
+                    },
+                    {
+                      "id": "12g3a6a",
+                      "elType": "container",
+                      "isInner": false,
+                      "settings": {
+                        "content_width": "full",
+                        "flex_direction": "row",
+                        "flex_wrap": "wrap",
+                        "flex_justify_content": "center",
+                        "flex_gap": {
+                          "column": "10",
+                          "row": "10",
+                          "unit": "px",
+                          "size": 10,
+                          "isLinked": true
+                        },
+                        "flex_direction_mobile": "column",
+                        "css_classes": "az-row",
+                        "_title": "اقدام‌های وضعیت",
+                        "_css_classes": "az-row"
+                      },
+                      "elements": [
+                        {
+                          "id": "1iubmvv",
+                          "elType": "widget",
+                          "isInner": false,
+                          "widgetType": "button",
+                          "settings": {
+                            "text": "مشاهدهٔ سفارش‌ها",
+                            "link": {
+                              "url": "/dashboard/orders",
+                              "is_external": "",
+                              "nofollow": "",
+                              "custom_attributes": ""
+                            },
+                            "size": "md",
+                            "align": "center",
+                            "button_type": "info",
+                            "text_color": "#FFFFFF",
+                            "background_color": "#193B5C",
+                            "border_border": "solid",
+                            "border_width": {
+                              "unit": "px",
+                              "top": "1",
+                              "right": "1",
+                              "bottom": "1",
+                              "left": "1",
+                              "isLinked": false
+                            },
+                            "border_color": "#193B5C",
+                            "border_radius": {
+                              "unit": "px",
+                              "top": "13",
+                              "right": "13",
+                              "bottom": "13",
+                              "left": "13",
+                              "isLinked": false
+                            },
+                            "typography_typography": "custom",
+                            "typography_font_family": "Peyda",
+                            "typography_font_size": {
+                              "unit": "px",
+                              "size": 15,
+                              "sizes": []
+                            },
+                            "typography_font_weight": "700",
+                            "button_text_padding": {
+                              "unit": "px",
+                              "top": "13",
+                              "right": "22",
+                              "bottom": "13",
+                              "left": "22",
+                              "isLinked": false
+                            },
+                            "button_full_width": "yes",
+                            "align_mobile": "center",
+                            "_title": "CTA — مشاهدهٔ سفارش‌ها",
+                            "_css_classes": "az-btn az-btn--primary az-btn--block"
+                          },
+                          "elements": []
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "id": "se2fuk6",
+                  "elType": "container",
+                  "isInner": false,
+                  "settings": {
+                    "content_width": "full",
+                    "flex_direction": "column",
+                    "flex_gap": {
+                      "column": "12",
+                      "row": "12",
+                      "unit": "px",
+                      "size": 12,
+                      "isLinked": true
+                    },
+                    "css_classes": "az-card az-stack",
+                    "_title": "بخش — گام بعدی",
+                    "_css_classes": "az-card az-stack"
+                  },
+                  "elements": [
+                    {
+                      "id": "bulgnzx",
+                      "elType": "widget",
+                      "isInner": false,
+                      "widgetType": "heading",
+                      "settings": {
+                        "title": "گام بعدی",
+                        "header_size": "h2",
+                        "align": "right",
+                        "title_color": "#193B5C",
+                        "typography_typography": "custom",
+                        "typography_font_family": "Neirizi",
+                        "typography_font_weight": "400",
+                        "typography_font_size": {
+                          "unit": "px",
+                          "size": 44,
+                          "sizes": []
+                        },
+                        "typography_line_height": {
+                          "unit": "em",
+                          "size": 1.34,
+                          "sizes": []
+                        },
+                        "_title": "H2 — گام بعدی"
+                      },
+                      "elements": []
+                    },
+                    {
+                      "id": "7bltr15",
+                      "elType": "widget",
+                      "isInner": false,
+                      "widgetType": "icon-list",
+                      "settings": {
+                        "icon_list": [
+                          {
+                            "_id": "13qf1zo",
+                            "text": "دسترسی به دوره فعال شده است.",
+                            "selected_icon": {
+                              "value": "fas fa-check",
+                              "library": "fa-solid"
+                            }
+                          },
+                          {
+                            "_id": "x0lx3v1",
+                            "text": "فاکتور در بخش سفارش‌های من در دسترس است.",
+                            "selected_icon": {
+                              "value": "fas fa-check",
+                              "library": "fa-solid"
+                            }
+                          },
+                          {
+                            "_id": "1st86xu",
+                            "text": "در صورت خرید کلاس حضوری، برنامهٔ جلسات ارسال می‌شود.",
+                            "selected_icon": {
+                              "value": "fas fa-check",
+                              "library": "fa-solid"
+                            }
+                          }
+                        ],
+                        "icon_color": "#2F8C87",
+                        "text_color": "#45423D",
+                        "icon_size": {
+                          "unit": "px",
+                          "size": 15,
+                          "sizes": []
+                        },
+                        "space_between": {
+                          "unit": "px",
+                          "size": 12,
+                          "sizes": []
+                        },
+                        "typography_typography": "custom",
+                        "typography_font_family": "Peyda",
+                        "typography_font_size": {
+                          "unit": "px",
+                          "size": 15,
+                          "sizes": []
+                        },
+                        "typography_line_height": {
+                          "unit": "em",
+                          "size": 1.9,
+                          "sizes": []
+                        },
+                        "_title": "گام‌ها",
+                        "_css_classes": "az-list"
+                      },
+                      "elements": []
+                    },
+                    {
+                      "id": "1t9jkl4",
+                      "elType": "container",
+                      "isInner": false,
+                      "settings": {
+                        "content_width": "full",
+                        "flex_direction": "row",
+                        "flex_wrap": "wrap",
+                        "flex_gap": {
+                          "column": "12",
+                          "row": "12",
+                          "unit": "px",
+                          "size": 12,
+                          "isLinked": true
+                        },
+                        "flex_direction_mobile": "column",
+                        "css_classes": "az-row",
+                        "_title": "اقدام‌ها",
+                        "_css_classes": "az-row"
+                      },
+                      "elements": [
+                        {
+                          "id": "1tel2m7",
+                          "elType": "widget",
+                          "isInner": false,
+                          "widgetType": "button",
+                          "settings": {
+                            "text": "رفتن به دوره‌های من",
+                            "link": {
+                              "url": "/dashboard/courses",
+                              "is_external": "",
+                              "nofollow": "",
+                              "custom_attributes": ""
+                            },
+                            "size": "md",
+                            "align": "center",
+                            "button_type": "info",
+                            "text_color": "#FFFFFF",
+                            "background_color": "#193B5C",
+                            "border_border": "solid",
+                            "border_width": {
+                              "unit": "px",
+                              "top": "1",
+                              "right": "1",
+                              "bottom": "1",
+                              "left": "1",
+                              "isLinked": false
+                            },
+                            "border_color": "#193B5C",
+                            "border_radius": {
+                              "unit": "px",
+                              "top": "13",
+                              "right": "13",
+                              "bottom": "13",
+                              "left": "13",
+                              "isLinked": false
+                            },
+                            "typography_typography": "custom",
+                            "typography_font_family": "Peyda",
+                            "typography_font_size": {
+                              "unit": "px",
+                              "size": 15,
+                              "sizes": []
+                            },
+                            "typography_font_weight": "700",
+                            "button_text_padding": {
+                              "unit": "px",
+                              "top": "13",
+                              "right": "22",
+                              "bottom": "13",
+                              "left": "22",
+                              "isLinked": false
+                            },
+                            "button_full_width": "yes",
+                            "align_mobile": "center",
+                            "_title": "CTA — دوره‌های من",
+                            "_css_classes": "az-btn az-btn--primary az-btn--block"
+                          },
+                          "elements": []
+                        },
+                        {
+                          "id": "1ljn9ra",
+                          "elType": "widget",
+                          "isInner": false,
+                          "widgetType": "button",
+                          "settings": {
+                            "text": "مشاهدهٔ سفارش",
+                            "link": {
+                              "url": "/dashboard/orders",
+                              "is_external": "",
+                              "nofollow": "",
+                              "custom_attributes": ""
+                            },
+                            "size": "md",
+                            "align": "center",
+                            "button_type": "info",
+                            "text_color": "#193B5C",
+                            "background_color": "transparent",
+                            "border_border": "solid",
+                            "border_width": {
+                              "unit": "px",
+                              "top": "1",
+                              "right": "1",
+                              "bottom": "1",
+                              "left": "1",
+                              "isLinked": false
+                            },
+                            "border_color": "#193B5C33",
+                            "border_radius": {
+                              "unit": "px",
+                              "top": "13",
+                              "right": "13",
+                              "bottom": "13",
+                              "left": "13",
+                              "isLinked": false
+                            },
+                            "typography_typography": "custom",
+                            "typography_font_family": "Peyda",
+                            "typography_font_size": {
+                              "unit": "px",
+                              "size": 15,
+                              "sizes": []
+                            },
+                            "typography_font_weight": "700",
+                            "button_text_padding": {
+                              "unit": "px",
+                              "top": "13",
+                              "right": "22",
+                              "bottom": "13",
+                              "left": "22",
+                              "isLinked": false
+                            },
+                            "button_full_width": "yes",
+                            "align_mobile": "center",
+                            "_title": "CTA — سفارش‌ها",
+                            "_css_classes": "az-btn az-btn--outline az-btn--block"
+                          },
+                          "elements": []
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
