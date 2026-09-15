@@ -103,6 +103,27 @@ means:
   forever,
 - a failure mid-finalise aborts the multipart upload, leaving no orphan.
 
+### Import from cloud URL (admin)
+
+In addition to direct upload, `/admin/videos` and the lesson manager offer
+**“دریافت از لینک ابری”** → `POST /api/video/import`:
+
+- Admin provides a public `https://` URL (e.g. a file already on Liara/Arvan/S3).
+- Server validates the URL (no private IP, no localhost, no metadata service,
+  only https, SSRF-safe with manual redirect checks).
+- Server streams the remote file in 8 MB parts directly into the private bucket
+  (`videos/`), creating a `VideoAsset` with `status: ready` on success.
+- On any failure the multipart upload is aborted, the record is marked `failed`,
+  and no orphan parts remain.
+- The imported file is then available in the video library and can be attached
+  to lessons exactly like an uploaded file — same secure player, same token
+  flow, same private bucket guarantee.
+
+This satisfies the requirement “receive and play a course's videos from a cloud
+link using exactly the infrastructure we built”: the file ends up in the same
+private `videos/` prefix, never as a public URL, and is always served via
+`/api/video/[id]/stream` with enrolment check.
+
 ## Local development
 
 Without S3 credentials the same code writes to `data/object-store/`. Identical

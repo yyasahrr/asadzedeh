@@ -89,9 +89,9 @@ curl -s https://asadzedeh.ir/api/health | jq '.integrations'
 | بخش | مسیر | توضیح |
 |---|---|---|
 | تیزر دوره/کلاس | فرم دوره و کلاس در ادمین | آپلود اختصاصی یا embed؛ نمایش با `components/video/TrailerBlock.tsx` |
-| جلسات دوره | `/admin/courses/[slug]/lessons` | آپلود تکه‌تکه (`/api/video/upload`)، فصل‌بندی، پیش‌نمایش رایگان |
-| پلیر امن | `components/video/SecurePlayer.tsx` | توکن امضاشده کوتاه‌عمر، واترمارک متحرک با شماره موبایل بیننده، Range streaming از Object Storage خصوصی |
-| اسپات‌پلیر | `lib/spotplayer.ts` | صدور لایسنس با واترمارک شماره پس از پرداخت (API Key از ادمین) |
+| جلسات دوره | `/admin/courses/[slug]/lessons` | آپلود تکه‌تکه (`/api/video/upload`) + دریافت از لینک ابری (`/api/video/import`)، فصل‌بندی، پیش‌نمایش رایگان |
+| پلیر امن | `components/video/SecurePlayer.tsx` | توکن امضاشده کوتاه‌عمر، واترمارک متحرک با شماره موبایل بیننده، Range streaming از Object Storage خصوصی (باکت private) |
+| کتابخانه ویدیو | `/admin/videos` | مدیریت متمرکز ویدیوها: آپلود از دستگاه یا انتقال مستقیم از فضای ابری (S3/آروان/لیارا) به باکت خصوصی، بدون URL عمومی |
 | پنل هنرجو | `/dashboard/courses/[slug]` | پخش جلسات، پیشرفت، تکمیل خودکار، گواهی |
 | ۲FA | `/account/security`, `/auth/verify` | TOTP سازگار با Google Authenticator + کد بازیابی؛ سیاست اجباری کارکنان از `/admin/security` |
 | لاگ سیستم | `/admin/audit` | ممیزی ساخت‌یافته با زنجیره هش، فیلتر و خروجی CSV |
@@ -99,7 +99,7 @@ curl -s https://asadzedeh.ir/api/health | jq '.integrations'
 | فروشگاه | `/shop`, `/admin/shop` | محصول، قیمت، موجودی، روش ارسال؛ پیش‌سفارش ساخت با بیعانه و خط زمانی (`/shop/preorder`) |
 | اینستاگرام | `components/home/InstagramEmbed.tsx` | embed رسمی قبل از فوتر؛ تنظیم از `/admin/content` |
 
-متغیرهای محیطی مهم در `.env.example`: `APP_SECRET` (الزامی در production)، `FFMPEG_PATH` و `SPOTPLAYER_API_KEY` (اختیاری).
+در این RC: واترمارک حک‌شده با ffmpeg و DRM اسپات‌پلیر عمداً غیرفعال است. پخش فقط با فایل اصلی و پلیر امن S3 انجام می‌شود. متغیرهای محیطی مهم در `.env.example`: `APP_SECRET` (الزامی در production)، `S3_*` برای فضای ابری خصوصی.
 
 ## استقرار روی cPanel (Node.js Application)
 

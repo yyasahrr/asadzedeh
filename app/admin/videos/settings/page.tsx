@@ -1,44 +1,40 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CircleCheck, ExternalLink, Info, KeyRound, MonitorSmartphone, ShieldCheck, Timer } from "lucide-react";
+import { CircleCheck, Cloud, Info, ShieldCheck, Timer } from "lucide-react";
 import { saveVideoSettings } from "../../actions";
 import { Denied } from "@/components/admin/Denied";
 import { ProtectionFields } from "@/components/admin/ProtectionFields";
 import { FieldLabel, Input } from "@/components/ui/Input";
 import { can, getSessionUser } from "@/lib/auth";
 import { toFa } from "@/lib/format";
-import { spotPlayerConfigured } from "@/lib/spotplayer";
 import { getSettings } from "@/lib/store";
-import { ffmpegStatus } from "@/lib/video";
+import { storageKind } from "@/lib/storage";
+import { objectStorageConfigured } from "@/lib/env";
 
 export const metadata: Metadata = { title: "تنظیمات امنیت ویدیو" };
 export const dynamic = "force-dynamic";
-
-function DeviceInput({ name, label, value }: { name: string; label: string; value: number }) {
-  return (
-    <div>
-      <FieldLabel htmlFor={`sp-${name}`}>{label}</FieldLabel>
-      <Input id={`sp-${name}`} name={name} inputMode="numeric" defaultValue={value} dir="ltr" className="text-left" />
-    </div>
-  );
-}
 
 export default async function VideoSettingsPage({ searchParams }: { searchParams: Promise<{ saved?: string }> }) {
   const user = await getSessionUser();
   if (!user || !can(user, "videos")) return <Denied />;
   const { saved } = await searchParams;
   const s = getSettings();
-  const ffmpeg = ffmpegStatus();
-  const sp = s.spotplayer;
+  const kind = storageKind();
+  const configured = objectStorageConfigured();
 
   return (
     <div className="space-y-6">
       <div>
         <p className="text-xs text-ink-500">
-          <Link href="/admin/videos" className="hover:text-teal-700">کتابخانه ویدیو</Link> / تنظیمات
+          <Link href="/admin/videos" className="hover:text-teal-700">
+            کتابخانه ویدیو
+          </Link>{" "}
+          / تنظیمات
         </p>
         <h1 className="mt-1 text-2xl font-black text-navy-900">تنظیمات امنیت و پخش ویدیو</h1>
-        <p className="mt-1 text-sm text-ink-600">این مقادیر پیش‌فرض دوره‌های جدید هستند؛ هر دوره می‌تواند در فرم ویرایش خودش آن‌ها را تغییر دهد.</p>
+        <p className="mt-1 text-sm text-ink-600">
+          این مقادیر پیش‌فرض دوره‌های جدید هستند؛ هر دوره می‌تواند در فرم ویرایش خودش آن‌ها را تغییر دهد. پخش همیشه امن است و از فضای ابری خصوصی انجام می‌شود.
+        </p>
       </div>
 
       {saved && (
@@ -47,13 +43,27 @@ export default async function VideoSettingsPage({ searchParams }: { searchParams
         </div>
       )}
 
+      <div className={`flex items-start gap-3 rounded-2xl p-4 ring-1 ${configured ? "bg-teal-50 ring-teal-200" : "bg-red-50 ring-red-200"}`}>
+        <Cloud className={`mt-0.5 h-5 w-5 ${configured ? "text-teal-700" : "text-red-700"}`} />
+        <div className="text-sm">
+          <p className="font-black text-ink-900">
+            وضعیت فضای ابری: {configured ? (kind === "s3" ? "متصل (S3 خصوصی)" : "لوکال — فقط برای توسعه") : "پیکربندی نشده — آپلود در production مسدود است"}
+          </p>
+          <p className="mt-1 text-xs leading-6 text-ink-600">
+            ویدیوها در <code dir="ltr">videos/</code> ذخیره می‌شوند، هیچ URL عمومی تولید نمی‌شود. پخش فقط از{" "}
+            <code dir="ltr">/api/video/[id]/stream</code> با توکن امضاشده کوتاه‌مدت و بررسی ثبت‌نام انجام می‌شود. برای production باید{" "}
+            <code dir="ltr">S3_ENDPOINT / S3_BUCKET / S3_ACCESS_KEY / S3_SECRET_KEY</code> تنظیم باشد.
+          </p>
+        </div>
+      </div>
+
       <form action={saveVideoSettings} className="grid gap-6">
         {/* Protection defaults */}
         <section className="grid gap-4 rounded-2xl bg-card p-6 shadow-card ring-1 ring-ink-900/5 sm:grid-cols-2">
           <h2 className="flex items-center gap-2 font-black text-navy-900 sm:col-span-2">
             <ShieldCheck className="h-5 w-5 text-teal-700" /> حفاظت پیش‌فرض دوره‌ها
           </h2>
-          <ProtectionFields value={s.video.defaults} spotConfigured={spotPlayerConfigured()} ffmpegAvailable={ffmpeg.available} />
+          <ProtectionFields value={s.video.defaults} />
         </section>
 
         {/* Player + delivery */}
@@ -64,7 +74,7 @@ export default async function VideoSettingsPage({ searchParams }: { searchParams
           <div>
             <FieldLabel htmlFor="v-ttl">عمر لینک پخش (ثانیه)</FieldLabel>
             <Input id="v-ttl" name="signedUrlSeconds" inputMode="numeric" defaultValue={s.video.signedUrlSeconds} dir="ltr" className="text-left" />
-            <p className="mt-1 text-xs text-ink-500">لینک‌ها به کاربر، ویدیو و مرورگر گره خورده‌اند و پلیر پیش از انقضا آن‌ها را تمدید می‌کند.</p>
+            <p className="mt-1 text-xs text-ink-500">لینک‌ها به کاربر، ویدیو و مرورگر گره خورده‌اند و پلیر پیش از انقضا آن‌ها را تمدید می‌کند. حداقل ۶۰ ثانیه.</p>
           </div>
           <div>
             <FieldLabel htmlFor="v-int">فاصله جابه‌جایی واترمارک (ثانیه)</FieldLabel>
@@ -78,68 +88,19 @@ export default async function VideoSettingsPage({ searchParams }: { searchParams
             <FieldLabel htmlFor="v-color">رنگ پلیر</FieldLabel>
             <div className="flex items-center gap-2">
               <input id="v-color" name="playerColor" type="color" defaultValue={s.video.playerColor} className="h-11 w-16 cursor-pointer rounded-xl border border-ink-900/10 bg-white p-1" />
-              <span className="text-xs text-ink-500" dir="ltr">{s.video.playerColor}</span>
+              <span className="text-xs text-ink-500" dir="ltr">
+                {s.video.playerColor}
+              </span>
             </div>
           </div>
-          <div className="sm:col-span-2">
-            <label className="flex cursor-pointer items-start gap-3 rounded-xl bg-sand-50 p-3">
-              <input type="checkbox" name="transcode" value="1" defaultChecked={s.video.transcode} className="mt-1 h-4 w-4 accent-teal-700" />
-              <span>
-                <span className="block text-sm font-bold text-ink-800">تبدیل خودکار به HLS پس از آپلود</span>
-                <span className="block text-xs leading-6 text-ink-500">
-                  ویدیو به قطعات رمزنگاری‌نشده اما امضاشده (m3u8/ts) تبدیل می‌شود؛ دانلود یک‌جای فایل عملاً ناممکن است.
-                  {ffmpeg.available ? " پردازش ویدیو فعال است." : ` ${ffmpeg.reason ?? "ffmpeg در دسترس نیست"}`}
-                </span>
-              </span>
-            </label>
-          </div>
-          <div className="sm:col-span-2">
-            <FieldLabel htmlFor="v-ffmpeg">مسیر ffmpeg</FieldLabel>
-            <Input id="v-ffmpeg" name="ffmpegPath" defaultValue={s.video.ffmpegPath} placeholder="auto (جست‌وجوی خودکار) یا مثلاً /usr/bin/ffmpeg" dir="ltr" className="text-left" />
-          </div>
-        </section>
 
-        {/* SpotPlayer */}
-        <section className="grid gap-4 rounded-2xl bg-card p-6 shadow-card ring-1 ring-ink-900/5 sm:grid-cols-2">
-          <div className="flex flex-wrap items-center justify-between gap-2 sm:col-span-2">
-            <h2 className="flex items-center gap-2 font-black text-navy-900">
-              <KeyRound className="h-5 w-5 text-teal-700" /> اتصال به اسپات‌پلیر (DRM)
-            </h2>
-            <a href="https://spotplayer.ir/help/api" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs font-bold text-teal-700 hover:underline">
-              مستندات API <ExternalLink className="h-3 w-3" />
-            </a>
-          </div>
-          <div className="flex items-start gap-2 rounded-xl bg-sand-50 p-3 text-xs leading-6 text-ink-600 sm:col-span-2">
-            <Info className="mt-1 h-4 w-4 shrink-0 text-navy-700" />
-            <span>
-              با فعال‌سازی، برای هر خرید دوره‌ای که «تحویل با اسپات‌پلیر» دارد، یک لایسنس با نام و شماره خریدار (به‌عنوان واترمارک) ساخته و لینک آن پیامک می‌شود.
-              بدون کلید API، سامانه در «حالت نمایشی» کلید شبیه‌سازی‌شده می‌سازد تا جریان خرید کامل تست شود.
-            </span>
-          </div>
-          <label className="flex cursor-pointer items-center gap-2 text-sm font-bold text-ink-700">
-            <input type="checkbox" name="spEnabled" value="1" defaultChecked={sp.enabled} className="h-4 w-4 accent-teal-700" /> فعال باشد
-          </label>
-          <label className="flex cursor-pointer items-center gap-2 text-sm font-bold text-ink-700">
-            <input type="checkbox" name="spTest" value="1" defaultChecked={sp.test} className="h-4 w-4 accent-teal-700" /> لایسنس تستی (بدون هزینه)
-          </label>
-          <div className="sm:col-span-2">
-            <FieldLabel htmlFor="sp-key">کلید API</FieldLabel>
-            <Input id="sp-key" name="spApiKey" type="password" placeholder={sp.apiKey ? `••••••••${sp.apiKey.slice(-4)} (برای تغییر، مقدار جدید وارد کنید)` : "کلید API از پنل اسپات‌پلیر"} dir="ltr" className="text-left" autoComplete="off" />
-            <input type="hidden" name="spKeepKey" value="1" />
-          </div>
-          <div className="sm:col-span-2">
-            <FieldLabel htmlFor="sp-course">شناسه دوره پیش‌فرض اسپات‌پلیر</FieldLabel>
-            <Input id="sp-course" name="spDefaultCourse" defaultValue={sp.defaultCourseId} placeholder="برای دوره‌هایی که شناسه اختصاصی ندارند" dir="ltr" className="text-left" />
-          </div>
-          <div className="sm:col-span-2">
-            <p className="mb-2 flex items-center gap-1.5 text-sm font-bold text-ink-700"><MonitorSmartphone className="h-4 w-4" /> سقف دستگاه‌ها (۰ = ممنوع)</p>
-            <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
-              <DeviceInput name="spAll" label="کل" value={sp.devices.all} />
-              <DeviceInput name="spWin" label="ویندوز" value={sp.devices.windows} />
-              <DeviceInput name="spMac" label="مک" value={sp.devices.mac} />
-              <DeviceInput name="spAnd" label="اندروید" value={sp.devices.android} />
-              <DeviceInput name="spIos" label="iOS" value={sp.devices.ios} />
-              <DeviceInput name="spWeb" label="وب" value={sp.devices.web} />
+          <div className="sm:col-span-2 rounded-xl bg-sand-50 p-3 text-xs leading-6 text-ink-600">
+            <div className="flex gap-2">
+              <Info className="mt-0.5 h-4 w-4 shrink-0 text-navy-700" />
+              <span>
+                در این نسخه تبدیل HLS و واترمارک حک‌شده با ffmpeg غیرفعال است (عمداً). فایل اصلی با پخش امن ارائه می‌شود.
+                کپی لینک پخش به‌سرعت منقضی می‌شود و در صورت خروج کاربر، بلافاصله بی‌اعتبار می‌شود. هیچ ویدیویی با URL مستقیم S3 در HTML یا API بازگردانده نمی‌شود.
+              </span>
             </div>
           </div>
         </section>

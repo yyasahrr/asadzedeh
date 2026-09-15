@@ -130,13 +130,15 @@ function parseTrailer(fd: FormData): Trailer | undefined {
 }
 
 function parseProtection(fd: FormData, base: CourseProtection): CourseProtection {
+  // RC: securePlayer is always on (private S3 + signed token + enrolment check).
+  // burnWatermark (ffmpeg) and spotPlayer (DRM) are out of scope and forced off.
   return {
-    securePlayer: bool(fd, "p_securePlayer"),
-    burnWatermark: bool(fd, "p_burnWatermark"),
+    securePlayer: true,
+    burnWatermark: false,
     overlayWatermark: bool(fd, "p_overlayWatermark"),
-    spotPlayer: bool(fd, "p_spotPlayer"),
-    spotPlayerCourseIds: lines(str(fd, "p_spotIds").replace(/[،,]/g, "\n")),
-    maxDevices: num(fd, "p_maxDevices", base.maxDevices),
+    spotPlayer: false,
+    spotPlayerCourseIds: [],
+    maxDevices: 1,
     blockDownload: bool(fd, "p_blockDownload"),
   };
 }
@@ -1480,35 +1482,30 @@ export async function revokeUserSessions(fd: FormData) {
 export async function saveVideoSettings(fd: FormData) {
   const me = await staff("videos");
   const s = getSettings();
+  // RC: transcode/ffmpeg and spotplayer are out of scope. Keep only real secure-player settings.
   writeDb({
     settings: {
       ...s,
       video: {
         defaults: parseProtection(fd, s.video.defaults),
         signedUrlSeconds: num(fd, "signedUrlSeconds", s.video.signedUrlSeconds),
-        transcode: bool(fd, "transcode"),
-        ffmpegPath: str(fd, "ffmpegPath") || "auto",
+        transcode: false,
+        ffmpegPath: "auto",
         watermarkExtra: str(fd, "watermarkExtra"),
         watermarkIntervalSec: num(fd, "watermarkIntervalSec", s.video.watermarkIntervalSec),
         playerColor: /^#[0-9a-f]{6}$/i.test(str(fd, "playerColor")) ? str(fd, "playerColor") : s.video.playerColor,
       },
       spotplayer: {
-        enabled: bool(fd, "spEnabled"),
-        apiKey: str(fd, "spApiKey") || (str(fd, "spKeepKey") === "1" ? s.spotplayer.apiKey : ""),
-        test: bool(fd, "spTest"),
-        defaultCourseId: str(fd, "spDefaultCourse"),
-        devices: {
-          all: numAllowZero(fd, "spAll", s.spotplayer.devices.all),
-          windows: numAllowZero(fd, "spWin", s.spotplayer.devices.windows),
-          mac: numAllowZero(fd, "spMac", s.spotplayer.devices.mac),
-          android: numAllowZero(fd, "spAnd", s.spotplayer.devices.android),
-          ios: numAllowZero(fd, "spIos", s.spotplayer.devices.ios),
-          web: numAllowZero(fd, "spWeb", s.spotplayer.devices.web),
-        },
+        // Keep existing key for backward compat but force disabled in RC
+        enabled: false,
+        apiKey: s.spotplayer.apiKey,
+        test: s.spotplayer.test,
+        defaultCourseId: "",
+        devices: s.spotplayer.devices,
       },
     },
   });
-  await audit({ action: "settings.update", level: "security", actor: actor(me), detail: { section: "video+spotplayer" } });
+  await audit({ action: "settings.update", level: "security", actor: actor(me), detail: { section: "video" } });
   revalidatePath("/admin/videos");
   redirect("/admin/videos/settings?saved=1");
 }

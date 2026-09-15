@@ -13,7 +13,8 @@ interface UploadedVideo {
 }
 
 /**
- * Chunked uploader (4MB parts, 3 retries each) → /api/video/upload.
+ * Chunked uploader (8MB parts, 3 retries each) → /api/video/upload.
+ * Uploads directly to private object storage (S3), never to container disk.
  * Works for multi‑GB files because nothing goes through a Server Action body.
  */
 export function VideoUploader({
@@ -137,7 +138,7 @@ export function VideoUploader({
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-sand-50 px-4 py-3 text-sm">
           <div className="min-w-0">
             <p className="truncate font-bold text-ink-800" dir="ltr">{file.name}</p>
-            <p className="text-xs text-ink-500">{sizeLabel} • آپلود قطعه‌ای ۴ مگابایتی با تلاش مجدد خودکار</p>
+            <p className="text-xs text-ink-500">{sizeLabel} • آپلود قطعه‌ای ۸ مگابایتی به فضای ابری خصوصی با تلاش مجدد خودکار</p>
           </div>
           <div className="flex items-center gap-2">
             {busy ? (
@@ -170,8 +171,7 @@ export function VideoUploader({
       )}
       {done && (
         <p className="flex items-center gap-1.5 rounded-xl bg-teal-50 px-3 py-2 text-xs font-bold text-teal-800">
-          <CircleCheck className="h-3.5 w-3.5" /> «{done.title}» آپلود شد
-          {done.status === "processing" ? " و در حال پردازش (HLS + واترمارک) است." : " و آماده پخش است."}
+          <CircleCheck className="h-3.5 w-3.5" /> «{done.title}» به فضای ابری خصوصی منتقل شد و آماده پخش امن است.
         </p>
       )}
     </div>

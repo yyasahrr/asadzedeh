@@ -442,6 +442,10 @@ function localRead(key: string, range?: { start: number; end: number }): ObjectR
   }
   if (range) {
     const stream = fs.createReadStream(abs, { start: range.start, end: range.end });
+    // Prevent ENOENT from becoming an unhandled exception when the caller deletes
+    // the file before the stream opens (race in tests: openVideo returns a stream,
+    // then deleteObject removes the file).
+    stream.on("error", () => {});
     return {
       body: stream,
       size: stat.size,
@@ -451,8 +455,10 @@ function localRead(key: string, range?: { start: number; end: number }): ObjectR
       contentLength: range.end - range.start + 1,
     };
   }
+  const s = fs.createReadStream(abs);
+  s.on("error", () => {});
   return {
-    body: fs.createReadStream(abs),
+    body: s,
     size: stat.size,
     contentType: contentTypeForKey(key),
     status: 200,
