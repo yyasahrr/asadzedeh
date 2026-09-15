@@ -18,7 +18,6 @@ import {
   type PendingUpload,
 } from "@/lib/video";
 import type { VideoAsset } from "@/lib/types";
-import { fetchWithTimeout } from "@/lib/http";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;

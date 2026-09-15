@@ -129,7 +129,8 @@ function parseTrailer(fd: FormData): Trailer | undefined {
   return { kind, src, poster: str(fd, "trailerPoster") || undefined };
 }
 
-function parseProtection(fd: FormData, base: CourseProtection): CourseProtection {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function parseProtection(fd: FormData, _base: CourseProtection): CourseProtection {
   // RC: securePlayer is always on (private S3 + signed token + enrolment check).
   // burnWatermark (ffmpeg) and spotPlayer (DRM) are out of scope and forced off.
   return {

@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CircleCheck, Link2, Loader2, TriangleAlert } from "lucide-react";
-import { toFa } from "@/lib/format";
 
 interface ImportedVideo {
   id: string;

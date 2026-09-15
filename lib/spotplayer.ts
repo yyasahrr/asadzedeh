@@ -29,7 +29,7 @@ export function spotPlayerConfigured(): boolean {
   return false;
 }
 
-export async function createSpotLicense(_opts: {
+export async function createSpotLicense(opts: {
   name: string;
   phone: string;
   courseIds: string[];
@@ -37,5 +37,6 @@ export async function createSpotLicense(_opts: {
 }): Promise<{ ok: true; license: SpotLicense } | { ok: false; error: string }> {
   // RC: refuse explicitly so callers can audit the skip rather than throw
   void spotConfig();
+  void opts;
   return { ok: false, error: "اسپات‌پلیر در این نسخه غیرفعال است (پخش امن S3 فعال است)" };
 }
