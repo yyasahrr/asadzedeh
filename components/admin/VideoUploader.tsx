@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CircleCheck, Clapperboard, Loader2, TriangleAlert, Upload } from "lucide-react";
+import { CircleCheck, FileVideo, Loader2, TriangleAlert, Upload } from "lucide-react";
 import { toFa } from "@/lib/format";
 
 interface UploadedVideo {
@@ -12,11 +12,6 @@ interface UploadedVideo {
   status: string;
 }
 
-/**
- * Chunked uploader (8MB parts, 3 retries each) → /api/video/upload.
- * Uploads directly to private object storage (S3), never to container disk.
- * Works for multi‑GB files because nothing goes through a Server Action body.
- */
 export function VideoUploader({
   onUploaded,
   compact = false,
@@ -96,84 +91,105 @@ export function VideoUploader({
   const sizeLabel = file ? `${toFa((file.size / 1024 / 1024).toFixed(1))} مگابایت` : "";
 
   return (
-    <div className={compact ? "grid gap-3" : "grid gap-3 rounded-2xl bg-card p-5 shadow-card ring-1 ring-ink-900/5"}>
-      {!compact && (
-        <div className="flex items-center gap-2">
-          <Clapperboard className="h-5 w-5 text-teal-700" />
-          <h3 className="font-black text-navy-900">آپلود ویدیوی جدید</h3>
+    <div className={compact ? "flex flex-col gap-4" : "flex flex-col gap-4 rounded-2xl bg-card p-6 shadow-card ring-1 ring-ink-900/5"}>
+      <div className="flex items-start gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-navy-800 text-white">
+          <Upload className="h-5 w-5" />
         </div>
-      )}
-      <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
-        <input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="عنوان ویدیو (مثلاً: جلسه ۳ — چله‌کشی)"
-          className="h-11 rounded-xl border border-ink-900/10 bg-white px-3 text-sm focus:border-teal-600 focus:outline-none"
-          disabled={busy}
-        />
-        <button
-          type="button"
-          onClick={() => fileRef.current?.click()}
-          disabled={busy}
-          className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-xl bg-sand-200 px-4 text-sm font-bold text-ink-700 hover:bg-sand-300 disabled:opacity-60"
-        >
-          <Upload className="h-4 w-4" />
-          {file ? "تغییر فایل" : "انتخاب فایل ویدیو"}
-        </button>
-        <input
-          ref={fileRef}
-          type="file"
-          accept="video/mp4,video/quicktime,video/webm,video/x-matroska,.mp4,.mov,.webm,.mkv,.m4v"
-          className="hidden"
-          onChange={(e) => {
-            setFile(e.target.files?.[0] ?? null);
-            setDone(null);
-            setError("");
-            if (!title && e.target.files?.[0]) setTitle(e.target.files[0].name.replace(/\.[^.]+$/, ""));
-          }}
-        />
+        <div className="min-w-0 flex-1">
+          <h3 className="text-[15px] font-black text-navy-900">آپلود از دستگاه</h3>
+          <p className="mt-1 text-xs leading-5 text-ink-500">فایل را مستقیم به فضای ابری خصوصی منتقل کنید. ۸MB تکه‌تکه، امن، قابل ادامه.</p>
+        </div>
       </div>
 
-      {file && (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-sand-50 px-4 py-3 text-sm">
-          <div className="min-w-0">
-            <p className="truncate font-bold text-ink-800" dir="ltr">{file.name}</p>
-            <p className="text-xs text-ink-500">{sizeLabel} • آپلود قطعه‌ای ۸ مگابایتی به فضای ابری خصوصی با تلاش مجدد خودکار</p>
-          </div>
-          <div className="flex items-center gap-2">
-            {busy ? (
-              <button type="button" onClick={() => (abortRef.current = true)} className="h-9 cursor-pointer rounded-lg bg-white px-3 text-xs font-bold text-red-700 ring-1 ring-red-200">
-                لغو
-              </button>
-            ) : (
-              <button type="button" onClick={upload} className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg bg-navy-800 px-4 text-xs font-bold text-white hover:bg-navy-700">
-                <Upload className="h-3.5 w-3.5" /> شروع آپلود
-              </button>
-            )}
-          </div>
-        </div>
-      )}
-
-      {busy && (
+      <div className="grid gap-3">
         <div>
-          <div className="h-2.5 w-full overflow-hidden rounded-full bg-sand-200">
-            <div className="h-full rounded-full bg-teal-600 transition-all" style={{ width: `${progress}%` }} />
-          </div>
-          <p className="mt-1.5 flex items-center gap-1.5 text-xs text-ink-600">
-            <Loader2 className="h-3.5 w-3.5 animate-spin" /> در حال آپلود… {toFa(progress)}٪
-          </p>
+          <label className="mb-1.5 block text-xs font-bold text-ink-700">عنوان ویدیو</label>
+          <input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="مثلاً: جلسه ۳ — چله‌کشی"
+            className="h-11 w-full rounded-xl border border-ink-900/10 bg-white px-3 text-sm font-medium text-ink-900 placeholder:text-ink-400 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+            disabled={busy}
+          />
         </div>
-      )}
-      {error && (
-        <p className="flex items-center gap-1.5 rounded-xl bg-red-50 px-3 py-2 text-xs font-bold text-red-700">
-          <TriangleAlert className="h-3.5 w-3.5" /> {error}
-        </p>
-      )}
-      {done && (
-        <p className="flex items-center gap-1.5 rounded-xl bg-teal-50 px-3 py-2 text-xs font-bold text-teal-800">
-          <CircleCheck className="h-3.5 w-3.5" /> «{done.title}» به فضای ابری خصوصی منتقل شد و آماده پخش امن است.
-        </p>
-      )}
+
+        <div>
+          <label className="mb-1.5 block text-xs font-bold text-ink-700">فایل ویدیو</label>
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            disabled={busy}
+            className="group flex w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-ink-900/15 bg-sand-50/70 px-4 py-6 text-center transition-colors hover:border-teal-400/50 hover:bg-teal-50/30 disabled:opacity-60"
+          >
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-ink-900/5 group-hover:ring-teal-200">
+              <FileVideo className="h-5 w-5 text-navy-700" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-navy-900">{file ? file.name : "انتخاب فایل ویدیو"}</p>
+              <p className="mt-1 text-[11px] text-ink-500">mp4, mov, webm, mkv — تا ۴GB</p>
+            </div>
+          </button>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="video/mp4,video/quicktime,video/webm,video/x-matroska,.mp4,.mov,.webm,.mkv,.m4v"
+            className="hidden"
+            onChange={(e) => {
+              setFile(e.target.files?.[0] ?? null);
+              setDone(null);
+              setError("");
+              if (!title && e.target.files?.[0]) setTitle(e.target.files[0].name.replace(/\.[^.]+$/, ""));
+            }}
+          />
+        </div>
+
+        {file && (
+          <div className="flex items-center justify-between rounded-xl bg-white px-4 py-3 text-sm ring-1 ring-ink-900/10">
+            <div className="min-w-0">
+              <p className="truncate text-sm font-bold text-ink-900" dir="ltr">
+                {file.name}
+              </p>
+              <p className="text-xs text-ink-500">{sizeLabel}</p>
+            </div>
+            <div className="flex items-center gap-2">
+              {busy ? (
+                <button type="button" onClick={() => (abortRef.current = true)} className="h-8 cursor-pointer rounded-lg bg-white px-3 text-xs font-bold text-red-700 ring-1 ring-red-200 hover:bg-red-50">
+                  لغو
+                </button>
+              ) : (
+                <button type="button" onClick={upload} className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-xl bg-navy-800 px-5 text-xs font-black text-white hover:bg-navy-700">
+                  <Upload className="h-4 w-4" /> شروع آپلود
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {busy && (
+          <div className="space-y-2">
+            <div className="h-2 w-full overflow-hidden rounded-full bg-sand-200">
+              <div className="h-full rounded-full bg-teal-600 transition-all duration-300" style={{ width: `${progress}%` }} />
+            </div>
+            <p className="flex items-center gap-1.5 text-xs font-medium text-ink-600">
+              <Loader2 className="h-3.5 w-3.5 animate-spin" /> در حال آپلود… {toFa(progress)}٪ — لطفاً صفحه را نبندید
+            </p>
+          </div>
+        )}
+
+        {error && (
+          <div className="flex gap-2 rounded-xl bg-red-50 px-3 py-2.5 text-xs font-bold text-red-700 ring-1 ring-red-200">
+            <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
+        {done && (
+          <div className="flex gap-2 rounded-xl bg-teal-50 px-3 py-2.5 text-xs font-bold text-teal-800 ring-1 ring-teal-200">
+            <CircleCheck className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>«{done.title}» به فضای خصوصی منتقل شد و آماده اتصال به جلسات است.</span>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

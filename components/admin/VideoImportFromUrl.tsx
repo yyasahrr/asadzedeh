@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { CircleCheck, Link2, Loader2, TriangleAlert } from "lucide-react";
+import { CircleCheck, CloudDownload, Link2, Loader2, TriangleAlert } from "lucide-react";
 
 interface ImportedVideo {
   id: string;
@@ -54,57 +54,73 @@ export function VideoImportFromUrl({
   }
 
   return (
-    <div className={compact ? "grid gap-3" : "grid gap-3 rounded-2xl bg-card p-5 shadow-card ring-1 ring-ink-900/5"}>
-      {!compact && (
-        <div className="flex items-center gap-2">
-          <Link2 className="h-5 w-5 text-teal-700" />
-          <h3 className="font-black text-navy-900">دریافت ویدیو از فضای ابری (لینک مستقیم)</h3>
+    <div className={compact ? "flex flex-col gap-4" : "flex flex-col gap-4 rounded-2xl bg-card p-6 shadow-card ring-1 ring-ink-900/5"}>
+      <div className="flex items-start gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-700 text-white">
+          <CloudDownload className="h-5 w-5" />
         </div>
-      )}
-      <p className="text-xs leading-6 text-ink-500">
-        اگر ویدیو از قبل روی یک فضای ابری (مثلاً لیارا، آروان، S3) دارید، لینک مستقیم آن را وارد کنید تا مستقیماً به مخزن خصوصی سایت منتقل شود.
-        لینک باید <span dir="ltr" className="font-mono text-[11px]">https://</span> و قابل دانلود باشد و به شبکه خصوصی اشاره نکند.
-        پس از انتقال، فایل فقط از طریق پلیر امن و با احراز هویت پخش می‌شود.
-      </p>
-      <div className="grid gap-3 sm:grid-cols-[1fr_240px]">
-        <input
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          placeholder="https://.../video.mp4"
-          dir="ltr"
-          className="h-11 rounded-xl border border-ink-900/10 bg-white px-3 text-left text-sm focus:border-teal-600 focus:outline-none"
-          disabled={busy}
-        />
-        <input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="عنوان ویدیو (اختیاری)"
-          className="h-11 rounded-xl border border-ink-900/10 bg-white px-3 text-sm focus:border-teal-600 focus:outline-none"
-          disabled={busy}
-        />
+        <div className="min-w-0 flex-1">
+          <h3 className="text-[15px] font-black text-navy-900">دریافت از فضای ابری (لینک مستقیم)</h3>
+          <p className="mt-1 text-xs leading-5 text-ink-500">لینک https ویدیو را بدهید تا سرور مستقیماً آن را به باکت خصوصی منتقل کند.</p>
+        </div>
       </div>
-      <div className="flex items-center gap-2">
+
+      <div className="rounded-xl bg-sand-50 px-3 py-2.5 text-[11px] leading-5 text-ink-600 ring-1 ring-ink-900/5">
+        مناسب برای وقتی ویدیو از قبل روی آروان، لیارا یا S3 دارید. فایل پس از انتقال فقط با پلیر امن و احراز هویت پخش می‌شود، نه با URL عمومی.
+      </div>
+
+      <div className="grid gap-3">
+        <div>
+          <label className="mb-1.5 block text-xs font-bold text-ink-700">لینک مستقیم ویدیو</label>
+          <div className="relative">
+            <Link2 className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
+            <input
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              placeholder="https://.../video.mp4"
+              dir="ltr"
+              className="h-11 w-full rounded-xl border border-ink-900/10 bg-white py-2 pr-10 pl-3 text-left text-sm font-medium text-ink-900 placeholder:text-ink-400 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+              disabled={busy}
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="mb-1.5 block text-xs font-bold text-ink-700">عنوان ویدیو (اختیاری)</label>
+          <input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="مثلاً: جلسه ۳ — چله‌کشی"
+            className="h-11 w-full rounded-xl border border-ink-900/10 bg-white px-3 text-sm font-medium text-ink-900 placeholder:text-ink-400 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+            disabled={busy}
+          />
+        </div>
+
         <button
           type="button"
           onClick={doImport}
           disabled={busy || !url.trim()}
-          className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-xl bg-navy-800 px-5 text-sm font-bold text-white hover:bg-navy-700 disabled:opacity-60"
+          className="inline-flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-navy-800 text-sm font-black text-white transition-colors hover:bg-navy-700 disabled:opacity-60"
         >
-          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Link2 className="h-4 w-4" />}
-          {busy ? "در حال انتقال…" : "انتقال به فضای خصوصی"}
+          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <CloudDownload className="h-4 w-4" />}
+          {busy ? "در حال انتقال به فضای خصوصی…" : "انتقال به فضای خصوصی"}
         </button>
-        {busy && <span className="text-xs text-ink-500">این مرحله ممکن است چند دقیقه طول بکشد؛ صفحه را نبندید.</span>}
+
+        {busy && <p className="text-center text-[11px] text-ink-500">این مرحله ممکن است چند دقیقه طول بکشد؛ لطفاً صفحه را نبندید.</p>}
+
+        {error && (
+          <div className="flex gap-2 rounded-xl bg-red-50 px-3 py-2.5 text-xs font-bold text-red-700 ring-1 ring-red-200">
+            <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
+        {done && (
+          <div className="flex gap-2 rounded-xl bg-teal-50 px-3 py-2.5 text-xs font-bold text-teal-800 ring-1 ring-teal-200">
+            <CircleCheck className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>«{done.title}» با موفقیت اضافه شد و آماده اتصال به جلسات است.</span>
+          </div>
+        )}
       </div>
-      {error && (
-        <p className="flex items-center gap-1.5 rounded-xl bg-red-50 px-3 py-2 text-xs font-bold text-red-700">
-          <TriangleAlert className="h-3.5 w-3.5" /> {error}
-        </p>
-      )}
-      {done && (
-        <p className="flex items-center gap-1.5 rounded-xl bg-teal-50 px-3 py-2 text-xs font-bold text-teal-800">
-          <CircleCheck className="h-3.5 w-3.5" /> «{done.title}» با موفقیت به کتابخانه اضافه شد و آماده اتصال به جلسات است.
-        </p>
-      )}
     </div>
   );
 }
