@@ -2,20 +2,31 @@ name: CI
 
 on:
   push:
-    branches: [main, arena]
+    branches:
+      - main
+      - "arena/**"
   pull_request:
-    branches: [main]
+    branches:
+      - main
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   ci:
+    name: Code Quality
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Install dependencies
@@ -25,12 +36,160 @@ jobs:
         run: npm run lint
 
       - name: Typecheck
-        run: npx tsc --noEmit
+        run: npm run typecheck
 
-      - name: Unit tests
+      - name: Unit and integration tests
         run: npm test
 
-      - name: Build
+      - name: SEO audit
+        run: npm run seo:audit
+
+      - name: Production build
         run: npm run build
         env:
-          APP_SECRET: test-secret-for-ci-only
+          APP_SECRET: ci-only-secret-not-for-production-0123456789abcdef0123456789
+          NEXT_PUBLIC_APP_URL: http://127.0.0.1:4700
+
+      - name: Production dependency audit
+        run: npm audit --omit=dev --audit-level=high
+
+  smoke:
+    name: PostgreSQL / Security / Scenarios
+    needs: ci
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: asadzedeh_ci
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d asadzedeh_ci"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/asadzedeh_ci
+      APP_SECRET: ci-only-secret-not-for-production-0123456789abcdef0123456789
+      NEXT_PUBLIC_APP_URL: http://127.0.0.1:4700
+
+      SUPER_ADMIN_PHONE: "09121000001"
+      SUPER_ADMIN_PASSWORD: "CI-only-admin-password-2026!"
+
+      SCENARIO_ADMIN_PHONE: "09121000001"
+      SCENARIO_ADMIN_PASSWORD: "CI-only-admin-password-2026!"
+
+      SMOKE_BASE_URL: http://127.0.0.1:4700
+      SECURITY_BASE_URL: http://127.0.0.1:4700
+      SCENARIO_BASE_URL: http://127.0.0.1:4700
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run database migrations
+        run: npm run db:migrate
+
+      - name: Seed disposable CI database
+        run: npm run db:seed
+        env:
+          ALLOW_DEMO_SEED: "true"
+
+      - name: Bootstrap CI super admin
+        run: npm run db:bootstrap-admin
+
+      - name: Build production application
+        run: npm run build
+
+      - name: Start production server
+        run: |
+          PORT=4700 HOSTNAME=0.0.0.0 nohup npm start > server.log 2>&1 &
+          echo $! > server.pid
+
+      - name: Wait for application
+        run: |
+          for i in {1..60}; do
+            if curl --fail --silent http://127.0.0.1:4700/api/health > /dev/null; then
+              echo "Application is ready"
+              exit 0
+            fi
+
+            sleep 2
+          done
+
+          echo "Application failed to start"
+          cat server.log
+          exit 1
+
+      - name: Smoke tests
+        run: npm run smoke -- --base http://127.0.0.1:4700
+
+      - name: Security audit
+        run: npm run security:audit -- --base http://127.0.0.1:4700
+
+      - name: Scenario tests
+        run: >
+          npm run test:scenarios --
+          --base http://127.0.0.1:4700
+          --admin-phone "$SCENARIO_ADMIN_PHONE"
+          --admin-password "$SCENARIO_ADMIN_PASSWORD"
+
+      - name: Upload server log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-log
+          path: server.log
+          if-no-files-found: ignore
+
+  e2e:
+    name: Playwright E2E
+    needs: ci
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check Chrome
+        run: google-chrome --version
+
+      - name: Install Playwright dependencies
+        run: npx playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        run: npm run test:e2e
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          if-no-files-found: ignore
