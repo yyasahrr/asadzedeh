@@ -25,9 +25,9 @@ test.describe("access control", () => {
   });
 
   test("a student cannot open admin pages", async ({ page }) => {
-    const phone = `09${String(Date.now()).slice(-8)}`;
+    const phone = `091${String(Date.now()).slice(-8)}`;
     await page.goto("/auth?tab=register");
-    await page.getByLabel(/نام/).first().fill("هنرجوی تست");
+    await page.locator("#reg-name").fill("هنرجوی تست");
     await page.locator("#reg-phone").fill(phone);
     await page.locator("#reg-pass").fill("Student!2345678");
     await page.getByRole("button", { name: "ساخت حساب کاربری", exact: true }).click();

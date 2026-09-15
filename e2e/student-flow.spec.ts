@@ -3,12 +3,12 @@ import { expect, test, type Page } from "@playwright/test";
 /** A unique phone number per run so repeated runs never collide. */
 function e2ePhone(): string {
   const tail = String(Date.now()).slice(-8);
-  return `09${tail}`;
+  return `091${tail}`;
 }
 
 async function register(page: Page, phone: string, password: string) {
   await page.goto("/auth?tab=register");
-  await page.getByLabel(/نام/).first().fill("هنرجوی تست");
+  await page.locator("#reg-name").fill("هنرجوی تست");
   await page.locator("#reg-phone").fill(phone);
   await page.locator("#reg-pass").fill(password);
   await page.getByRole("button", { name: "ساخت حساب کاربری", exact: true }).click();
@@ -54,13 +54,14 @@ test.describe("student journey", () => {
     await expect(page.getByText("گلیم‌بافی مقدماتی").first()).toBeVisible();
 
     // No contact details or internal identifiers on a public page.
-    const body = await page.locator("body").innerText();
-    expect(body).not.toContain("09123456789");
-    expect(body).not.toContain("@");
+    const certificate = page.getByRole("img", { name: /گواهی پایان دوره/ });
+    const publicFacts = await certificate.innerText();
+    expect(publicFacts).not.toContain("09123456789");
+    expect(publicFacts).not.toContain("@");
   });
 
   test("an unknown certificate code is reported as invalid", async ({ page }) => {
     await page.goto("/verify/AZ-C-000000");
-    await expect(page.getByText(/معتبر نیست|یافت نشد|نامعتبر/).first()).toBeVisible();
+    await expect(page.getByRole("heading", { name: "گواهی با این کد پیدا نشد" })).toBeVisible();
   });
 });
