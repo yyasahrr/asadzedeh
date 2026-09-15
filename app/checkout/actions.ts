@@ -1,0 +1,288 @@
+"use server";
+
+import crypto from "node:crypto";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { headers } from "next/headers";
+import { audit } from "@/lib/audit";
+import { faToday, formatPrice, normalizeDigits, toFa } from "@/lib/format";
+import type { CartItem } from "@/lib/cart";
+import { getSessionUser, hashPassword } from "@/lib/auth";
+import { buildLines, linesSubtotal } from "@/lib/checkout-lines";
+import { sendSms } from "@/lib/notify";
+import { configuredPaymentProvider, isDemoPayment, requestPayment } from "@/lib/payment";
+import { finalizePaidOrder, releaseOrder } from "@/lib/order-payment";
+import { reserveOrderLines, writeOrderItems } from "@/lib/db/commerce";
+import { getEnrollments, getOrders, getPayments, getSettings, getUserByPhone, getUsers, syncCollections, withStoreLock, writeDbAsync } from "@/lib/store";
+import { rateLimit, LIMITS } from "@/lib/rate-limit";
+import type { OrderLine, PaymentRecord, ShippingInfo, User } from "@/lib/types";
+
+/** Resolve every checkout display field from the same server truth used to charge. */
+export async function quoteCheckout(items: CartItem[]) {
+  return buildLines(items);
+}
+
+function nextOrderId(): string {
+  return `AZ-${crypto.randomBytes(8).toString("hex").toUpperCase()}`;
+}
+
+/** Compute shipping cost for a set of product lines with a chosen method (server-side truth). */
+export async function quoteShipping(methodId: string, subtotal: number): Promise<{ cost: number; label: string } | null> {
+  const shop = getSettings().shop;
+  const m = shop.shippingMethods.find((x) => x.id === methodId && x.active);
+  if (!m) return null;
+  const freeOver = m.freeOver || shop.freeShippingOver;
+  const cost = freeOver > 0 && subtotal >= freeOver ? 0 : m.cost;
+  return { cost, label: m.label };
+}
+
+export async function startCheckout(fd: FormData) {
+  const ip = (await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  const limited = rateLimit(`checkout:${ip}`, LIMITS.payment.limit, LIMITS.payment.windowMs);
+  if (!limited.ok) redirect(`/checkout?error=${encodeURIComponent("تعداد درخواست‌ها بیش از حد مجاز است")}`);
+  const user = await getSessionUser();
+  const name = String(fd.get("name") ?? "").trim() || user?.name || "مهمان";
+  const phone = normalizeDigits(String(fd.get("phone") ?? "").trim());
+  let items: CartItem[] = [];
+  try {
+    items = JSON.parse(String(fd.get("items") ?? "[]")) as CartItem[];
+  } catch {
+    items = [];
+  }
+  if (items.length === 0) redirect("/cart");
+
+  const { lines, problems, priceChanges } = buildLines(items);
+  if (problems.length > 0 || lines.length === 0) {
+    redirect(`/checkout?error=${encodeURIComponent(problems[0] ?? "سبد خرید معتبر نیست")}`);
+  }
+
+  /**
+   * A price moved while the item sat in the cart. We never charge the stale
+   * figure, and we do not quietly charge the new one either — the shopper is
+   * sent back to review the updated amount and confirm it.
+   */
+  if (priceChanges.length > 0) {
+    const c = priceChanges[0];
+    const message =
+      `قیمت «${c.title}» تغییر کرده است (${formatPrice(c.expected)} ← ${formatPrice(c.actual)} تومان).` +
+      (priceChanges.length > 1 ? ` و ${toFa(priceChanges.length - 1)} مورد دیگر نیز به‌روز شده‌اند.` : "") +
+      " لطفاً سبد خرید را بازبینی کنید.";
+    redirect(`/checkout?error=${encodeURIComponent(message)}`);
+  }
+
+  // ── جلوگیری از خرید تکراری ──
+  const checkUserId = user?.id;
+  const checkPhone = phone || user?.phone;
+  if (checkUserId || checkPhone) {
+    const allOrders = getOrders();
+    const allEnrollments = getEnrollments();
+    for (const l of lines) {
+      if (l.kind === "course") {
+        const alreadyEnrolled = allEnrollments.some(
+          (e) => e.courseSlug === l.slug && (e.userId === checkUserId || (checkPhone && allOrders.find((o) => o.id === e.orderId)?.phone === checkPhone))
+        );
+        if (alreadyEnrolled) {
+          redirect(`/checkout?error=${encodeURIComponent(`شما قبلاً دوره «${l.title}» را خریداری کرده‌اید`)}`);
+        }
+      }
+      if (l.kind === "class") {
+        const alreadyBought = allOrders.some(
+          (o) => o.status === "پرداخت شده" && (o.userId === checkUserId || (checkPhone && o.phone === checkPhone)) && (o.lines ?? []).some((ol) => ol.kind === "class" && ol.slug === l.slug)
+        );
+        if (alreadyBought) {
+          redirect(`/checkout?error=${encodeURIComponent(`شما قبلاً کلاس «${l.title}» را خریداری کرده‌اید`)}`);
+        }
+      }
+      if (l.kind === "learning_path") {
+        const alreadyBought = allOrders.some(
+          (o) => o.status === "پرداخت شده" && (o.userId === checkUserId || (checkPhone && o.phone === checkPhone)) && (o.lines ?? []).some((ol) => ol.kind === "learning_path" && ol.slug === l.slug)
+        );
+        if (alreadyBought) {
+          redirect(`/checkout?error=${encodeURIComponent(`شما قبلاً مسیر «${l.title}» را خریداری کرده‌اید`)}`);
+        }
+      }
+    }
+  }
+
+  const subtotal = linesSubtotal(lines);
+  const coupon = String(fd.get("coupon") ?? "").trim().toUpperCase();
+  const discount = coupon === "ASAD10" ? Math.round((subtotal * 10) / 100) : 0;
+
+  // Shipping (only when the order contains physical products)
+  const needsShipping = lines.some((l) => l.kind === "product");
+  let shipping: ShippingInfo | undefined;
+  if (needsShipping) {
+    const methodId = String(fd.get("shippingMethod") ?? "");
+    const quote = await quoteShipping(methodId, subtotal - discount);
+    const address = String(fd.get("address") ?? "").trim();
+    const city = String(fd.get("city") ?? "").trim();
+    const province = String(fd.get("province") ?? "").trim();
+    const postalCode = normalizeDigits(String(fd.get("postalCode") ?? "").trim());
+    if (!quote) redirect(`/checkout?error=${encodeURIComponent("روش ارسال را انتخاب کنید")}`);
+    if (methodId !== "pickup" && (!address || !city)) redirect(`/checkout?error=${encodeURIComponent("آدرس و شهر برای ارسال الزامی است")}`);
+    shipping = {
+      method: quote.label,
+      methodId,
+      cost: quote.cost,
+      address,
+      city,
+      province,
+      postalCode,
+      recipient: String(fd.get("recipient") ?? "").trim() || name,
+      phone,
+    };
+  }
+
+  // Course access is tied to an account. Guests buying a course get (or are matched to)
+  // a student account by phone number so the enrolment has somewhere to live.
+  let ownerId = user?.id;
+  let provisionedPassword: string | undefined;
+  if (!user && lines.some((l) => l.kind === "course")) {
+    if (!/^09\d{9}$/.test(phone)) redirect(`/checkout?error=${encodeURIComponent("برای خرید دوره آنلاین شماره موبایل معتبر لازم است")}`);
+    const existing = getUserByPhone(phone);
+    if (existing) {
+      ownerId = existing.id;
+    } else {
+      provisionedPassword = crypto.randomBytes(8).toString("base64url").slice(0, 12);
+      const created: User = {
+        id: `u-${Date.now().toString(36)}`,
+        name,
+        phone,
+        passwordHash: hashPassword(provisionedPassword),
+        role: "student",
+        createdAt: faToday(),
+      };
+      await writeDbAsync({ users: [...getUsers(), created] });
+      ownerId = created.id;
+      await audit({ action: "auth.register", actor: { id: created.id, name: created.name, role: "student" }, detail: { via: "checkout" } });
+    }
+  }
+
+  const final = Math.max(0, subtotal - discount + (shipping?.cost ?? 0));
+  const id = nextOrderId();
+  const itemLabel = lines
+    .map((l) => `${l.title}${l.qty > 1 ? ` ×${l.qty}` : ""} (${l.kind === "course" ? "آنلاین" : l.kind === "class" ? "حضوری" : l.kind === "preorder" ? "پیش‌سفارش" : "کالا"})`)
+    .join(" + ");
+
+  const demo = isDemoPayment();
+  const paymentId = `pay-${crypto.randomBytes(6).toString("hex")}`;
+
+  // Stock and seats are held by conditional SQL UPDATEs inside one transaction:
+  // the database (not this process) decides who gets the last unit.
+  const reservation = await withStoreLock(async () => {
+    const { lines: lockedLines, problems: lockedProblems } = buildLines(items);
+    if (lockedProblems.length > 0 || lockedLines.length === 0) {
+      return { failure: lockedProblems[0] ?? "سبد خرید معتبر نیست", lines: [] as OrderLine[] };
+    }
+    const held = await reserveOrderLines(lockedLines);
+    if (!held.ok) {
+      const label = held.title || held.slug;
+      return {
+        failure:
+          held.reason === "capacity"
+            ? `ظرفیت «${label}» تکمیل شده است`
+            : `موجودی «${label}» کافی نیست`,
+        lines: [] as OrderLine[],
+      };
+    }
+    return { failure: null, lines: lockedLines };
+  });
+  if (reservation.failure) {
+    redirect(`/checkout?error=${encodeURIComponent(reservation.failure)}`);
+  }
+  const lockedLines = reservation.lines;
+
+  // Pull the database-authoritative stock/seats back into the document cache
+  // before the order is written, so a later cache flush cannot undo the hold.
+  await syncCollections(["products", "classes"]);
+
+  const paymentRow: PaymentRecord = {
+    id: paymentId,
+    orderId: id,
+    provider: demo ? "demo" : configuredPaymentProvider(),
+    status: demo ? "paid" : "pending",
+    amount: final,
+    createdAt: new Date().toISOString(),
+    verifiedAt: demo ? new Date().toISOString() : undefined,
+  };
+  await writeDbAsync({
+    users: getUsers(),
+    orders: [
+      {
+        id,
+        student: phone ? `${name} (${phone})` : name,
+        item: itemLabel,
+        amount: final,
+        status: demo ? "پرداخت شده" : "در انتظار پرداخت",
+        date: faToday(),
+        lines: lockedLines,
+        userId: ownerId,
+        phone: phone || user?.phone,
+        shipping,
+        discount: discount || undefined,
+        note: String(fd.get("note") ?? "").trim() || undefined,
+      },
+      ...getOrders(),
+    ],
+    payments: [paymentRow, ...getPayments()],
+  });
+  await writeOrderItems(id, lockedLines);
+
+  await audit({
+    action: "order.create",
+    actor: user ? { id: user.id, name: user.name, role: user.role } : null,
+    target: `order:${id}`,
+    detail: { amount: final, lines: lines.map((l) => `${l.kind}:${l.slug}x${l.qty}`), shipping: shipping?.method, demo },
+  });
+  revalidatePath("/admin/orders");
+  revalidatePath("/admin/shop");
+  revalidatePath("/shop");
+
+  if (provisionedPassword && phone) {
+    await sendSms([phone], `اسدزاده: حساب هنرجویی شما ساخته شد. ورود با شماره موبایل و رمز ${provisionedPassword} — لطفاً پس از ورود رمز را تغییر دهید.`);
+  }
+
+  if (demo) {
+    await finalizePaidOrder(id);
+    redirect(`/checkout/success?order=${id}${provisionedPassword ? "&account=new" : ""}`);
+  }
+
+  const order = getOrders().find((o) => o.id === id);
+  if (!order) redirect("/checkout/failed?reason=notfound");
+  const base = getSettings().site.siteUrl.replace(/\/$/, "") || "http://localhost:3000";
+  const r = await requestPayment(order, `${base}/api/payment/callback`);
+  if (!r.ok || !r.payUrl || !r.authority) {
+    await releaseOrder(id);
+    redirect(`/checkout/failed?order=${id}&reason=${encodeURIComponent(r.error ?? "خطای درگاه")}`);
+  }
+  await writeDbAsync({
+    orders: getOrders().map((o) => (o.id === id ? { ...o, authority: r.authority } : o)),
+    payments: getPayments().map((p) => (p.id === paymentId ? { ...p, authority: r.authority } : p)),
+  });
+  redirect(r.payUrl);
+}
+
+/**
+ * بررسی آیا کاربر قبلاً آیتم‌های سبد را خریداری کرده است.
+ * آیدی‌های تکراری برمی‌گرداند.
+ */
+export async function checkAlreadyOwned(items: { kind: string; slug: string }[]): Promise<string[]> {
+  const user = await getSessionUser();
+  if (!user) return [];
+  const allOrders = getOrders();
+  const allEnrollments = getEnrollments();
+  const owned: string[] = [];
+  for (const item of items) {
+    if (item.kind === "course") {
+      const enrolled = allEnrollments.some((e) => e.courseSlug === item.slug && e.userId === user.id);
+      if (enrolled) owned.push(item.slug);
+    }
+    if (item.kind === "class") {
+      const bought = allOrders.some(
+        (o) => o.status === "پرداخت شده" && o.userId === user.id && (o.lines ?? []).some((l) => l.kind === "class" && l.slug === item.slug)
+      );
+      if (bought) owned.push(item.slug);
+    }
+  }
+  return owned;
+}
