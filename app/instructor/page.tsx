@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import Link from "next/link";
 import { BookOpen, ClipboardCheck, Clapperboard, Users, Wallet } from "lucide-react";
 import { getSessionUser } from "@/lib/auth";
@@ -10,8 +11,10 @@ export const metadata: Metadata = { title: "پنل مدرس" };
 export const dynamic = "force-dynamic";
 
 export default async function InstructorHome() {
-  const user = (await getSessionUser())!;
-  const inst = getInstructorByUser(user.id)!;
+  const user = await getSessionUser();
+  if (!user) redirect("/auth?next=/instructor");
+  const inst = getInstructorByUser(user.id);
+  if (!inst) redirect("/dashboard");
   const courses = getCourses().filter((c) => c.instructorSlug === inst.slug);
   const slugs = new Set(courses.map((c) => c.slug));
   const titles = new Set(courses.flatMap((c) => [c.title, c.shortTitle]));

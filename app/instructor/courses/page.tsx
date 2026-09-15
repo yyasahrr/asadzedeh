@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { Clapperboard, ExternalLink, Users } from "lucide-react";
@@ -10,8 +11,10 @@ export const metadata: Metadata = { title: "دوره‌های من" };
 export const dynamic = "force-dynamic";
 
 export default async function InstructorCoursesPage() {
-  const user = (await getSessionUser())!;
-  const inst = getInstructorByUser(user.id)!;
+  const user = await getSessionUser();
+  if (!user) redirect("/auth?next=/instructor");
+  const inst = getInstructorByUser(user.id);
+  if (!inst) redirect("/dashboard");
   const courses = getCourses().filter((c) => c.instructorSlug === inst.slug);
   const classes = getClasses().filter((c) => c.instructorSlug === inst.slug);
   const enrollments = getEnrollments();

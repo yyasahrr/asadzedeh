@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { CircleCheck, ExternalLink, FileText, Video } from "lucide-react";
 import { instructorAddChapter, instructorAddLesson, instructorDeleteChapter, instructorDeleteLesson, instructorMoveChapter, instructorMoveLesson, instructorUpdateChapter, instructorUpdateCourseText, instructorUpdateLesson } from "../../actions";
 import { LessonManager } from "@/components/admin/LessonManager";
@@ -20,8 +20,10 @@ export default async function InstructorCoursePage({
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ edit?: string; preview?: string; saved?: string }>;
 }) {
-  const user = (await getSessionUser())!;
-  const inst = getInstructorByUser(user.id)!;
+  const user = await getSessionUser();
+  if (!user) redirect("/auth?next=/instructor");
+  const inst = getInstructorByUser(user.id);
+  if (!inst) redirect("/dashboard");
   const { slug } = await params;
   const { edit, preview, saved } = await searchParams;
   const course = getCourse(slug);

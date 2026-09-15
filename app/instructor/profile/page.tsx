@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import Link from "next/link";
 import { CircleCheck, ExternalLink } from "lucide-react";
 import { instructorUpdateProfile } from "../actions";
@@ -12,8 +13,10 @@ export const metadata: Metadata = { title: "پروفایل مدرس" };
 export const dynamic = "force-dynamic";
 
 export default async function InstructorProfilePage({ searchParams }: { searchParams: Promise<{ saved?: string }> }) {
-  const user = (await getSessionUser())!;
-  const inst = getInstructorByUser(user.id)!;
+  const user = await getSessionUser();
+  if (!user) redirect("/auth?next=/instructor");
+  const inst = getInstructorByUser(user.id);
+  if (!inst) redirect("/dashboard");
   const { saved } = await searchParams;
   return (
     <div className="space-y-5">

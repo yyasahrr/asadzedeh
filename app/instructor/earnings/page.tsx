@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { Wallet } from "lucide-react";
 import { TableShell, Td } from "@/components/admin/TableShell";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
@@ -10,8 +11,10 @@ export const metadata: Metadata = { title: "درآمد" };
 export const dynamic = "force-dynamic";
 
 export default async function InstructorEarningsPage() {
-  const user = (await getSessionUser())!;
-  const inst = getInstructorByUser(user.id)!;
+  const user = await getSessionUser();
+  if (!user) redirect("/auth?next=/instructor");
+  const inst = getInstructorByUser(user.id);
+  if (!inst) redirect("/dashboard");
   const courses = getCourses().filter((c) => c.instructorSlug === inst.slug);
   const slugs = new Map(courses.map((c) => [c.slug, c]));
   const share = (inst.commissionPercent ?? 60) / 100;

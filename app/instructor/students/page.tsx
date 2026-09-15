@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { ClipboardCheck, Users } from "lucide-react";
 import { instructorReviewSubmission } from "../actions";
 import { TableShell, Td } from "@/components/admin/TableShell";
@@ -11,8 +12,10 @@ export const metadata: Metadata = { title: "هنرجویان و تمرین‌ه�
 export const dynamic = "force-dynamic";
 
 export default async function InstructorStudentsPage() {
-  const user = (await getSessionUser())!;
-  const inst = getInstructorByUser(user.id)!;
+  const user = await getSessionUser();
+  if (!user) redirect("/auth?next=/instructor");
+  const inst = getInstructorByUser(user.id);
+  if (!inst) redirect("/dashboard");
   const courses = getCourses().filter((c) => c.instructorSlug === inst.slug);
   const bySlug = new Map(courses.map((c) => [c.slug, c]));
   const titles = new Set(courses.flatMap((c) => [c.title, c.shortTitle]));

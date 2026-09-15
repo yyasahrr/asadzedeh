@@ -88,8 +88,52 @@ Code, configuration, storage architecture, security posture and tests are releas
 9. Committed runtime artefacts: `data/db.json.migrated`, an uploaded lesson PDF.
 10. Dead ffmpeg stubs that always returned `null`/`false` — misleading, since a caller could read them as a working feature. Removed.
 
-### OPEN — observed, not fixed
-**`TypeError: Cannot read properties of null (reading 'id')`** appears in the server log when the security audit fires hostile Server Action probes without a session. I could not attribute it to a specific action within this pass. It did **not** produce a 5xx on the probe burst (`security-audit`: *"40 requests, 0 5xx"*), and Next.js does not return the stack to the client in production, so it is a robustness wart rather than an exposure. It should be traced and fixed before the next release.
+### Fixed after the first pass — instructor pages assumed a session exists
+
+**Root cause.** Six instructor pages did:
+
+```ts
+const user = (await getSessionUser())!;
+const inst = getInstructorByUser(user.id)!;
+```
+
+The `!` silences TypeScript and changes nothing at runtime, so an anonymous
+request dereferenced `null`. `app/instructor/layout.tsx` *does* guard correctly
+with `if (!user) redirect("/auth?next=/instructor")` — but Next.js renders a
+page and its layout concurrently, so the page threw before the layout's
+`redirect()` took effect.
+
+**Why it hid.** The HTTP response was still a correct `307`, so no test and no
+probe could see it. It existed only as three unattributable `TypeError`s per
+anonymous sweep of the panel (`digest: 3751525039 / 2267153717 / 1099841126`),
+drowning real errors in production logs. An earlier note in this report
+attributed it to the hostile Server Action probes; that was wrong — it was
+these pages, found by reproducing against a live production server and slicing
+the built chunks at the stack offsets.
+
+**Fix.** Every instructor page now guards itself instead of relying on the
+layout:
+
+```ts
+const user = await getSessionUser();
+if (!user) redirect("/auth?next=/instructor");
+const inst = getInstructorByUser(user.id);
+if (!inst) redirect("/dashboard");
+```
+
+`app/instructor/courses`, `courses/[slug]`, `earnings`, `page`, `profile`,
+`students` — six files.
+
+**Verified:** rebuilt, restarted in `NODE_ENV=production`, re-ran
+`security-audit` (66/66) and `smoke` (36/36). All five anonymous instructor
+routes return `307 → /auth?next=/instructor`, and the server log contains **zero
+`TypeError`s** across the whole run.
+
+**Regression test:** `lib/__tests__/route-session-guards.test.ts` (3 tests). It
+asserts no route under `app/` uses `(await getSessionUser())!` and none
+dereferences a session variable before it is guarded, and it self-checks that
+the scanner still fails on the exact shape that shipped — so the two assertions
+above cannot silently become vacuous.
 
 ---
 
