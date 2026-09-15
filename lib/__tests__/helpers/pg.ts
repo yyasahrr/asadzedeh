@@ -84,8 +84,34 @@ export async function startTestDatabase(): Promise<TestDatabase> {
     async stop() {
       try {
         await pg.stop();
-      } finally {
-        fs.rmSync(databaseDir, { recursive: true, force: true });
+      } catch {
+        // Best effort: if stop fails, still try to clean up directory.
+      }
+
+      // On Windows, PostgreSQL may still hold file handles for a short
+      // period after stop(). Retry deletion with backoff instead of failing
+      // the entire test run with EPERM.
+      const delays = [100, 300, 600, 1000, 2000];
+      for (let attempt = 0; attempt <= delays.length; attempt++) {
+        try {
+          if (fs.existsSync(databaseDir)) {
+            fs.rmSync(databaseDir, { recursive: true, force: true });
+          }
+          break;
+        } catch (error) {
+          const isLast = attempt === delays.length;
+          const code = (error as NodeJS.ErrnoException)?.code;
+          const isEphemeral = code === "EPERM" || code === "EBUSY" || code === "ENOTEMPTY";
+          if (!isEphemeral || isLast) {
+            // On last attempt, log but don't crash the test process if it's just cleanup.
+            // Throw only if directory still exists and error is not ephemeral.
+            if (isLast && fs.existsSync(databaseDir)) {
+              console.warn(`[pg-test] failed to remove ${databaseDir} after retries:`, error);
+            }
+            break;
+          }
+          await new Promise((r) => setTimeout(r, delays[attempt]));
+        }
       }
     },
   };
