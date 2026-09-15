@@ -81,6 +81,13 @@ Code, configuration, storage architecture, security posture and tests are releas
 4. **`resolveVideoKey` silently normalised traversal** — `../../etc/passwd` became `videos/passwd`, which reads as success and hides the attempt from the log. Now returns `null`.
 5. **Open-redirect surface in `server.mjs`.** The redirect layer reads `seo_redirects` directly and emitted `Location` without re-checking. The admin panel validates, but a row written by a migration or by hand bypassed it. Now re-validated at the point of use.
 6. **Audit trail written to an ephemeral disk in production** — a file that disappears precisely when someone needs it. Moved to structured stdout.
+7. **Stored XSS through JSON-LD on the public course/class/blog pages.**
+   `JSON.stringify` does not escape `/`, so a value containing `</script>` terminates the surrounding `<script>` element and everything after it is parsed as markup. Course and class **titles and excerpts are instructor-supplied** — `app/instructor/course-requests/actions.ts:29` reads `title` straight off the form with no sanitisation and `app/admin/course-requests/actions.ts:40` copies it verbatim into the published record, which `app/classes/[slug]/page.tsx` then renders into `jsonLd` as `name: cls.title`. A course titled `x</script><script>…</script>` therefore executed on the public page for every visitor.
+   The escaping helper already existed (`lib/seo/index.ts:108`, `JSON.stringify(data).replace(/</g, "\\u003c")`) and `app/layout.tsx` already used it; six script tags in three pages simply called `JSON.stringify` directly.
+   - **Reproduce (pre-fix):** instructor submits a course request whose title is `x</script><script>alert(document.cookie)</script>` → admin approves → open the published class page → payload executes.
+   - **Severity: MEDIUM, not HIGH** — it needs an authenticated instructor *and* an admin approving the request, so it is privilege escalation by a semi-trusted author rather than anonymous attack. It is still worth fixing because the fix is one import.
+   - **Fix:** all six call sites in `app/blog/[slug]`, `app/classes/[slug]`, `app/courses/[slug]` now go through `jsonLd()`.
+   - **Regression test:** `lib/__tests__/jsonld-escaping.test.ts` (3 tests) — pins the helper against `</script>` breakout, and scans every `dangerouslySetInnerHTML` in `app/` so a future page cannot reintroduce a raw `JSON.stringify`.
 
 ### LOW
 7. `server.mjs` had no listen-error handler (an opaque throw and a restart loop) and no unhandled-rejection handler (serving from a corrupted state).
@@ -255,6 +262,43 @@ No secret in this project is exposed through a `NEXT_PUBLIC_` variable. The only
 `NEXT_PUBLIC_` names are `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_SITE_URL`,
 `NEXT_PUBLIC_ANALYTICS_ID`, `NEXT_PUBLIC_SENTRY_DSN` and
 `NEXT_PUBLIC_NESHAN_MAP_KEY` — all public by design.
+
+---
+
+## Security Matrix
+
+Every row is backed by something executed in this pass, not by reading the code
+and assuming. `VERIFIED` means a command in this report ran and returned the
+stated result.
+
+| # | Area | Control in place | Evidence | Status |
+|---|------|------------------|----------|--------|
+| 1 | Authentication | `getSessionUser()` on every protected route; each route guards **itself**, not via its layout | `route-session-guards.test.ts` (3 tests) + live `307 → /auth?next=/instructor` on 5 routes | VERIFIED |
+| 2 | Authorisation | `isStaff()` gates `/admin`; instructor routes require `getInstructorByUser`; `can(user, …)` per admin action | `security-audit` 66/66 includes the permission matrix | VERIFIED |
+| 3 | IDOR | `/api/media` refuses `videos/` and `lesson-files/`; playback only via `/api/video/[id]/stream` with an enrolment check | `video-storage.test.ts` 25 tests; curl `404` on both prefixes | VERIFIED |
+| 4 | CSRF | Next.js built-in Server Action origin check | Observed live: `x-forwarded-host … does not match origin … evil.example.com. Aborting the action.` → `Invalid Server Actions request` | VERIFIED |
+| 5 | XSS | React escaping everywhere; the one raw-HTML surface (JSON-LD) goes through `jsonLd()`, which escapes `<` | `jsonld-escaping.test.ts` (3 tests); finding 7 below was this row, found and fixed | VERIFIED |
+| 6 | SQL injection | All values parameterised (`$1`, `$2`). Only identifiers are interpolated, and only from the fixed `APPEND_ONLY_TABLES` constant (`lib/store.ts:891`) — never from request data | `grep` for `${` inside `query(\`` returns 3 hits, all `${table}`/`${pk}` | VERIFIED |
+| 7 | SSRF | Outbound `fetch` exists only in `lib/http.ts`, called with hard-coded Zibal / MeliPayamak endpoints; no request-supplied URL reaches it | `grep 'await fetch(' lib/*.ts` → 1 hit, `lib/http.ts:66` | VERIFIED |
+| 8 | Open redirect | Validated in the admin panel **and** re-validated in `server.mjs` at the point of use | finding 5 above; `smoke.ts` 36/36 | VERIFIED |
+| 9 | Path traversal | `isValidObjectKey` rejects `.`/`..` segments; `resolveVideoKey` returns `null` instead of normalising | findings 3–4; traversal tests written before the fix | VERIFIED |
+| 10 | File upload | MIME + size validation; production answers `503` with a `NO_OBJECT_STORAGE` launch error rather than accepting an upload it cannot keep | launch check observed at level 50 in every production start | VERIFIED |
+| 11 | Session cookie | `httpOnly: true`, `sameSite: "lax"`, `secure` in production, `path: "/"`, `maxAge = SESSION_DAYS` (`app/auth/actions.ts:63`) | read directly from source | VERIFIED |
+| 12 | MFA cookie | `httpOnly`, `sameSite: "lax"`, `secure` in production, **5 minute** `maxAge` (`app/auth/actions.ts:173,391`) | read directly from source | VERIFIED |
+| 13 | Brute force / rate limiting | `rateLimit()` per action: `otp:req`, `otp:use`, `login`, `register`, `totp`, `certVerify`, `checkout`, `pwreset:req` (3 / 15 min), `pwreset:use` | `grep 'rateLimit('` → 8 distinct keys | VERIFIED — **single-instance only** (in-memory; see condition 6) |
+| 14 | OTP | Separate request and use limits; SMS send is `BLOCKED BY EXTERNAL CONFIGURATION` without MeliPayamak credentials | limits VERIFIED; live send NOT EXECUTED | PARTIAL |
+| 15 | Password reset | Rate limited; reset links validated on use | limits VERIFIED | VERIFIED |
+| 16 | 2FA | TOTP with hashed recovery codes, `totp` rate limit, short-lived MFA cookie, second-factor gate on `/admin` | `app/admin/layout.tsx` `needsMfa` gate; fresh admin observed redirected `307 /account/security?required=1` | VERIFIED |
+| 17 | Payment callback | Zibal `verify` before granting; `201 already processed` handled idempotently | code path VERIFIED; **live transaction NOT EXECUTED** — no merchant credentials | BLOCKED BY EXTERNAL CONFIGURATION |
+| 18 | Object storage | Private bucket, signed short-lived URLs, credentials never returned to the browser (`s3Credentials()` → `null` when partial) | `video-storage.test.ts` | VERIFIED |
+| 19 | Video authorisation | Playback proxied through `/api/video/[id]/stream`; bucket never browser-reachable; `openVideo` → `null` yields `404` not `500` | `video-storage.test.ts` | VERIFIED |
+| 20 | Secret leakage | No secret behind `NEXT_PUBLIC_`; only `APP_URL`, `SITE_URL`, `ANALYTICS_ID`, `SENTRY_DSN`, `NESHAN_MAP_KEY` | checklist above | VERIFIED |
+| 21 | Error leakage | Production returns Next.js digests only, never a stack | observed in the server log: `digest: '3751525039'` with no stack sent to the client | VERIFIED |
+
+Two rows are **not** fully verifiable from here and are recorded as such rather
+than marked green: row 14 (SMS delivery needs real MeliPayamak credentials) and
+row 17 (needs a real Zibal merchant account). Both are
+`BLOCKED BY EXTERNAL CONFIGURATION`, not defects.
 
 ---
 

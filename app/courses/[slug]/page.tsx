@@ -15,7 +15,7 @@ import {
   UsersRound,
 } from "lucide-react";
 import { getCourse, getCourses, getSettings } from "@/lib/store";
-import { breadcrumbJsonLd, toMetadata } from "@/lib/seo";
+import { breadcrumbJsonLd,  jsonLd as jsonLdString, toMetadata  } from "@/lib/seo";
 import { formatPrice, formatPriceCompact, toFa } from "@/lib/format";
 import { PageHero } from "@/components/PageHero";
 import { Badge } from "@/components/ui/Badge";
@@ -124,9 +124,9 @@ export default async function CourseDetailPage({
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(crumbs) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdString(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdString(faqLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdString(crumbs) }} />
       <PageHero
         compact
         title={course.title}

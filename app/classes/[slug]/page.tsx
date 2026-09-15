@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { jsonLd as jsonLdString  } from "@/lib/seo";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { BookOpen, CalendarDays, CheckCircle2, Clock3, MapPin, Minus, Plus, UsersRound } from "lucide-react";
@@ -100,8 +101,8 @@ export default async function ClassDetailPage({
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdString(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdString(faqLd) }} />
       <PageHero
         compact
         title={cls.title}
