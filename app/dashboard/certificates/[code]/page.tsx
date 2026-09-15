@@ -3,14 +3,21 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowRight, FileDown } from "lucide-react";
 import { getCertificate } from "@/lib/store";
+import { getSessionUser } from "@/lib/auth";
+import { canAccessCertificate } from "@/lib/certificate-access";
 import { Certificate } from "@/components/certificate/Certificate";
 import { PrintButton } from "@/components/certificate/PrintButton";
 
 export const metadata: Metadata = { title: "گواهی پایان دوره" };
+export const dynamic = "force-dynamic";
 
 export default async function CertificatePage({ params }: { params: Promise<{ code: string }> }) {
   const { code } = await params;
-  const cert = getCertificate(decodeURIComponent(code));
+  const found = getCertificate(decodeURIComponent(code));
+  // A certificate is a personal document and its code is not a secret: the same
+  // 404 covers "does not exist" and "is not yours". Public authenticity checks
+  // live on /verify/[code].
+  const cert = canAccessCertificate(found, await getSessionUser()) ? found : undefined;
   if (!cert) notFound();
 
   return (

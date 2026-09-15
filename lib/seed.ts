@@ -113,6 +113,38 @@ export const users: User[] = [
   },
 ];
 
+/**
+ * Registry of the development demo identities.
+ *
+ * `lib/auth.ts` uses this to recognise a demo profile that survived a
+ * dev-to-production database copy, and — because it carries the hash each demo
+ * account ships with — to tell whether the account is still running on the
+ * published development password. An admin whose password has been rotated is a
+ * real account and keeps working; one that still answers to the README password
+ * is refused in production.
+ */
+export interface SeedAccount {
+  id: string;
+  phone: string;
+  role: User["role"];
+  label: string;
+  /** The password hash this account is created with. */
+  seedPasswordHash: string;
+}
+
+export const SEED_ACCOUNTS: SeedAccount[] = users.map((u) => ({
+  id: u.id,
+  phone: u.phone,
+  role: u.role,
+  label: u.name,
+  seedPasswordHash: u.passwordHash,
+}));
+
+/** Staff demo identities. Everything except the admin account is retired at launch. */
+export const SEED_DEMO_ACCOUNT_IDS: string[] = SEED_ACCOUNTS.filter(
+  (a) => a.role !== "admin" && a.role !== "super_admin",
+).map((a) => a.id);
+
 export const comments: Comment[] = [
   {
     id: "cm-1",

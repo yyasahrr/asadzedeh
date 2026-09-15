@@ -5,7 +5,8 @@ import { getSessionUser, can } from "@/lib/auth";
 import { Denied } from "@/components/admin/Denied";
 import { FieldLabel, Input, Select } from "@/components/ui/Input";
 import { listSmsDrivers } from "@/lib/sms";
-import { appUrl } from "@/lib/env";
+import { appUrl, isProduction } from "@/lib/env";
+import { integrationStatus } from "@/lib/integrations";
 import { resetDemoData, saveChannelSettings, saveEmailSettings, saveLegalSettings, saveSmsSettings } from "../actions";
 import { LegalSettingsManager } from "@/components/admin/LegalSettingsManager";
 
@@ -27,12 +28,29 @@ export default async function SettingsPage({
   if (!can(user, "settings")) return <Denied />;
   const { saved } = await searchParams;
   const settings = getSettings();
+  // Credentials supplied through the host's environment win over what is stored
+  // here, and the operator has to be told that — otherwise a saved form looks
+  // like it took effect when the process is using MELIPAYAMAK_USERNAME instead.
+  const env = integrationStatus();
+  const envDriven = [
+    env.sms.fromEnvironment ? "پیامک (ملی پیامک)" : null,
+    env.payment.fromEnvironment ? "درگاه پرداخت (زیبال)" : null,
+  ].filter(Boolean) as string[];
   // Shown to the operator so the exact feed URL can be pasted into the panel.
   const siteUrl = appUrl();
 
   return (
     <div className="space-y-5">
       <h1 className="text-2xl font-black text-navy-900">تنظیمات</h1>
+      {envDriven.length > 0 && (
+        <p className="flex items-start gap-2 rounded-2xl bg-amber-50 px-5 py-3.5 text-sm font-bold text-amber-800 ring-1 ring-amber-600/25 ring-inset">
+          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
+          <span>
+            {envDriven.join(" و ")} از متغیرهای محیطی سرور خوانده می‌شود و بر مقادیر این صفحه اولویت دارد.
+            برای تغییر، متغیرها را در پنل هاست ویرایش کنید و برنامه را دوباره راه‌اندازی کنید.
+          </span>
+        </p>
+      )}
       {saved && savedMessages[saved] && (
         <p className="flex items-center gap-2 rounded-2xl bg-teal-50 px-5 py-3.5 text-sm font-bold text-teal-800 ring-1 ring-teal-600/25 ring-inset">
           <CheckCircle2 className="h-5 w-5" />
@@ -186,7 +204,9 @@ export default async function SettingsPage({
         </button>
       </form>
 
-      {user?.role === "admin" && (
+      {/* The action itself refuses in production; the button is hidden too so
+          the panel never offers something that cannot work. */}
+      {user?.role === "admin" && !isProduction() && (
         <section className="rounded-2xl bg-madder-50 p-6 ring-1 ring-madder-700/25 ring-inset">
           <h2 className="flex items-center gap-2 font-extrabold text-madder-700">
             <AlertTriangle className="h-5 w-5" />

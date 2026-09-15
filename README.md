@@ -32,12 +32,47 @@ npm run build    # بررسی تولید
 | `npm run db:migrate-json` | انتقال `data/db.json` قدیمی به PostgreSQL |
 | `npm run db:generate` / `db:push` | تولید/اعمال اسکیمای Drizzle |
 | `npm run seo:audit` | ممیزی سئو (PASS / WARN / ERROR) |
+| `npm run smoke` | تست دود پس از استقرار (فقط خواندنی، روی سرور واقعی) |
+| `npm run security:audit` | ممیزی امنیتی HTTP: دسترسی، IDOR، traversal، هدرها |
+| `npm run load` | سنجه p50/p95/p99 و نرخ خطا زیر بار همزمان |
+| `npm run db:bootstrap-admin` | ساخت/ارتقای مدیر ارشد واقعی (پیش از لانچ الزامی) |
+| `npm run db:disable-demo` | غیرفعال‌کردن حساب‌های نمایشی و باطل‌کردن نشست‌هایشان |
+| `npm run backup:verify` | تمرین بازیابی: dump → restore → بررسی |
 
 CI: فایل `ci/ci.yml` را به `.github/workflows/ci.yml` منتقل کنید.
 
 مستندات: `docs/DEPLOY.md` · `docs/ENV.md` · `docs/DATABASE.md` · `docs/PAYMENT.md` · `docs/BACKUP.md` · `docs/backup-restore.md` · `docs/SECURITY.md` · `docs/SEO.md`.
 
-گزارش‌های آمادگی: `GO_LIVE_CHECKLIST.md` · `FINAL_GO_LIVE_GAP_REPORT.md` · `PRODUCTION_READINESS_REPORT.md`.
+## اتصال به درگاه پرداخت و سامانه پیامک
+
+درگاه لانچ **زیبال (Zibal)** و پنل پیامک **ملی پیامک (MeliPayamak)** است. هر دو
+را می‌توان از متغیرهای محیطی یا از `/admin/settings` تنظیم کرد؛ **متغیر محیطی
+اولویت دارد**، تا رمز پنل و شناسه مرچنت داخل پایگاه‌داده نماند.
+
+```bash
+ZIBAL_MERCHANT=شناسه-مرچنت-زیبال
+MELIPAYAMAK_USERNAME=نام-کاربری-وب‌سرویس
+MELIPAYAMAK_PASSWORD=رمز-وب‌سرویس
+```
+
+صحت اتصال بدون افشای رمز از `/api/health` قابل بررسی است:
+
+```bash
+curl -s https://asadzedeh.ir/api/health | jq '.integrations'
+```
+
+مستندات: `docs/PAYMENT.md` · `docs/SMS.md` · `docs/ENV.md`.
+
+## حساب‌های نمایشی
+
+هویت‌های نمایشیِ seed (`u-editor`، `u-support`، `u-maryam`، `u-sara`) در تولید
+**غیرفعال** می‌شوند: در هنگام بالا آمدن سرور خاموش و نشست‌هایشان باطل می‌شود و
+ورودشان در هر صورت رد می‌شود. حساب مدیر seed تا زمانی که رمز توسعه
+(`admin123`) را دارد در تولید رد می‌شود؛ با تغییر رمز یا اجرای
+`npm run db:bootstrap-admin` به یک حساب واقعی تبدیل می‌شود. این تنها راه ورود
+به پنل در روز لانچ است.
+
+گزارش آمادگی: `PRODUCTION_READINESS_REPORT.md` · چک‌لیست اجرا: `GO_LIVE_CHECKLIST.md`.
 
 ## پنل مدیریت واقعی + گواهی PDF
 

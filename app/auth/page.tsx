@@ -4,6 +4,7 @@ import { PageHero } from "@/components/PageHero";
 import { AuthTabs } from "@/components/auth/AuthTabs";
 import { Logo } from "@/components/Logo";
 import { isProduction } from "@/lib/env";
+import { safeNextPath } from "@/lib/auth-navigation";
 
 export const metadata: Metadata = { title: "ورود | ثبت‌نام" };
 
@@ -13,6 +14,10 @@ export default async function AuthPage({
   searchParams: Promise<{ tab?: string; error?: string; next?: string; sent?: string; reset?: string }>;
 }) {
   const { tab, error, next, sent, reset } = await searchParams;
+  // Never echo an attacker-supplied redirect target into the form. The action
+  // validates `next` again before redirecting (`safeNextPath`), but the value
+  // should not reach the HTML in the first place.
+  const safeNext = next ? safeNextPath(next, "") : undefined;
   return (
     <>
       <PageHero
@@ -37,7 +42,7 @@ export default async function AuthPage({
               }
               error={error}
               notice={sent ? "sent" : reset ? "reset" : undefined}
-              next={next}
+              next={safeNext}
               showDemoAccounts={!isProduction()}
             />
           </div>

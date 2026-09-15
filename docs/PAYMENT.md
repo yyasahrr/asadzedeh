@@ -76,23 +76,88 @@ Covered by `lib/__tests__/commerce.integration.test.ts`.
 
 Never set `ALLOW_DEMO_PAYMENT=true` on a host that takes real money.
 
+## Gateways
+
+`lib/gateways/` holds one file per PSP behind a single interface
+(`request` / `verify`). Adding one is a file, a registry entry and an id in
+`PAYMENT_PROVIDERS`; nothing else changes.
+
+| Gateway | Credential | Amount unit | Sandbox |
+|---|---|---|---|
+| **Zibal (زیبال) — launch** | `merchant` string | Rial | the literal merchant `zibal` |
+| Zarinpal | merchant id (UUID) | Rial | `sandbox.zarinpal.com` |
+| IDPay | API key | Rial | `x-sandbox: 1` |
+| PayPing | client id + secret | Rial | n/a |
+
+`demo` is not a gateway: it is the absence of one, and it is unreachable in
+production.
+
 ## Configuration
 
-Set in `/admin/payments` (site settings, not environment):
+Two places, and **the environment wins** whenever it has a value:
 
-| Field | Meaning |
-|---|---|
-| `provider` | `zarinpal` or `demo` |
-| `merchantId` | Zarinpal merchant id — **BLOCKED BY CREDENTIAL** until supplied |
-| `sandbox` | use `sandbox.zarinpal.com` |
+```bash
+ZIBAL_MERCHANT=your-merchant-string
+PAYMENT_PROVIDER=zibal
+PAYMENT_SANDBOX=false
+```
+
+| Field | Environment | Admin panel (`/admin/payments`) |
+|---|---|---|
+| provider | `PAYMENT_PROVIDER` | dropdown |
+| credential | `ZIBAL_MERCHANT` / `PAYMENT_MERCHANT_ID` | merchant field |
+| second credential (PayPing only) | `PAYMENT_SECRET` | secret field |
+| sandbox | `PAYMENT_SANDBOX` | checkbox |
+
+Setting `ZIBAL_MERCHANT` alone is enough — the provider is inferred as `zibal`
+when the stored provider is still `demo`.
+
+**Sandbox in production is opt-in only.** The stored default is
+`sandbox: true`, which is right on a laptop and wrong on a live shop, so in
+production the sandbox is enabled solely by `PAYMENT_SANDBOX=true`. See
+`effectivePaymentSettings()` in `lib/integrations.ts`.
 
 The callback URL is `${NEXT_PUBLIC_APP_URL}/api/payment/callback?order=<id>`,
 so `NEXT_PUBLIC_APP_URL` must be the public HTTPS origin.
 
+## Zibal specifics
+
+- `POST https://gateway.zibal.ir/v1/request` with
+  `{ merchant, amount, callbackUrl, orderId, mobile, description }`; success is
+  `result === 100` with a `trackId`, and the buyer is sent to
+  `https://gateway.zibal.ir/start/<trackId>`.
+- `POST https://gateway.zibal.ir/v1/verify` with `{ merchant, trackId }`.
+  `result === 100` is a fresh confirmation and `201` means *already verified* —
+  the driver reports that as `alreadyVerified` so a replayed callback cannot look
+  like a new payment.
+- A verified `amount` that does not equal `order.amount × 10` is rejected even
+  when the gateway returns a reference number. A reference is not proof that
+  *this* order was paid.
+- `request` is never retried (a retry would create a second transaction);
+  `verify` is retried up to 3 times because it is idempotent.
+
+Covered by `lib/__tests__/integrations.test.ts` (7 Zibal cases) and
+`lib/__tests__/payment-gateways.test.ts`.
+
+## Verifying a live connection
+
+```bash
+curl -s "$NEXT_PUBLIC_APP_URL/api/health" | jq .integrations.payment
+# { "configured": true, "provider": "zibal", "sandbox": false, "fromEnvironment": true }
+```
+
+Then place a real order for the cheapest item and confirm: the redirect reaches
+`gateway.zibal.ir/start/…`, the callback returns to `/checkout/success`, the
+`payments` row is `paid` with a `refNumber`, and the order is enrolled. That is
+the one test no amount of unit coverage can replace.
+
 ## What is still open
 
-- **Zarinpal merchant id** — the integration is complete and unit-reachable, but
-  no live credentials exist. Marked *BLOCKED BY CREDENTIAL*, not READY.
+- **Live credentials** — the Zibal and MeliPayamak boundaries are implemented and
+  their wire formats are pinned by tests, but no live transaction has been made
+  from this repository. Marked *PENDING CREDENTIAL*, not READY.
+- **Gateway credentials in the repo** — none exist. `ZIBAL_MERCHANT` and the
+  MeliPayamak password are supplied by the operator at deploy time.
 - **Refunds** — `REFUNDED` is a valid state in the machine, but there is no
   gateway refund call and no admin refund action. Manual refunds must be
   recorded through an audit-logged admin action before this is claimed.

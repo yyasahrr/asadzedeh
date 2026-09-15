@@ -328,6 +328,15 @@ export interface User {
     /** Last accepted TOTP time-step — a code is never accepted twice (RFC 6238 §5.2). */
     lastStep?: number;
   };
+  /**
+   * Administratively switched off. A disabled account cannot sign in, cannot
+   * resume an existing session and cannot be promoted; it keeps its data so an
+   * audit trail survives. This is how demo profiles are retired for launch and
+   * how a leaver's access is cut without deleting their history.
+   */
+  disabled?: boolean;
+  /** Why the account was disabled, shown to admins and written to the audit log. */
+  disabledReason?: string;
   /** Account lock after repeated failures */
   lockedUntil?: string;
   failedLogins?: number;

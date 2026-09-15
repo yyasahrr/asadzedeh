@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Plus } from "lucide-react";
 import { getUsers } from "@/lib/store";
-import { getSessionUser, roleLabels } from "@/lib/auth";
+import { accountBlockReason, getSessionUser, roleLabels } from "@/lib/auth";
 import type { Role } from "@/lib/types";
 import { TableShell, Td } from "@/components/admin/TableShell";
 import { Denied } from "@/components/admin/Denied";
@@ -79,6 +79,23 @@ export default async function UsersPage({
           <tr key={u.id} className="transition-colors hover:bg-sand-50">
             <Td className="font-bold text-navy-900">
               {u.name} {u.id === user.id && <span className="text-xs text-ink-400">(شما)</span>}
+              {u.disabled ? (
+                <span
+                  className="ms-1 rounded-full bg-madder-50 px-2 py-1 text-[10px] font-bold text-madder-700"
+                  title={u.disabledReason || "حساب غیرفعال"}
+                >
+                  غیرفعال
+                </span>
+              ) : (
+                accountBlockReason(u) && (
+                  <span
+                    className="ms-1 rounded-full bg-amber-50 px-2 py-1 text-[10px] font-bold text-amber-700"
+                    title="تا زمانی که رمز توسعه تغییر نکند، ورود رد می‌شود"
+                  >
+                    رمز توسعه
+                  </span>
+                )
+              )}
             </Td>
             <Td><span dir="ltr" className="text-ink-600">{u.phone}</span></Td>
             <Td>

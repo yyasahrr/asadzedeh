@@ -1,5 +1,9 @@
 # Production Gap Report — اسدزاده | Asadzedeh
 
+> **SUPERSEDED (2026-09-15).** Kept for history. The current assessment is
+> `PRODUCTION_READINESS_REPORT.md`; the operational sequence is
+> `GO_LIVE_CHECKLIST.md`. Counts and statuses below are out of date.
+
 **Date:** 2026-09-07  
 **Scope:** Audit of the existing Next.js App Router codebase before production hardening.  
 **Method:** Inspect → Understand. No rewrite of healthy UI/domain code.

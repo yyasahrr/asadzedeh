@@ -1,5 +1,9 @@
 # Final Go-Live Gap Report
 
+> **SUPERSEDED (2026-09-15).** Kept for history. The current assessment is
+> `PRODUCTION_READINESS_REPORT.md`; the operational sequence is
+> `GO_LIVE_CHECKLIST.md`. Counts and statuses below are out of date.
+
 **Status: every gap identified in this audit is closed.** What remains open is
 listed at the end, and none of it is a correctness defect in this repository.
 

@@ -4,9 +4,14 @@ Every item is marked **DONE**, **BLOCKED** or **NOT REQUIRED**, with the evidenc
 behind the mark. Nothing is marked DONE on the strength of code being written —
 only on a test that ran or a command that produced the stated output.
 
-Verification run for this checklist: `lint` 0/0 · `typecheck` 0 errors ·
-`vitest run` **230 passed / 27 files** · `build` compiled (49 static pages) ·
-`seo:audit` PASS · `smoke` **36/36** against real PostgreSQL 18.4.
+Verification run for this checklist (2026-09-15): `lint` 0 errors ·
+`typecheck` 0 errors · `vitest run` **325 passed / 34 files** · `build` compiled
+(47 routes) · `seo:audit` 0 ERROR 0 WARN · `npm audit --omit=dev` 0 vulnerabilities ·
+`smoke` **36/36** · `security-audit` **66/66** · `scenario-test` **16/16** ·
+`load-test` 1226 req, p95 462 ms, 0 errors — all against a **production-mode
+server** (`NODE_ENV=production node server.mjs`) on real PostgreSQL.
+
+Full findings and severity ratings: `PRODUCTION_READINESS_REPORT.md`.
 
 ---
 
@@ -27,7 +32,13 @@ These are the conditions that must hold. If any fails, the answer is NOT READY.
 | Authorization regression tests pass | **DONE** | `authorization.test.ts` 23/23 — action-level, not page-level. |
 | Backup can be restored | **DONE** | `backup:verify` runs 13 checks against a throwaway database. `backup-verify.pg.test.ts` 10/10, of which 6 corrupt the restore and require failure. |
 | Production build succeeds | **DONE** | `npm run build` → compiled successfully, 49 static pages. |
-| Playwright E2E ran | **BLOCKED** | Browsers cannot be downloaded in this sandbox. **Must run in CI before Go-Live.** |
+| Playwright E2E ran | **BLOCKED** | `cdn.playwright.dev` unreachable (TLS `ECONNRESET`); apt and npm mirrors blocked too. The HTTP scenario suite (`scripts/scenario-test.ts`, 16/16) covers the same flows without a browser. **Must run in CI before Go-Live.** |
+| Demo profiles cannot sign in | **DONE** | Retired at production boot (4 accounts disabled, sessions revoked, audited) and refused by `demoAccountBlocked()`. Scenario suite: all five published demo logins → `303 /auth?error=invalid`, no session. `auth.test.ts` (9), `launch-check.test.ts` (7). |
+| A real administrator can be created | **DONE** | `db:bootstrap-admin` judges admins by "not disabled and not on the seeded password", so it works on a database that still holds the seed. Verified: created, idempotent on re-run, refuses a second phone once a usable admin exists. |
+| Certificates are not readable by strangers | **DONE** | `lib/certificate-access.ts`; PDF and dashboard page answer 404 to a non-owner. `certificate-access.test.ts` (7) + anonymous checks in the security audit. |
+| Payment gateway configured | **BLOCKED** | Zibal boundary implemented and wire-format tested (7 cases). **Needs `ZIBAL_MERCHANT` and one live transaction.** |
+| SMS panel configured | **BLOCKED** | MeliPayamak boundary implemented and wire-format tested (6 cases). **Needs credentials and one real code delivery.** |
+| Backup restore rehearsed | **BLOCKED** | No `pg_dump` in this sandbox. Run `npm run backup:verify -- --dump <file>` on the server. |
 
 ---
 
@@ -141,24 +152,75 @@ These are operator actions, not code changes.
    and staging.
 2. **Set `DATABASE_URL`** to the production PostgreSQL. The server exits without it.
 3. **Set `NEXT_PUBLIC_APP_URL`** — required for the canonical base and payment callbacks.
-4. **Set `APP_SECRET`** to a real random value.
-5. **Change or remove the seeded admin password** and set real staff passwords.
-6. **Choose the RPO.** A daily dump gives 24 h. A 5-minute RPO requires streaming
+4. **Set `APP_SECRET`** to a real random value (`openssl rand -hex 32`).
+5. **Set the launch integrations** — `ZIBAL_MERCHANT`, `MELIPAYAMAK_USERNAME`,
+   `MELIPAYAMAK_PASSWORD`. See `docs/PAYMENT.md` and `docs/SMS.md`.
+6. **Create the real administrator** — `npm run db:bootstrap-admin`. The seeded
+   admin is refused while it keeps the published password; this is the command
+   that replaces it.
+7. **Retire the demo profiles explicitly** (optional — the server also does it at
+   boot) — `npm run db:disable-demo`.
+8. **Choose the RPO.** A daily dump gives 24 h. A 5-minute RPO requires streaming
    replication or WAL archiving — see `docs/BACKUP.md`.
-7. **Rehearse a restore** with `npm run backup:verify -- --dump <latest>`.
+9. **Rehearse a restore** with `npm run backup:verify -- --dump <latest>`.
+
+---
+
+## Launch runbook
+
+Run in this order. Each step has a command that proves it.
+
+```bash
+# 1. Install and build from the lockfile
+npm ci
+npm run build
+
+# 2. Schema
+npm run db:migrate
+
+# 3. Real administrator (never the seeded one)
+SUPER_ADMIN_PHONE=09... SUPER_ADMIN_PASSWORD='...' npm run db:bootstrap-admin
+
+# 4. Retire demo profiles explicitly
+npm run db:disable-demo -- --dry-run     # read what it would do
+npm run db:disable-demo
+
+# 5. Start
+NODE_ENV=production node server.mjs
+#   the boot log must show no launch.check error; ADMIN_LOCKED_OUT means step 3
+#   did not happen
+
+# 6. Prove the integrations are wired (no credential is echoed)
+curl -s "$NEXT_PUBLIC_APP_URL/api/health" | jq '.integrations, .commerceReady'
+
+# 7. Prove the deploy
+npm run smoke       -- --base "$NEXT_PUBLIC_APP_URL"
+npm run security:audit -- --base "$NEXT_PUBLIC_APP_URL"
+npm run test:scenarios -- --base "$NEXT_PUBLIC_APP_URL" \
+    --admin-phone 09... --admin-password '...' --allow-remote
+npm run load -- --base "$NEXT_PUBLIC_APP_URL" --concurrency 20 --seconds 30
+
+# 8. One real payment, one real SMS code — the two checks no test can replace
+```
 
 ---
 
 ## Verdict
 
-**NOT READY** — solely because Playwright E2E has never executed in a browser.
+**⚠️ CONDITIONALLY READY.**
 
-Everything the repository can verify on its own passes: 230 tests, a 36-check
-smoke test against real PostgreSQL, a verified restore path, clean lint,
-typecheck and build. The moment the E2E suite runs green in CI, and the
-configuration list above is completed, the verdict becomes READY.
+Everything this repository can verify on its own passes: 325 tests, a 36-check
+smoke test, a 66-check HTTP security audit, a 16-check scenario suite and a load
+probe — all against a production-mode server on real PostgreSQL. Nine findings
+from this pass are FIXED and VERIFIED, including one CRITICAL certificate IDOR.
 
-Six integrations (Zarinpal, S3, SpotPlayer, SMS, SMTP, Sentry DSN) remain
-**BLOCKED BY EXTERNAL CONFIGURATION**. Their boundaries are implemented and
-tested; they are not marked READY and must not be, because no real call has
-succeeded.
+Three conditions remain, none of them a code defect:
+
+1. live Zibal and MeliPayamak credentials plus one real round trip each;
+2. the Playwright suite green once in a browser (CI job `e2e`);
+3. a rehearsed restore (`npm run backup:verify`).
+
+S3, SpotPlayer, SMTP and the Sentry DSN remain optional integrations: their
+boundaries are implemented and tested, and none of them blocks launch.
+
+Details, severities and reproduction steps: `PRODUCTION_READINESS_REPORT.md`.

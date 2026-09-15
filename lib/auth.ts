@@ -2,21 +2,78 @@ import crypto from "node:crypto";
 import { cookies } from "next/headers";
 import type { Role, Session, User } from "./types";
 import { isProduction } from "./env";
+import { SEED_ACCOUNTS, SEED_DEMO_ACCOUNT_IDS } from "./seed";
 import { getSession, getSettings, getUserById } from "./store";
 
 export const SESSION_COOKIE = "az_session";
 /** Short-lived cookie used between password step and TOTP step. */
 export const MFA_COOKIE = "az_mfa";
 
-/** Seed identities that may survive a development-to-production migration. */
-const NON_ADMIN_DEMO_ACCOUNT_IDS = new Set(["u-editor", "u-support", "u-maryam", "u-sara"]);
+/* ---------- demo / disabled account policy ---------- */
 
-export function isNonAdminDemoAccount(user: Pick<User, "id" | "role">): boolean {
-  return user.role !== "admin" && user.role !== "super_admin" && NON_ADMIN_DEMO_ACCOUNT_IDS.has(user.id);
+/** Everything `demoAccountBlocked` needs to judge an account. */
+export type AccountState = Pick<User, "id" | "role" | "phone" | "passwordHash"> &
+  Partial<Pick<User, "disabled" | "disabledReason">>;
+
+const SEED_ACCOUNT_BY_ID = new Map(SEED_ACCOUNTS.map((a) => [a.id, a]));
+const SEED_PHONES = new Set(SEED_ACCOUNTS.map((a) => a.phone));
+const DEMO_IDS = new Set(SEED_DEMO_ACCOUNT_IDS);
+
+/**
+ * Is this one of the identities the development seed creates?
+ *
+ * Matched by id *and* by phone: a database copied out of staging keeps the ids,
+ * while a user re-registered by hand keeps only the phone number. Either is
+ * enough to identify a demo profile.
+ */
+export function isSeedDemoAccount(user: Pick<User, "id" | "phone">): boolean {
+  return DEMO_IDS.has(user.id) || SEED_PHONES.has(user.phone);
 }
 
-export function demoAccountBlocked(user: Pick<User, "id" | "role"> | undefined | null): boolean {
-  return Boolean(user && isProduction() && isNonAdminDemoAccount(user));
+/**
+ * Does the account still carry the password it was seeded with?
+ *
+ * Comparing hashes (not plaintext) is enough: scrypt output is deterministic for
+ * a given salt, so an unchanged hash means an unchanged password.
+ */
+export function hasSeedPassword(user: Pick<User, "id" | "passwordHash">): boolean {
+  const seed = SEED_ACCOUNT_BY_ID.get(user.id);
+  return Boolean(seed && seed.seedPasswordHash === user.passwordHash);
+}
+
+/** An account an administrator has switched off. Enforced in every environment. */
+export function accountDisabled(user: Partial<Pick<User, "disabled">> | undefined | null): boolean {
+  return Boolean(user?.disabled);
+}
+
+/**
+ * Whether the account is refused at the door.
+ *
+ * Three independent reasons, any of which is enough:
+ *  1. an administrator disabled it — honoured in development too, because a
+ *     disabled account that works locally is a disabled account nobody tests;
+ *  2. in production, a non-admin demo profile from the seed — these exist so a
+ *     reviewer can click through the panel, not so a live site has an editor
+ *     account with a published password;
+ *  3. in production, the admin demo profile while it still answers to the
+ *     published development password. Rotating the password (or running
+ *     `npm run db:bootstrap-admin`) turns it into a real account; leaving it as
+ *     shipped would hand the whole panel to anyone who read the README.
+ */
+export function demoAccountBlocked(user: AccountState | undefined | null): boolean {
+  if (!user) return false;
+  if (accountDisabled(user)) return true;
+  if (!isProduction()) return false;
+  if (isSeedDemoAccount(user) && user.role !== "admin" && user.role !== "super_admin") return true;
+  return isSeedDemoAccount(user) && hasSeedPassword(user);
+}
+
+/** Why an account was refused, for the login screen and the audit log. */
+export function accountBlockReason(user: AccountState): "disabled" | "demo" | "seed-password" | null {
+  if (accountDisabled(user)) return "disabled";
+  if (!isProduction() || !isSeedDemoAccount(user)) return null;
+  if (user.role !== "admin" && user.role !== "super_admin") return "demo";
+  return hasSeedPassword(user) ? "seed-password" : null;
 }
 
 /* ---------- password hashing (scrypt, no deps) ---------- */

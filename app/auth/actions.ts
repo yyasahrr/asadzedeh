@@ -7,6 +7,7 @@ import {
   MFA_COOKIE,
   SESSION_COOKIE,
   SESSION_TTL_MS,
+  accountBlockReason,
   demoAccountBlocked,
   getSessionUser,
   hashPassword,
@@ -118,8 +119,23 @@ export async function login(fd: FormData) {
   }
   const { phone, password, next } = parsed.data;
   const foundUser = getUserByPhone(phone);
-  const user = demoAccountBlocked(foundUser) ? undefined : foundUser;
+  const blockReason = foundUser ? accountBlockReason(foundUser) : null;
+  const user = blockReason ? undefined : foundUser;
   const sec = getSettings().security;
+
+  if (blockReason) {
+    // The visitor sees the same "invalid" message as an unknown number — a
+    // distinct error here would be a user-enumeration oracle. The reason goes to
+    // the audit log, where an operator can tell a retired demo profile from a
+    // real account an admin switched off.
+    await audit({
+      action: "auth.login.blocked",
+      level: "security",
+      actor: foundUser ? { id: foundUser.id, name: foundUser.name, role: foundUser.role } : undefined,
+      detail: { reason: blockReason },
+    });
+    redirect("/auth?error=invalid");
+  }
 
   if (user?.lockedUntil && Date.parse(user.lockedUntil) > Date.now()) {
     await audit({ action: "auth.login.locked", level: "security", actor: { id: user.id, name: user.name, role: user.role } });

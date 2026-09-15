@@ -1,7 +1,7 @@
 import nodemailer from "nodemailer";
 import { getNotifyLog, getSettings, writeDb } from "./store";
+import { effectiveSmsSettings } from "./integrations";
 import { getSmsDriver } from "./sms";
-import type { SmsCredentials } from "./sms";
 import { isProduction } from "./env";
 
 function faNow(): string {
@@ -21,10 +21,17 @@ function log(channel: "sms" | "email", to: string, message: string, status: stri
   return entry;
 }
 
-/** True when no real panel is configured, so sends are logged instead. */
-function demoSms(): { provider: string; creds: SmsCredentials } {
-  const { sms } = getSettings();
-  return { provider: sms.provider, creds: { apiKey: sms.apiKey, secret: sms.secret, sender: sms.sender, templateId: sms.templateId } };
+/**
+ * The panel in force: process environment first, then the admin panel's stored
+ * settings. Credentials stay out of the return value's logs — only the provider
+ * id is ever printed.
+ */
+function panel() {
+  const sms = effectiveSmsSettings();
+  return {
+    provider: sms.provider,
+    creds: { apiKey: sms.apiKey, secret: sms.secret, sender: sms.sender, templateId: sms.templateId },
+  };
 }
 
 /** Send SMS via the configured panel, or demo-log when none is set up. */
@@ -32,12 +39,11 @@ export async function sendSms(
   to: string[],
   message: string
 ): Promise<{ ok: boolean; mode: string; detail: string }> {
-  const { sms } = getSettings();
-  const { provider, creds } = demoSms();
+  const { provider, creds } = panel();
   const receptors = to.filter(Boolean);
   if (receptors.length === 0) return { ok: false, mode: provider, detail: "گیرنده‌ای مشخص نشده" };
 
-  const driver = getSmsDriver(sms.provider);
+  const driver = getSmsDriver(provider);
   if (!driver || !creds.apiKey) {
     if (isProduction()) return { ok: false, mode: "disabled", detail: "سامانه پیامک پیکربندی نشده است" };
     log("sms", receptors.join("، "), message, "نمایشی (ارسال نشد)");
@@ -71,9 +77,8 @@ export async function sendSmsCode(
   code: string,
   text: string
 ): Promise<{ ok: boolean; mode: string; detail: string }> {
-  const { sms } = getSettings();
-  const { creds } = demoSms();
-  const driver = getSmsDriver(sms.provider);
+  const { provider, creds } = panel();
+  const driver = getSmsDriver(provider);
 
   if (!driver || !creds.apiKey) {
     if (isProduction()) return { ok: false, mode: "disabled", detail: "سامانه پیامک پیکربندی نشده است" };

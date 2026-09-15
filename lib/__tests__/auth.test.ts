@@ -1,12 +1,113 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import crypto from "node:crypto";
-import { hashPassword, verifyPassword, isNonAdminDemoAccount } from "@/lib/auth";
+import { hashPassword, verifyPassword } from "@/lib/auth";
+import { SEED_ACCOUNTS, SEED_DEMO_ACCOUNT_IDS } from "@/lib/seed";
+
+const APP_SECRET = "test-secret-for-ci-only-0123456789";
+
+/**
+ * `getEnv()` memoises on first call, so every policy case resets the module
+ * registry and re-imports `@/lib/auth`. Mutating NODE_ENV in place would not be
+ * observed — the same reason `staff-mfa-policy.test.ts` does this.
+ */
+async function loadAuth(nodeEnv: string) {
+  Object.assign(process.env, { NODE_ENV: nodeEnv, APP_SECRET, PGLITE_DIR: "memory" });
+  vi.resetModules();
+  return import("@/lib/auth");
+}
+
+afterEach(() => {
+  Object.assign(process.env, { NODE_ENV: "test" });
+  vi.resetModules();
+});
+
+/** The account shape the demo policy judges. */
+function account(overrides: Record<string, unknown> = {}) {
+  const seed = SEED_ACCOUNTS[0];
+  return {
+    id: seed.id,
+    phone: seed.phone,
+    role: seed.role,
+    passwordHash: seed.seedPasswordHash,
+    ...overrides,
+  } as never;
+}
 
 describe("auth", () => {
-  it("identifies only non-admin seed profiles as demo accounts", () => {
-    expect(isNonAdminDemoAccount({ id: "u-sara", role: "student" })).toBe(true);
-    expect(isNonAdminDemoAccount({ id: "u-admin", role: "admin" })).toBe(false);
-    expect(isNonAdminDemoAccount({ id: "u-real", role: "student" })).toBe(false);
+  describe("demo account policy", () => {
+    const seedAdmin = SEED_ACCOUNTS.find((a) => a.role === "admin")!;
+    const seedStudent = SEED_ACCOUNTS.find((a) => a.role === "student")!;
+
+    it("recognises seed identities by id and by phone", async () => {
+      const auth = await loadAuth("test");
+      expect(auth.isSeedDemoAccount({ id: "u-sara", phone: "09000000000" })).toBe(true);
+      expect(auth.isSeedDemoAccount({ id: "u-123", phone: seedStudent.phone })).toBe(true);
+      expect(auth.isSeedDemoAccount({ id: "u-123", phone: "09000000000" })).toBe(false);
+    });
+
+    it("lists every non-admin seed identity as a demo profile", () => {
+      expect(SEED_DEMO_ACCOUNT_IDS).toContain("u-editor");
+      expect(SEED_DEMO_ACCOUNT_IDS).toContain("u-support");
+      expect(SEED_DEMO_ACCOUNT_IDS).toContain("u-maryam");
+      expect(SEED_DEMO_ACCOUNT_IDS).toContain("u-sara");
+      expect(SEED_DEMO_ACCOUNT_IDS).not.toContain("u-admin");
+    });
+
+    it("detects an account still on its seeded password", async () => {
+      const auth = await loadAuth("test");
+      expect(auth.hasSeedPassword({ id: seedAdmin.id, passwordHash: seedAdmin.seedPasswordHash })).toBe(true);
+      expect(auth.hasSeedPassword({ id: seedAdmin.id, passwordHash: hashPassword("rotated") })).toBe(false);
+      expect(auth.hasSeedPassword({ id: "u-real", passwordHash: seedAdmin.seedPasswordHash })).toBe(false);
+    });
+
+    it("leaves every demo profile usable in development", async () => {
+      const auth = await loadAuth("development");
+      expect(auth.demoAccountBlocked(account({ id: "u-sara", role: "student" }))).toBe(false);
+      expect(auth.demoAccountBlocked(account({ id: seedAdmin.id, role: "admin" }))).toBe(false);
+    });
+
+    it("refuses every non-admin demo profile in production", async () => {
+      const auth = await loadAuth("production");
+      for (const id of SEED_DEMO_ACCOUNT_IDS) {
+        expect(auth.demoAccountBlocked(account({ id, phone: "09000000000", role: "editor" }))).toBe(true);
+      }
+    });
+
+    it("refuses the admin demo profile only while it keeps the seeded password", async () => {
+      const auth = await loadAuth("production");
+      const seeded = account({ id: seedAdmin.id, phone: seedAdmin.phone, role: "admin" });
+      expect(auth.demoAccountBlocked(seeded)).toBe(true);
+      expect(auth.accountBlockReason(seeded)).toBe("seed-password");
+      const rotated = { ...(seeded as object), passwordHash: hashPassword("a-real-password") } as never;
+      expect(auth.demoAccountBlocked(rotated)).toBe(false);
+      expect(auth.accountBlockReason(rotated)).toBe(null);
+    });
+
+    it("honours an explicit disable in every environment", async () => {
+      const auth = await loadAuth("development");
+      const off = account({ id: "u-real", phone: "09000000000", disabled: true });
+      expect(auth.accountDisabled(off)).toBe(true);
+      expect(auth.demoAccountBlocked(off)).toBe(true);
+      expect(auth.accountBlockReason(off)).toBe("disabled");
+    });
+
+    it("never blocks a real registered user in production", async () => {
+      const auth = await loadAuth("production");
+      expect(
+        auth.demoAccountBlocked({
+          id: "u-1712",
+          phone: "09121112233",
+          role: "student",
+          passwordHash: hashPassword("their-own-password"),
+        } as never),
+      ).toBe(false);
+    });
+
+    it("treats a missing account as not blocked, so login falls through to 'invalid'", async () => {
+      const auth = await loadAuth("production");
+      expect(auth.demoAccountBlocked(undefined)).toBe(false);
+      expect(auth.demoAccountBlocked(null)).toBe(false);
+    });
   });
 
   describe("hashPassword / verifyPassword", () => {

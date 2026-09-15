@@ -1,6 +1,6 @@
 import type { Order } from "./types";
-import { getSettings } from "./store";
 import { demoPaymentAllowed } from "./env";
+import { effectivePaymentSettings } from "./integrations";
 import { logger } from "./logger";
 import { getDriver } from "./gateways/registry";
 import type { GatewayCredentials } from "./gateways/types";
@@ -34,19 +34,31 @@ interface VerifyResult {
 const NOT_CONFIGURED = "درگاه پرداخت پیکربندی نشده است";
 
 export function isDemoPayment(): boolean {
-  const { payment } = getSettings();
+  const payment = effectivePaymentSettings();
   if (!demoPaymentAllowed()) return false;
   return payment.provider === "demo" || !payment.merchantId;
 }
 
 /** Provider captured on a new payment row; never infer it from a hard-coded default. */
 export function configuredPaymentProvider() {
-  return getSettings().payment.provider;
+  return effectivePaymentSettings().provider;
+}
+
+/**
+ * The gateway this deployment will actually charge through.
+ *
+ * Kept separate from `isDemoPayment()` because the two answer different
+ * questions: this one names the driver, that one says whether a driver will run
+ * at all. In production with nothing configured, the answer here is `demo` and
+ * `resolve()` below refuses to build a transaction.
+ */
+export function paymentGatewayId() {
+  return effectivePaymentSettings().provider;
 }
 
 /** Credentials for the configured gateway, or null when it cannot run. */
 function resolve(): { credentials: GatewayCredentials; driver: NonNullable<ReturnType<typeof getDriver>> } | { error: string } {
-  const { payment } = getSettings();
+  const payment = effectivePaymentSettings();
   const driver = getDriver(payment.provider);
   if (!driver) return { error: "درگاه پرداخت پشتیبانی‌نشده" };
   if (!payment.merchantId) return { error: NOT_CONFIGURED };

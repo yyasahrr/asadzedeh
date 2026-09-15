@@ -8,6 +8,8 @@ export async function registerNode() {
   assertProductionSecrets();
   const { initStore } = await import("./lib/store");
   await initStore();
+  const { runLaunchChecks } = await import("./lib/launch-check");
+  await runLaunchChecks();
   await startReservationSweeper();
 }
 

@@ -7,20 +7,35 @@ import { z } from "zod";
 
 const optionalUrl = z.string().url().optional().or(z.literal(""));
 
+/**
+ * Hosting panels write `KEY=` for an unset variable. An empty string is not an
+ * invalid value, it is an absent one, and refusing to boot over it would turn a
+ * blank text box in cPanel into an outage. Blank is therefore coerced to
+ * `undefined` before validation, everywhere.
+ */
+const blankToUndefined = (schema: z.ZodTypeAny) =>
+  z.preprocess((value) => (typeof value === "string" && value.trim() === "" ? undefined : value), schema);
+
+function optionalEnum<const T extends readonly string[]>(values: T) {
+  return blankToUndefined(z.enum(values as unknown as [string, ...string[]]).optional()) as z.ZodType<
+    T[number] | undefined
+  >;
+}
+
 const schema = z.object({
   NODE_ENV: z.enum(["development", "test", "production", "staging"]).default("development"),
   PORT: z.string().optional(),
   HOSTNAME: z.string().optional(),
 
   DATABASE_URL: z.string().min(1).optional().or(z.literal("")),
-  DATABASE_SSL: z.enum(["true", "false"]).optional(),
+  DATABASE_SSL: optionalEnum(["true", "false"]),
 
-  APP_SECRET: z.string().min(16).optional(),
+  APP_SECRET: blankToUndefined(z.string().min(16).optional()) as z.ZodType<string | undefined>,
   NEXT_PUBLIC_APP_URL: optionalUrl,
   NEXT_PUBLIC_SITE_URL: optionalUrl,
 
-  ALLOW_DEMO_PAYMENT: z.enum(["true", "false"]).optional(),
-  ALLOW_DEMO_SEED: z.enum(["true", "false"]).optional(),
+  ALLOW_DEMO_PAYMENT: optionalEnum(["true", "false"]),
+  ALLOW_DEMO_SEED: optionalEnum(["true", "false"]),
 
   S3_ENDPOINT: z.string().optional(),
   S3_REGION: z.string().optional(),
@@ -28,7 +43,7 @@ const schema = z.object({
   S3_ACCESS_KEY: z.string().optional(),
   S3_SECRET_KEY: z.string().optional(),
   S3_PUBLIC_BASE_URL: z.string().optional(),
-  S3_FORCE_PATH_STYLE: z.enum(["true", "false"]).optional(),
+  S3_FORCE_PATH_STYLE: optionalEnum(["true", "false"]),
 
   SENTRY_DSN: z.string().optional(),
   NEXT_PUBLIC_SENTRY_DSN: z.string().optional(),
@@ -37,6 +52,26 @@ const schema = z.object({
   SPOTPLAYER_API_KEY: z.string().optional(),
   FFMPEG_PATH: z.string().optional(),
   ZARINPAL_MERCHANT_ID: z.string().optional(),
+
+  // Payments. Environment overrides the admin-panel settings when set, so a
+  // merchant id can live in the host's environment block instead of the database.
+  PAYMENT_PROVIDER: optionalEnum(["demo", "zarinpal", "idpay", "zibal", "payping"]),
+  PAYMENT_MERCHANT_ID: z.string().optional(),
+  PAYMENT_SECRET: z.string().optional(),
+  PAYMENT_SANDBOX: optionalEnum(["true", "false"]),
+  /** Zibal (زیبال) merchant string — the launch gateway. */
+  ZIBAL_MERCHANT: z.string().optional(),
+
+  // SMS. Same override rule; MeliPayamak (ملی پیامک) is the launch panel and
+  // authenticates with a web-service username/password pair.
+  SMS_PROVIDER: optionalEnum(["demo", "melipayamak", "kavenegar", "ghasedak", "smsir"]),
+  SMS_API_KEY: z.string().optional(),
+  SMS_API_SECRET: z.string().optional(),
+  SMS_SENDER: z.string().optional(),
+  SMS_SENDER_NUMBER: z.string().optional(),
+  SMS_TEMPLATE_ID: z.string().optional(),
+  MELIPAYAMAK_USERNAME: z.string().optional(),
+  MELIPAYAMAK_PASSWORD: z.string().optional(),
 
   SUPER_ADMIN_PHONE: z.string().optional(),
   SUPER_ADMIN_PASSWORD: z.string().optional(),

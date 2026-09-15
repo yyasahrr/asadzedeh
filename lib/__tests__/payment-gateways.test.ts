@@ -24,9 +24,13 @@ vi.mock("@/lib/store", () => ({
 
 // Production forbids demo payments, which is the only context where an
 // unconfigured gateway surfaces its own error instead of the demo message.
-vi.mock("@/lib/env", () => ({
-  demoPaymentAllowed: () => demoAllowed,
-}));
+// Everything else in `@/lib/env` stays real: `lib/integrations` reads the
+// process environment through `getEnv()` to layer credentials over the stored
+// settings, and mocking it away would test a configuration path that cannot occur.
+vi.mock("@/lib/env", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/env")>();
+  return { ...actual, demoPaymentAllowed: () => demoAllowed };
+});
 
 function order(over: Partial<Order> = {}): Order {
   return {
