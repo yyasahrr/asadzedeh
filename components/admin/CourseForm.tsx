@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { OnlineCourse } from "@/lib/types";
 import { galleryImages } from "@/lib/seed";
 import { getInstructors, getSettings, getVideos } from "@/lib/store";
-import { findFfmpeg } from "@/lib/video";
+import { ffmpegStatus } from "@/lib/video";
 import { spotPlayerConfigured } from "@/lib/spotplayer";
 import { FieldLabel, Input, Select, Textarea } from "../ui/Input";
 import { UploadField } from "./UploadField";
@@ -108,7 +108,7 @@ export function CourseForm({
       </div>
 
       <TrailerFields initial={c?.trailer} videos={videos} gallery={galleryImages} />
-      <ProtectionFields value={protection} spotConfigured={spotPlayerConfigured()} ffmpegAvailable={!!findFfmpeg()} />
+      <ProtectionFields value={protection} spotConfigured={spotPlayerConfigured()} ffmpegAvailable={ffmpegStatus().available} />
 
       {c && (
         <div className="flex items-center justify-between gap-3 rounded-2xl bg-teal-50 px-4 py-3 text-sm sm:col-span-2">

@@ -44,7 +44,7 @@ export interface Trailer {
   durationSec?: number;
 }
 
-export type VideoStatus = "uploaded" | "processing" | "ready" | "failed";
+export type VideoStatus = "uploading" | "uploaded" | "processing" | "ready" | "failed";
 
 /** A stored video asset (server-side, never exposed as a static file). */
 export interface VideoAsset {
@@ -52,20 +52,37 @@ export interface VideoAsset {
   title: string;
   /** Original file name as uploaded. */
   originalName: string;
-  /** Path relative to the private video vault (not under /public). */
+  /**
+   * Object-storage key (e.g. `videos/v-abc.mp4`). Older records hold a path
+   * relative to the retired on-disk vault; both resolve through
+   * `resolveVideoKey`. This is never a URL and never leaves the server.
+   */
   file: string;
-  /** HLS playlist relative path when transcoded. */
+  /** HLS playlist key when transcoded. Unused while ffmpeg is disabled. */
   hls?: string;
   sizeBytes: number;
   mime: string;
   durationSec?: number;
   status: VideoStatus;
-  /** Progress detail / ffmpeg error. */
+  /** Progress detail, or the reason a video was not processed. */
   note?: string;
   uploadedBy: string;
   createdAt: string;
   /** Number of chunks received / expected (chunked upload). */
   chunks?: { received: number; total: number };
+  /**
+   * In-flight multipart upload. Persisted (rather than held in memory) so a
+   * process restart mid-upload leaves something an operator — and the stale
+   * upload reaper — can find, instead of orphaned parts in the bucket.
+   */
+  upload?: {
+    uploadId: string;
+    key: string;
+    contentType: string;
+    total: number;
+    startedAt: number;
+    parts: { partNumber: number; etag: string }[];
+  };
 }
 
 export interface Chapter {

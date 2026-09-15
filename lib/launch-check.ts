@@ -127,6 +127,20 @@ export async function runLaunchChecks(): Promise<LaunchReport> {
     findings.push({ code: "INTEGRATION", level: "warn", message });
   }
 
+  // Course videos and lesson attachments are the product. On a PaaS the
+  // container disk is wiped on every deploy, so local storage in production
+  // means losing paid-for teaching material at the next restart — an error,
+  // not a warning.
+  const { storageDurable } = await import("./storage");
+  if (isProduction() && !storageDurable()) {
+    findings.push({
+      code: "NO_OBJECT_STORAGE",
+      level: "error",
+      message:
+        "Object Storage پیکربندی نشده است. ویدیوها و فایل‌های درس روی دیسک موقت کانتینر ذخیره می‌شوند و با هر دیپلوی از بین می‌روند. S3_ENDPOINT، S3_BUCKET، S3_ACCESS_KEY و S3_SECRET_KEY را تنظیم کنید.",
+    });
+  }
+
   const security = getSettings().security;
   if (!isProduction() && security.requireStaff2fa === false) {
     findings.push({

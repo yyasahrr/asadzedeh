@@ -26,11 +26,26 @@ const schema = z.object({
   NODE_ENV: z.enum(["development", "test", "production", "staging"]).default("development"),
   PORT: z.string().optional(),
   HOSTNAME: z.string().optional(),
+  /** pino level. Read directly by lib/logger.ts before the schema is parsed. */
+  LOG_LEVEL: optionalEnum(["fatal", "error", "warn", "info", "debug", "trace", "silent"]),
 
   DATABASE_URL: z.string().min(1).optional().or(z.literal("")),
   DATABASE_SSL: optionalEnum(["true", "false"]),
+  /**
+   * Escape hatch for providers that terminate TLS with a private CA.
+   *
+   * Skipping certificate verification means anyone on the path can impersonate
+   * the database and read every query, so it is opt-in and named loudly rather
+   * than being the default behaviour of `DATABASE_SSL=true`.
+   */
+  DATABASE_SSL_REJECT_UNAUTHORIZED: optionalEnum(["true", "false"]),
 
   APP_SECRET: blankToUndefined(z.string().min(16).optional()) as z.ZodType<string | undefined>,
+  /**
+   * Legacy alias consulted only when APP_SECRET is absent. Declared here so it
+   * cannot be an undeclared way to choose the signing key.
+   */
+  VIDEO_SIGNING_SECRET: blankToUndefined(z.string().min(16).optional()) as z.ZodType<string | undefined>,
   NEXT_PUBLIC_APP_URL: optionalUrl,
   NEXT_PUBLIC_SITE_URL: optionalUrl,
 
@@ -42,6 +57,13 @@ const schema = z.object({
   S3_BUCKET: z.string().optional(),
   S3_ACCESS_KEY: z.string().optional(),
   S3_SECRET_KEY: z.string().optional(),
+  /**
+   * The AWS-standard spellings. Providers hand these names out in their own
+   * console, so accepting them means an operator pasting from the provider's
+   * docs does not silently get an unconfigured bucket.
+   */
+  S3_ACCESS_KEY_ID: z.string().optional(),
+  S3_SECRET_ACCESS_KEY: z.string().optional(),
   S3_PUBLIC_BASE_URL: z.string().optional(),
   S3_FORCE_PATH_STYLE: optionalEnum(["true", "false"]),
 
@@ -122,9 +144,21 @@ export function demoPaymentAllowed(): boolean {
   return true;
 }
 
-export function objectStorageConfigured(): boolean {
+/**
+ * The effective S3 credentials, whichever spelling the operator used.
+ * Returns null unless every required piece is present: a half-configured bucket
+ * must read as "not configured", never as "configured but broken at runtime".
+ */
+export function s3Credentials(): { endpoint: string; bucket: string; accessKey: string; secretKey: string } | null {
   const env = getEnv();
-  return Boolean(env.S3_ENDPOINT && env.S3_BUCKET && env.S3_ACCESS_KEY && env.S3_SECRET_KEY);
+  const accessKey = env.S3_ACCESS_KEY || env.S3_ACCESS_KEY_ID || "";
+  const secretKey = env.S3_SECRET_KEY || env.S3_SECRET_ACCESS_KEY || "";
+  if (!env.S3_ENDPOINT || !env.S3_BUCKET || !accessKey || !secretKey) return null;
+  return { endpoint: env.S3_ENDPOINT, bucket: env.S3_BUCKET, accessKey, secretKey };
+}
+
+export function objectStorageConfigured(): boolean {
+  return s3Credentials() !== null;
 }
 
 export function appUrl(): string {

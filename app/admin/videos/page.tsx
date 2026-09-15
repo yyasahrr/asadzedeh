@@ -11,7 +11,7 @@ import { can, getSessionUser } from "@/lib/auth";
 import { toFa } from "@/lib/format";
 import { spotPlayerConfigured } from "@/lib/spotplayer";
 import { getClasses, getCourses, getSettings, getUsers, getVideos } from "@/lib/store";
-import { findFfmpeg, formatBytes, formatDuration } from "@/lib/video";
+import { ffmpegStatus, formatBytes, formatDuration } from "@/lib/video";
 
 export const metadata: Metadata = { title: "کتابخانه ویدیو" };
 export const dynamic = "force-dynamic";
@@ -32,7 +32,7 @@ export default async function VideosPage({ searchParams }: { searchParams: Promi
   const classes = getClasses();
   const users = new Map(getUsers().map((u) => [u.id, u.name]));
   const settings = getSettings();
-  const ffmpeg = findFfmpeg();
+  const ffmpeg = ffmpegStatus().available;
   const previewVideo = preview ? videos.find((v) => v.id === preview) : undefined;
   const totalBytes = videos.reduce((s, v) => s + v.sizeBytes, 0);
 

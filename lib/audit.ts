@@ -4,6 +4,8 @@ import path from "node:path";
 import { headers } from "next/headers";
 import type { AuditEntry, AuditLevel, Role } from "./types";
 import { getAudit, writeDb } from "./store";
+import { isProduction } from "./env";
+import { logger } from "./logger";
 
 /**
  * Professional audit log for the admin panel.
@@ -80,6 +82,19 @@ export async function requestContext(): Promise<{ ip: string; userAgent: string 
   }
 }
 
+/**
+ * Ship the entry to the platform log stream.
+ *
+ * In production this replaces the on-disk copy. A PaaS container filesystem is
+ * wiped on every deploy, so an audit trail written there is not an audit trail
+ * — it is a file that disappears precisely when someone needs it. Structured
+ * stdout is collected by the platform (and by Loki/ELK when configured), and
+ * the hash-chained database copy remains the tamper-evident record.
+ */
+function shipEntry(entry: AuditEntry) {
+  logger.info({ event: "audit", ...entry });
+}
+
 function appendFile(entry: AuditEntry) {
   try {
     fs.mkdirSync(path.dirname(LOG_FILE), { recursive: true });
@@ -118,7 +133,9 @@ export async function audit(input: AuditInput): Promise<AuditEntry | null> {
     };
     const entry: AuditEntry = { ...base, hash: hashEntry(base) };
     writeDb({ audit: [entry, ...list].slice(0, MAX_IN_DB) });
-    appendFile(entry);
+    // Ephemeral disk in production: the log stream is the durable copy there.
+    if (isProduction()) shipEntry(entry);
+    else appendFile(entry);
     return entry;
   } catch (e) {
     console.error("[audit] failed", e);

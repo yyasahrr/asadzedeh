@@ -9,7 +9,7 @@ import { can, getSessionUser } from "@/lib/auth";
 import { toFa } from "@/lib/format";
 import { spotPlayerConfigured } from "@/lib/spotplayer";
 import { getSettings } from "@/lib/store";
-import { findFfmpeg } from "@/lib/video";
+import { ffmpegStatus } from "@/lib/video";
 
 export const metadata: Metadata = { title: "تنظیمات امنیت ویدیو" };
 export const dynamic = "force-dynamic";
@@ -28,7 +28,7 @@ export default async function VideoSettingsPage({ searchParams }: { searchParams
   if (!user || !can(user, "videos")) return <Denied />;
   const { saved } = await searchParams;
   const s = getSettings();
-  const ffmpeg = findFfmpeg();
+  const ffmpeg = ffmpegStatus();
   const sp = s.spotplayer;
 
   return (
@@ -53,7 +53,7 @@ export default async function VideoSettingsPage({ searchParams }: { searchParams
           <h2 className="flex items-center gap-2 font-black text-navy-900 sm:col-span-2">
             <ShieldCheck className="h-5 w-5 text-teal-700" /> حفاظت پیش‌فرض دوره‌ها
           </h2>
-          <ProtectionFields value={s.video.defaults} spotConfigured={spotPlayerConfigured()} ffmpegAvailable={!!ffmpeg} />
+          <ProtectionFields value={s.video.defaults} spotConfigured={spotPlayerConfigured()} ffmpegAvailable={ffmpeg.available} />
         </section>
 
         {/* Player + delivery */}
@@ -88,7 +88,7 @@ export default async function VideoSettingsPage({ searchParams }: { searchParams
                 <span className="block text-sm font-bold text-ink-800">تبدیل خودکار به HLS پس از آپلود</span>
                 <span className="block text-xs leading-6 text-ink-500">
                   ویدیو به قطعات رمزنگاری‌نشده اما امضاشده (m3u8/ts) تبدیل می‌شود؛ دانلود یک‌جای فایل عملاً ناممکن است.
-                  {ffmpeg ? ` ffmpeg: ${ffmpeg}` : " ffmpeg در دسترس نیست — تا نصب، فایل اصلی با پلیر امن پخش می‌شود."}
+                  {ffmpeg.available ? " پردازش ویدیو فعال است." : ` ${ffmpeg.reason ?? "ffmpeg در دسترس نیست"}`}
                 </span>
               </span>
             </label>

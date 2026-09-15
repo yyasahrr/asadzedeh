@@ -58,6 +58,12 @@ outputs/
 # Local development database (PGlite fallback) and store write-ahead log
 data/pglite*/
 
+# Runtime file storage. Development writes here; production uses object
+# storage. Nothing under these paths belongs in version control.
+data/object-store/
+data/lesson-files/
+data/db.json.migrated
+
 data/.store-wal*.json
 data/seo-redirects.json
 

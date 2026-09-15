@@ -19,7 +19,7 @@ import { faToday, parsePrice, slugify } from "@/lib/format";
 import { can, getSessionUser, hashPassword, isSuperAdmin, type Permission, type SessionUser } from "@/lib/auth";
 import { audit } from "@/lib/audit";
 import { sendEmail, sendSms } from "@/lib/notify";
-import { deleteVideoFiles, resetFfmpegCache, transcodeToHls } from "@/lib/video";
+import { deleteVideoFiles, transcodeToHls } from "@/lib/video";
 import { clampText } from "@/lib/validation/legacy";
 import { grantAccessForOrder } from "@/lib/access";
 import { generateCertificateCode } from "@/lib/certificate-code";
@@ -500,7 +500,7 @@ export async function deleteVideo(fd: FormData) {
   const id = str(fd, "id");
   const video = getVideos().find((v) => v.id === id);
   if (!video) return;
-  deleteVideoFiles(video);
+  await deleteVideoFiles(video);
   writeDb({
     videos: getVideos().filter((v) => v.id !== id),
     courses: getCourses().map((c) => ({
@@ -524,9 +524,8 @@ export async function retranscodeVideo(fd: FormData) {
   const id = str(fd, "id");
   const video = getVideos().find((v) => v.id === id);
   if (!video) return;
-  resetFfmpegCache();
   await audit({ action: "video.transcode", actor: actor(me), target: `video:${id}` });
-  void transcodeToHls(video);
+  await transcodeToHls(video);
   revalidatePath("/admin/videos");
   redirect("/admin/videos?queued=1");
 }
@@ -1509,7 +1508,6 @@ export async function saveVideoSettings(fd: FormData) {
       },
     },
   });
-  resetFfmpegCache();
   await audit({ action: "settings.update", level: "security", actor: actor(me), detail: { section: "video+spotplayer" } });
   revalidatePath("/admin/videos");
   redirect("/admin/videos/settings?saved=1");

@@ -29,6 +29,17 @@ async function startReservationSweeper() {
     } catch (error) {
       logger.error({ event: "inventory.reservations.sweep.failed", err: String(error) });
     }
+
+    // Abandoned video uploads. An interrupted multipart upload leaves parts in
+    // the bucket that nobody references and everybody pays for; both sides of
+    // this are idempotent, so a second replica or a restart is harmless.
+    try {
+      const { reapStaleUploads } = await import("./lib/video");
+      const reaped = await reapStaleUploads();
+      if (reaped > 0) await syncCollections(["videos"]);
+    } catch (error) {
+      logger.error({ event: "video.upload.reap.failed", err: String(error) });
+    }
   };
 
   const timer = setInterval(() => void runOnce(), everyMinutes * 60_000);

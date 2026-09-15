@@ -62,7 +62,13 @@ async function createPostgres(url: string): Promise<SqlExecutor> {
     max: 10,
     idle_timeout: 20,
     connect_timeout: 15,
-    ssl: env.DATABASE_SSL === "true" ? { rejectUnauthorized: false } : undefined,
+    // TLS verifies the server certificate by default: without that check anyone
+    // on the path can impersonate the database. Opt out explicitly, per host,
+    // only when the provider uses a private CA and its cert cannot be pinned.
+    ssl:
+      env.DATABASE_SSL === "true"
+        ? { rejectUnauthorized: env.DATABASE_SSL_REJECT_UNAUTHORIZED !== "false" }
+        : undefined,
     onnotice: () => undefined,
   });
   return {

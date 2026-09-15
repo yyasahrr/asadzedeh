@@ -117,11 +117,44 @@ describe("runLaunchChecks", () => {
     expect(report.integrations.sms.configured).toBe(false);
   });
 
-  it("is clean once a real admin and both integrations exist", async () => {
+  it("refuses to call production clean while uploads would land on an ephemeral disk", async () => {
     Object.assign(process.env, {
       ZIBAL_MERCHANT: "zibal-merchant-123",
       MELIPAYAMAK_USERNAME: "asadzedeh-user",
       MELIPAYAMAK_PASSWORD: "panel-secret",
+    });
+    const { store, launch } = await load("production");
+    store.writeDb({
+      users: [
+        {
+          id: "u-super-1",
+          name: "مدیر ارشد",
+          phone: "09120009999",
+          passwordHash: "salt:real-hash",
+          role: "super_admin",
+          createdAt: "۱۵ شهریور ۱۴۰۵",
+        },
+      ],
+    });
+
+    const report = await launch.runLaunchChecks();
+
+    const storage = report.findings.find((f) => f.code === "NO_OBJECT_STORAGE");
+    expect(storage?.level).toBe("error");
+    delete process.env.ZIBAL_MERCHANT;
+    delete process.env.MELIPAYAMAK_USERNAME;
+    delete process.env.MELIPAYAMAK_PASSWORD;
+  });
+
+  it("is clean once a real admin, both integrations and object storage exist", async () => {
+    Object.assign(process.env, {
+      ZIBAL_MERCHANT: "zibal-merchant-123",
+      MELIPAYAMAK_USERNAME: "asadzedeh-user",
+      MELIPAYAMAK_PASSWORD: "panel-secret",
+      S3_ENDPOINT: "https://s3.example.com",
+      S3_BUCKET: "asadzedeh",
+      S3_ACCESS_KEY: "access",
+      S3_SECRET_KEY: "secret",
     });
     const { store, launch } = await load("production");
     store.writeDb({
@@ -145,5 +178,9 @@ describe("runLaunchChecks", () => {
     delete process.env.ZIBAL_MERCHANT;
     delete process.env.MELIPAYAMAK_USERNAME;
     delete process.env.MELIPAYAMAK_PASSWORD;
+    delete process.env.S3_ENDPOINT;
+    delete process.env.S3_BUCKET;
+    delete process.env.S3_ACCESS_KEY;
+    delete process.env.S3_SECRET_KEY;
   });
 });

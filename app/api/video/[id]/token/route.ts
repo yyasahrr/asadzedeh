@@ -2,7 +2,6 @@ import { getSessionUser, signPayload } from "@/lib/auth";
 import { audit } from "@/lib/audit";
 import { resolveAccess } from "@/lib/access";
 import { getSettings, getVideo } from "@/lib/store";
-import { ensureWatermarkedCopy } from "@/lib/video";
 
 export const dynamic = "force-dynamic";
 
@@ -27,17 +26,15 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const ttl = Math.max(60, settings.video.signedUrlSeconds || 900);
   const ua = (req.headers.get("user-agent") ?? "").slice(0, 80);
 
-  // Which source: HLS (preferred), burned-in watermark copy, or original file.
-  let source: "hls" | "wm" | "file" = video.hls ? "hls" : "file";
-  if (access.watermark && protection.burnWatermark && user) {
-    const ready = await ensureWatermarkedCopy(video, user.phone);
-    if (ready) source = "wm";
-    // if not ready yet, fall back to HLS/file + overlay watermark; the copy is prepared in background.
-  }
+  // Delivery source. HLS and the burned-in watermark both need ffmpeg, which is
+  // out of scope for this release, so the original file is always what plays.
+  // The overlay watermark (moving text drawn by the player) still identifies the
+  // viewer on screen — degradation is visible to the operator, not silent.
+  const source: "hls" | "wm" | "file" = "file";
+  const watermarkText = access.watermark && user ? user.phone : "";
 
   const exp = Date.now() + ttl * 1000;
   const token = signPayload({ v: id, u: user?.id ?? "anon", s: source, ua, exp });
-  const watermarkText = access.watermark && user ? user.phone : "";
 
   await audit({
     action: "video.play",
@@ -50,7 +47,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     token,
     exp,
     source,
-    src: source === "hls" ? `/api/video/${id}/hls/index.m3u8?t=${token}` : `/api/video/${id}/stream?t=${token}`,
+    src: `/api/video/${id}/stream?t=${token}`,
     watermark: protection.overlayWatermark ? { text: watermarkText, extra: settings.video.watermarkExtra, intervalSec: settings.video.watermarkIntervalSec } : null,
     blockDownload: protection.blockDownload,
     durationSec: video.durationSec ?? null,

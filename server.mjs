@@ -8,7 +8,10 @@ const port = Number.parseInt(process.env.PORT || "3000", 10);
 
 const DATABASE_URL = process.env.DATABASE_URL || "";
 if (!DATABASE_URL && !dev) {
-  console.error("FATAL: DATABASE_URL is required — redirects are served from PostgreSQL.");
+  console.error(
+    "FATAL: DATABASE_URL is required in production. PostgreSQL is the only datastore; " +
+      "there is no JSON, SQLite or demo fallback to start on.",
+  );
   process.exit(1);
 }
 
@@ -31,15 +34,34 @@ const sql = DATABASE_URL
 let redirectCache = { at: 0, rows: [] };
 const REDIRECT_TTL_MS = 30_000;
 
+/**
+ * Is this a safe redirect target?
+ *
+ * The admin panel already refuses anything but a local path, but this layer
+ * reads the table directly, so a row written by a migration or by hand would
+ * bypass that check. Re-validating here means a bad row cannot turn the site
+ * into an open redirect — defence in depth, not a second opinion.
+ */
+function isLocalPath(value) {
+  return typeof value === "string" && value.startsWith("/") && !value.startsWith("//") && !value.includes("://");
+}
+
 async function refreshRedirects() {
   if (Date.now() - redirectCache.at < REDIRECT_TTL_MS) return;
   redirectCache.at = Date.now();
   try {
     const rows = await sql`
       SELECT from_path, to_path, status_code FROM seo_redirects WHERE enabled = TRUE`;
-    redirectCache.rows = rows.filter((r) => r.from_path && r.to_path);
-  } catch {
-    /* keep serving the previous snapshot */
+    const usable = rows.filter((r) => r.from_path && isLocalPath(r.to_path));
+    const rejected = rows.length - usable.length;
+    if (rejected > 0) {
+      console.warn(`> ignoring ${rejected} redirect(s) with a non-local target`);
+    }
+    redirectCache.rows = usable;
+  } catch (error) {
+    // Keep serving the previous snapshot, but say so: a silent catch here is
+    // how an operator ends up staring at stale 301s with no clue why.
+    console.error(`> redirect refresh failed, serving previous snapshot: ${String(error)}`);
   }
 }
 
@@ -74,8 +96,27 @@ await app.prepare();
 
 /* -------------------------------------------------------------- lifecycle */
 
+// A bind failure (port already taken, bad HOSTNAME) must be a clear startup
+// error. Without this handler Node reports an opaque throw and the platform
+// just restart-loops.
+httpServer.on("error", (error) => {
+  console.error(`FATAL: could not listen on ${hostname}:${port} — ${String(error)}`);
+  process.exit(1);
+});
+
 httpServer.listen(port, hostname, () => {
   console.log(`> Next.js ready on http://${hostname}:${port}`);
+});
+
+// Log and exit non-zero so the platform restarts the process. Continuing after
+// an unhandled rejection means serving requests from a corrupted state.
+process.on("unhandledRejection", (reason) => {
+  console.error(`FATAL: unhandled rejection — ${String(reason)}`);
+  process.exit(1);
+});
+process.on("uncaughtException", (error) => {
+  console.error(`FATAL: uncaught exception — ${String(error)}`);
+  process.exit(1);
 });
 
 let closing = false;
@@ -85,7 +126,10 @@ function shutdown(signal) {
   console.log(`> ${signal} received, closing`);
 
   httpServer.close(() => {
-    sql.end({ timeout: 5 }).finally(() => process.exit(0));
+    // `sql` is null in dev without DATABASE_URL; dereferencing it would turn a
+    // clean shutdown into a crash on the way out.
+    const done = sql ? sql.end({ timeout: 5 }) : Promise.resolve();
+    done.catch(() => undefined).finally(() => process.exit(0));
   });
   setTimeout(() => process.exit(1), 10_000).unref();
 }
