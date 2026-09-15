@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   // Do not advertise the framework on every response.
   poweredByHeader: false,
   // Native SVG renderer must be required at runtime, not bundled.

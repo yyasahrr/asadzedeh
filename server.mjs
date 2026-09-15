@@ -7,7 +7,7 @@ const hostname = process.env.HOSTNAME || "0.0.0.0";
 const port = Number.parseInt(process.env.PORT || "3000", 10);
 
 const DATABASE_URL = process.env.DATABASE_URL || "";
-if (!DATABASE_URL) {
+if (!DATABASE_URL && !dev) {
   console.error("FATAL: DATABASE_URL is required — redirects are served from PostgreSQL.");
   process.exit(1);
 }
@@ -16,13 +16,15 @@ if (!DATABASE_URL) {
  * PostgreSQL is the only store. The redirect layer below reads it directly so an
  * operator can add a 301 without a rebuild; nothing is cached on disk.
  */
-const sql = postgres(DATABASE_URL, {
-  max: 10,
-  idle_timeout: 20,
-  connect_timeout: 10,
-  prepare: false,
-  onnotice: () => {},
-});
+const sql = DATABASE_URL
+  ? postgres(DATABASE_URL, {
+      max: 10,
+      idle_timeout: 20,
+      connect_timeout: 10,
+      prepare: false,
+      onnotice: () => {},
+    })
+  : null;
 
 /* ---------------------------------------------------------------- redirects */
 

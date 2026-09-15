@@ -12,7 +12,7 @@ const schema = z.object({
   PORT: z.string().optional(),
   HOSTNAME: z.string().optional(),
 
-  DATABASE_URL: z.string().min(1).optional(),
+  DATABASE_URL: z.string().min(1).optional().or(z.literal("")),
   DATABASE_SSL: z.enum(["true", "false"]).optional(),
 
   APP_SECRET: z.string().min(16).optional(),

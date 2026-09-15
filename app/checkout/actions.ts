@@ -10,7 +10,7 @@ import type { CartItem } from "@/lib/cart";
 import { getSessionUser, hashPassword } from "@/lib/auth";
 import { buildLines, linesSubtotal } from "@/lib/checkout-lines";
 import { sendSms } from "@/lib/notify";
-import { isDemoPayment, requestPayment } from "@/lib/payment";
+import { configuredPaymentProvider, isDemoPayment, requestPayment } from "@/lib/payment";
 import { finalizePaidOrder, releaseOrder } from "@/lib/order-payment";
 import { reserveOrderLines, writeOrderItems } from "@/lib/db/commerce";
 import { getEnrollments, getOrders, getPayments, getSettings, getUserByPhone, getUsers, syncCollections, withStoreLock, writeDbAsync } from "@/lib/store";
@@ -194,7 +194,7 @@ export async function startCheckout(fd: FormData) {
   const paymentRow: PaymentRecord = {
     id: paymentId,
     orderId: id,
-    provider: demo ? "demo" : "zarinpal",
+    provider: demo ? "demo" : configuredPaymentProvider(),
     status: demo ? "paid" : "pending",
     amount: final,
     createdAt: new Date().toISOString(),

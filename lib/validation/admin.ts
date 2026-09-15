@@ -110,6 +110,7 @@ export type PaymentSettingsInput = z.infer<typeof paymentSettingsSchema>;
 export const smsSettingsSchema = z.object({
   provider: z.enum(SMS_PROVIDERS, { error: "پنل پیامک معتبر نیست" }),
   apiKey: z.string().trim().max(200, "کلید وب‌سرویس بیش از حد طولانی است"),
+  secret: z.string().trim().max(300, "رمز وب‌سرویس بیش از حد طولانی است"),
   sender: z.string().trim().max(40, "شماره ارسال‌کننده بیش از حد طولانی است"),
   templateId: z.string().trim().max(20, "شناسه قالب بیش از حد طولانی است"),
 });

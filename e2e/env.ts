@@ -18,6 +18,10 @@ export const e2eEnv: Record<string, string> = {
   PORT: String(E2E_PORT),
   HOSTNAME: "127.0.0.1",
   PGLITE_DIR: E2E_DB_DIR,
+  NEXT_DIST_DIR: ".next-e2e",
+  // Override any developer .env.local value. Browser tests must never mutate a
+  // developer or production PostgreSQL database.
+  DATABASE_URL: "",
   STORE_WAL_PATH: path.join("data", ".store-wal-e2e.json"),
   APP_SECRET: "e2e-only-secret-do-not-use-anywhere-else",
   NEXT_PUBLIC_APP_URL: E2E_BASE_URL,

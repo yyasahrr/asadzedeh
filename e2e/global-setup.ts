@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import crypto from "node:crypto";
 import { E2E_ADMIN_PASSWORD, E2E_ADMIN_PHONE, E2E_DB_DIR, e2eEnv } from "./env";
 
 // Must happen before lib/db/client is imported: it reads process.env lazily and
@@ -19,7 +20,6 @@ export default async function globalSetup() {
 
   const { runMigrations } = await import("../lib/db/migrate");
   const store = await import("../lib/store");
-  const { hashPassword } = await import("../lib/auth");
 
   await runMigrations();
   await store.initStore();
@@ -29,7 +29,7 @@ export default async function globalSetup() {
     id: existing?.id ?? "u-e2e-admin",
     name: "مدیر تست خودکار",
     phone: E2E_ADMIN_PHONE,
-    passwordHash: hashPassword(E2E_ADMIN_PASSWORD),
+    passwordHash: hashForFixture(E2E_ADMIN_PASSWORD),
     role: "super_admin" as const,
     createdAt: new Date().toISOString(),
   };
@@ -47,4 +47,9 @@ export default async function globalSetup() {
   console.log(
     `[e2e] database ready at ${E2E_DB_DIR} — ${store.getUsers().length} users, admin ${E2E_ADMIN_PHONE}`,
   );
+}
+
+function hashForFixture(password: string): string {
+  const salt = crypto.randomBytes(16).toString("hex");
+  return `${salt}:${crypto.scryptSync(password, salt, 64).toString("hex")}`;
 }

@@ -30,7 +30,7 @@ test.describe("access control", () => {
     await page.getByLabel(/نام/).first().fill("هنرجوی تست");
     await page.locator("#reg-phone").fill(phone);
     await page.locator("#reg-pass").fill("Student!2345678");
-    await page.getByRole("button", { name: /ثبت‌نام|ایجاد حساب/ }).click();
+    await page.getByRole("button", { name: "ساخت حساب کاربری", exact: true }).click();
     await page.waitForURL(/\/dashboard/);
 
     await page.goto("/admin/users");

@@ -1,8 +1,14 @@
 import { describe, it, expect } from "vitest";
 import crypto from "node:crypto";
-import { hashPassword, verifyPassword } from "@/lib/auth";
+import { hashPassword, verifyPassword, isNonAdminDemoAccount } from "@/lib/auth";
 
 describe("auth", () => {
+  it("identifies only non-admin seed profiles as demo accounts", () => {
+    expect(isNonAdminDemoAccount({ id: "u-sara", role: "student" })).toBe(true);
+    expect(isNonAdminDemoAccount({ id: "u-admin", role: "admin" })).toBe(false);
+    expect(isNonAdminDemoAccount({ id: "u-real", role: "student" })).toBe(false);
+  });
+
   describe("hashPassword / verifyPassword", () => {
     it("hashes a password and verifies it correctly", () => {
       const password = "mysecretpassword123";

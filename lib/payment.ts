@@ -39,6 +39,11 @@ export function isDemoPayment(): boolean {
   return payment.provider === "demo" || !payment.merchantId;
 }
 
+/** Provider captured on a new payment row; never infer it from a hard-coded default. */
+export function configuredPaymentProvider() {
+  return getSettings().payment.provider;
+}
+
 /** Credentials for the configured gateway, or null when it cannot run. */
 function resolve(): { credentials: GatewayCredentials; driver: NonNullable<ReturnType<typeof getDriver>> } | { error: string } {
   const { payment } = getSettings();

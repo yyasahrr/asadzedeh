@@ -6,7 +6,7 @@ async function loginAdmin(page: Page) {
   await page.goto("/auth");
   await page.locator("#auth-phone").fill(E2E_ADMIN_PHONE);
   await page.locator("#auth-pass").fill(E2E_ADMIN_PASSWORD);
-  await page.getByRole("button", { name: /ورود/ }).first().click();
+  await page.getByRole("button", { name: "ورود به حساب", exact: true }).click();
   await page.waitForURL(/\/(admin|account\/security|auth\/verify)/, { timeout: 30_000 });
 }
 

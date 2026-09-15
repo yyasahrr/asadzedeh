@@ -198,7 +198,7 @@ describe("zibal", () => {
 
   it("uses the literal sandbox merchant when sandbox is on", async () => {
     settings = { ...settings, sandbox: true };
-    stub({ "merchant/start": { result: 100, trackId: 777 } });
+    stub({ "/request": { result: 100, trackId: 777 } });
     const { requestPayment } = await import("@/lib/payment");
     await requestPayment(order(), "https://shop.test/cb");
     expect(JSON.parse(calls[0].body as string).merchant).toBe("zibal");
@@ -207,7 +207,7 @@ describe("zibal", () => {
   it("refuses a verified amount that does not match the order", async () => {
     // The gateway says "paid" but for a different sum. Trusting that ref would
     // hand the customer an order they did not pay for.
-    stub({ "merchant/verify": { result: 100, status: 1, refNumber: 42, amount: 1_000 } });
+    stub({ "/verify": { result: 100, status: 1, refNumber: 42, amount: 1_000 } });
     const { verifyPayment } = await import("@/lib/payment");
     const r = await verifyPayment(order({ amount: 250_000 }), "777");
     expect(r.ok).toBe(false);
@@ -215,10 +215,17 @@ describe("zibal", () => {
   });
 
   it("accepts a verified amount that does match", async () => {
-    stub({ "merchant/verify": { result: 100, status: 1, refNumber: 42, amount: 2_500_000 } });
+    stub({ "/verify": { result: 100, status: 1, refNumber: 42, amount: 2_500_000 } });
     const { verifyPayment } = await import("@/lib/payment");
     const r = await verifyPayment(order({ amount: 250_000 }), "777");
     expect(r).toEqual({ ok: true, refId: "42" });
+  });
+
+  it("recovers an already-verified transaction", async () => {
+    stub({ "/verify": { result: 201, status: 1, refNumber: 42, amount: 2_500_000 } });
+    const { verifyPayment } = await import("@/lib/payment");
+    const r = await verifyPayment(order({ amount: 250_000 }), "777");
+    expect(r).toEqual({ ok: true, refId: "42", alreadyVerified: true });
   });
 });
 

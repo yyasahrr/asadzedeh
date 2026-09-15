@@ -5,6 +5,7 @@ import { getOrder, getOrders, getPayments, writeDbAsync } from "@/lib/store";
 import { finalizePaidOrder, releaseOrder } from "@/lib/order-payment";
 import { isPaidStatus } from "@/lib/order-status";
 import { logger } from "@/lib/logger";
+import { parsePaymentCallback } from "@/lib/payment-callback";
 
 export const dynamic = "force-dynamic";
 
@@ -19,8 +20,6 @@ export const dynamic = "force-dynamic";
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const orderId = url.searchParams.get("order") ?? "";
-  const authority = url.searchParams.get("Authority") ?? "";
-  const status = url.searchParams.get("Status") ?? "";
   const order = getOrder(orderId);
 
   if (!order) redirect("/checkout/failed?reason=notfound");
@@ -29,12 +28,17 @@ export async function GET(req: Request) {
     redirect(`/checkout/success?order=${orderId}`);
   }
 
-  const existingPaid = getPayments().find((p) => p.orderId === orderId && p.status === "paid");
+  const orderPayments = getPayments().filter((p) => p.orderId === orderId);
+  const existingPaid = orderPayments.find((p) => p.status === "paid");
   if (existingPaid) {
     redirect(`/checkout/success?order=${orderId}`);
   }
 
-  if (status !== "OK" || !authority) {
+  const pendingPayment = orderPayments.find((p) => p.status === "pending") ?? orderPayments[0];
+  const callback = parsePaymentCallback(url.searchParams, pendingPayment?.provider);
+  const authority = callback.authority;
+
+  if (!callback.successful || !authority) {
     await releaseOrder(orderId);
     await writeDbAsync({
       orders: getOrders().map((o) => (o.id === orderId ? { ...o, status: "لغو شده" } : o)),

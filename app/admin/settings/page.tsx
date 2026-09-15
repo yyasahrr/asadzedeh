@@ -45,7 +45,7 @@ export default async function SettingsPage({
           <MessageSquareText className="h-5 w-5 text-teal-600" />
           اتصال به سامانه پیامکی
         </h2>
-        <div className="mt-4 grid gap-4 sm:grid-cols-3">
+        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           <div>
             <FieldLabel htmlFor="sms-provider">سامانه</FieldLabel>
             <Select id="sms-provider" name="provider" defaultValue={settings.sms.provider}>
@@ -58,8 +58,12 @@ export default async function SettingsPage({
             </Select>
           </div>
           <div>
-            <FieldLabel htmlFor="sms-key">کلید API</FieldLabel>
+            <FieldLabel htmlFor="sms-key">کلید API / نام کاربری</FieldLabel>
             <Input id="sms-key" name="apiKey" defaultValue={settings.sms.apiKey} dir="ltr" className="text-left" />
+          </div>
+          <div>
+            <FieldLabel htmlFor="sms-secret">رمز وب‌سرویس</FieldLabel>
+            <Input id="sms-secret" name="secret" type="password" defaultValue={settings.sms.secret} dir="ltr" className="text-left" autoComplete="off" />
           </div>
           <div>
             <FieldLabel htmlFor="sms-sender">شماره فرستنده (اختیاری)</FieldLabel>
@@ -71,8 +75,8 @@ export default async function SettingsPage({
           </div>
         </div>
         <p className="mt-3 text-[13px] leading-7 text-ink-500">
-          پیامک‌دهی (sms.ir) کد ورود را از طریق قالب ثبت‌شده ارسال می‌کند، پس شناسه قالب لازم است؛
-          کاوه‌نگار و قاصدک متن آزاد می‌فرستند. ورود با کد پیامکی در صفحه ورود فعال است.
+          برای ملی پیامک، نام کاربری را در فیلد کلید و رمز وب‌سرویس را جداگانه وارد کنید؛ شناسه قالب برای
+          ارسال کد از خط خدماتی اشتراکی استفاده می‌شود. ورود با کد پیامکی در صفحه ورود فعال است.
         </p>
         <button type="submit" className="mt-4 inline-flex h-11 cursor-pointer items-center rounded-xl bg-navy-800 px-8 font-bold text-white transition-colors hover:bg-navy-700">
           ذخیره تنظیمات پیامک

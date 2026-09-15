@@ -1527,6 +1527,7 @@ export async function saveSmsSettings(fd: FormData) {
         const parsed = validate(smsSettingsSchema, {
           provider: str(fd, "provider") || "demo",
           apiKey: str(fd, "apiKey"),
+          secret: str(fd, "secret"),
           sender: str(fd, "sender"),
           templateId: str(fd, "templateId"),
         });

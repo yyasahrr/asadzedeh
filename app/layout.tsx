@@ -53,7 +53,7 @@ export default function RootLayout({
   const org = organizationJsonLd(settings);
   const site = websiteJsonLd(settings);
   return (
-    <html lang="fa" dir="rtl" className={`${peyda.variable} ${neirizi.variable}`}>
+    <html lang="fa" dir="rtl" className={`${peyda.variable} ${neirizi.variable}`} data-scroll-behavior="smooth">
       <body className="flex min-h-screen flex-col">
         {org ? <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(org) }} /> : null}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(site) }} />

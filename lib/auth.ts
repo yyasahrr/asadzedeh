@@ -8,6 +8,17 @@ export const SESSION_COOKIE = "az_session";
 /** Short-lived cookie used between password step and TOTP step. */
 export const MFA_COOKIE = "az_mfa";
 
+/** Seed identities that may survive a development-to-production migration. */
+const NON_ADMIN_DEMO_ACCOUNT_IDS = new Set(["u-editor", "u-support", "u-maryam", "u-sara"]);
+
+export function isNonAdminDemoAccount(user: Pick<User, "id" | "role">): boolean {
+  return user.role !== "admin" && user.role !== "super_admin" && NON_ADMIN_DEMO_ACCOUNT_IDS.has(user.id);
+}
+
+export function demoAccountBlocked(user: Pick<User, "id" | "role"> | undefined | null): boolean {
+  return Boolean(user && isProduction() && isNonAdminDemoAccount(user));
+}
+
 /* ---------- password hashing (scrypt, no deps) ---------- */
 
 export function hashPassword(password: string): string {
@@ -87,7 +98,7 @@ export async function getSessionUser(): Promise<SessionUser | null> {
   const session = getSession(token);
   if (!isSessionActive(session)) return null;
   const user = getUserById(session!.userId);
-  if (!user) return null;
+  if (!user || demoAccountBlocked(user)) return null;
   return toSafeUser(user, session);
 }
 

@@ -2,6 +2,7 @@ import nodemailer from "nodemailer";
 import { getNotifyLog, getSettings, writeDb } from "./store";
 import { getSmsDriver } from "./sms";
 import type { SmsCredentials } from "./sms";
+import { isProduction } from "./env";
 
 function faNow(): string {
   return new Date().toLocaleString("fa-IR", { dateStyle: "medium", timeStyle: "short" });
@@ -23,7 +24,7 @@ function log(channel: "sms" | "email", to: string, message: string, status: stri
 /** True when no real panel is configured, so sends are logged instead. */
 function demoSms(): { provider: string; creds: SmsCredentials } {
   const { sms } = getSettings();
-  return { provider: sms.provider, creds: { apiKey: sms.apiKey, sender: sms.sender, templateId: sms.templateId } };
+  return { provider: sms.provider, creds: { apiKey: sms.apiKey, secret: sms.secret, sender: sms.sender, templateId: sms.templateId } };
 }
 
 /** Send SMS via the configured panel, or demo-log when none is set up. */
@@ -38,6 +39,7 @@ export async function sendSms(
 
   const driver = getSmsDriver(sms.provider);
   if (!driver || !creds.apiKey) {
+    if (isProduction()) return { ok: false, mode: "disabled", detail: "سامانه پیامک پیکربندی نشده است" };
     log("sms", receptors.join("، "), message, "نمایشی (ارسال نشد)");
     console.log("[SMS-DEMO]", { to: receptors, message });
     return { ok: true, mode: "demo", detail: "حالت نمایشی: پیامک در لاگ ثبت شد" };
@@ -74,6 +76,7 @@ export async function sendSmsCode(
   const driver = getSmsDriver(sms.provider);
 
   if (!driver || !creds.apiKey) {
+    if (isProduction()) return { ok: false, mode: "disabled", detail: "سامانه پیامک پیکربندی نشده است" };
     log("sms", phone, text, "نمایشی (ارسال نشد)");
     console.log("[SMS-DEMO]", { to: phone, message: text });
     return { ok: true, mode: "demo", detail: "حالت نمایشی: کد در لاگ ثبت شد" };
@@ -105,6 +108,7 @@ export async function sendEmail(
   if (recipients.length === 0) return { ok: false, mode: "smtp", detail: "گیرنده‌ای مشخص نشده" };
 
   if (!email.host) {
+    if (isProduction()) return { ok: false, mode: "disabled", detail: "سامانه ایمیل پیکربندی نشده است" };
     log("email", recipients.join("، "), `${subject} — ${html.slice(0, 120)}`, "نمایشی (ارسال نشد)");
     console.log("[EMAIL-DEMO]", { to: recipients, subject });
     return { ok: true, mode: "demo", detail: "حالت نمایشی: ایمیل در لاگ ثبت شد" };

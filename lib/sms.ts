@@ -20,11 +20,59 @@ import type { SmsProviderId } from "./types";
 
 export interface SmsCredentials {
   apiKey: string;
+  secret: string;
   /** Sender line number, where the panel supports choosing one. */
   sender: string;
   /** Template id, required by template-based panels for code delivery. */
   templateId: string;
 }
+
+type MeliPayamakResponse = { Value?: string | number; RetStatus?: number; StrRetStatus?: string };
+
+function meliPayamakOk(body: unknown): SmsResult {
+  const data = body as MeliPayamakResponse;
+  const value = Number(data?.Value);
+  if (data?.RetStatus === 1 && Number.isFinite(value) && value > 0) return { ok: true };
+  return { ok: false, error: data?.StrRetStatus || `خطای ملی پیامک (${String(data?.Value ?? "پاسخ نامعتبر")})` };
+}
+
+/** MeliPayamak/FaraPayamak REST API. `apiKey` is the panel username. */
+const melipayamak: SmsDriver = {
+  id: "melipayamak",
+  label: "ملی پیامک",
+  credentialLabel: "نام کاربری وب‌سرویس",
+  needsTemplateId: false,
+
+  async send(recipients, message, c) {
+    if (!c.secret || !c.sender) return { ok: false, error: "رمز وب‌سرویس و شماره فرستنده ملی پیامک لازم است" };
+    const results = await Promise.all(recipients.map(async (to) => {
+      const form = new URLSearchParams({ username: c.apiKey, password: c.secret, to, from: c.sender, text: message, isFlash: "false" });
+      const { body } = await json("https://rest.payamak-panel.com/api/SendSMS/SendSMS", {
+        event: "sms.melipayamak",
+        retry: { attempts: 2 },
+        method: "POST",
+        headers: { "content-type": "application/x-www-form-urlencoded" },
+        body: form.toString(),
+      });
+      return meliPayamakOk(body);
+    }));
+    return results.find((result) => !result.ok) ?? { ok: true };
+  },
+
+  async sendCode(phone, code, c) {
+    if (!c.secret) return { ok: false, error: "رمز وب‌سرویس ملی پیامک لازم است" };
+    if (!c.templateId) return this.send([phone], `کد ورود اسدزاده: ${code}`, c);
+    const form = new URLSearchParams({ username: c.apiKey, password: c.secret, text: code, to: phone, bodyId: c.templateId });
+    const { body } = await json("https://rest.payamak-panel.com/api/SendSMS/BaseServiceNumber", {
+      event: "sms.melipayamak.template",
+      retry: { attempts: 2 },
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: form.toString(),
+    });
+    return meliPayamakOk(body);
+  },
+};
 
 export interface SmsResult {
   ok: boolean;
@@ -132,7 +180,7 @@ const smsir: SmsDriver = {
   },
 };
 
-const DRIVERS: Record<string, SmsDriver> = { kavenegar, ghasedak, smsir };
+const DRIVERS: Record<string, SmsDriver> = { melipayamak, kavenegar, ghasedak, smsir };
 
 export function getSmsDriver(provider: SmsProviderId): SmsDriver | undefined {
   return DRIVERS[provider];

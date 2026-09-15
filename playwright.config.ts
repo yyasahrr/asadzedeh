@@ -20,16 +20,20 @@ export default defineConfig({
   workers: 1,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [["github"], ["list"]] : [["list"]],
-  globalSetup: "./e2e/global-setup.ts",
   use: {
     baseURL: E2E_BASE_URL,
     trace: "on-first-retry",
     screenshot: "only-on-failure",
     locale: "fa-IR",
   },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  // Use the installed stable Chrome. This also works where Playwright's browser
+  // CDN is unavailable and avoids coupling local tests to a downloaded binary.
+  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"], channel: "chrome" } }],
   webServer: {
-    command: "npm run build && node server.mjs",
+    // Browser scenarios run against Next's dev server and their disposable DB.
+    // The production build is a separate release gate; mixing NODE_ENV=development
+    // into `next build` creates an invalid React/Next runtime combination.
+    command: "node e2e/start-server.mjs",
     url: `${E2E_BASE_URL}/api/health`,
     reuseExistingServer: !process.env.CI,
     timeout: 300_000,

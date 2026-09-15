@@ -324,7 +324,7 @@ export const defaultSettings: Settings = {
       mapProvider: "neshan",
     },
   },
-  sms: { provider: "demo", apiKey: "", sender: "", templateId: "" },
+  sms: { provider: "demo", apiKey: "", secret: "", sender: "", templateId: "" },
   email: { host: "", port: 587, user: "", pass: "", from: "" },
   payment: { provider: "demo", merchantId: "", secret: "", sandbox: true },
   channels: {

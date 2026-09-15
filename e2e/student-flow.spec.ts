@@ -11,7 +11,7 @@ async function register(page: Page, phone: string, password: string) {
   await page.getByLabel(/نام/).first().fill("هنرجوی تست");
   await page.locator("#reg-phone").fill(phone);
   await page.locator("#reg-pass").fill(password);
-  await page.getByRole("button", { name: /ثبت‌نام|ایجاد حساب/ }).click();
+  await page.getByRole("button", { name: "ساخت حساب کاربری", exact: true }).click();
   await page.waitForURL(/\/dashboard/);
 }
 

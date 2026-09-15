@@ -7,6 +7,7 @@ import {
   MFA_COOKIE,
   SESSION_COOKIE,
   SESSION_TTL_MS,
+  demoAccountBlocked,
   getSessionUser,
   hashPassword,
   isInstructor,
@@ -109,14 +110,15 @@ export async function login(fd: FormData) {
   const parsed = validate(loginSchema, {
     phone: fd.get("phone"),
     password: fd.get("password"),
-    next: fd.get("next"),
+    next: fd.get("next") ?? "",
   });
   if (!parsed.ok) {
     await audit({ action: "auth.login.rejected", level: "security", detail: { field: parsed.issues[0]?.field } });
     redirect("/auth?error=validation");
   }
   const { phone, password, next } = parsed.data;
-  const user = getUserByPhone(phone);
+  const foundUser = getUserByPhone(phone);
+  const user = demoAccountBlocked(foundUser) ? undefined : foundUser;
   const sec = getSettings().security;
 
   if (user?.lockedUntil && Date.parse(user.lockedUntil) > Date.now()) {
@@ -260,7 +262,7 @@ export async function requestPasswordResetAction(fd: FormData) {
 
   await requestPasswordReset(phone, (p) => {
     const u = getUserByPhone(p);
-    return u ? { id: u.id, name: u.name } : undefined;
+    return u && !demoAccountBlocked(u) ? { id: u.id, name: u.name } : undefined;
   });
 
   await audit({ action: "auth.password_reset.requested", level: "security" });
@@ -283,7 +285,7 @@ export async function resetPasswordAction(fd: FormData) {
   const result = await resetPasswordWithCode(parsed.data.phone, parsed.data.code, parsed.data.password, {
     resolveUser: (p) => {
       const u = getUserByPhone(p);
-      return u ? { id: u.id } : undefined;
+      return u && !demoAccountBlocked(u) ? { id: u.id } : undefined;
     },
     setPassword: async (userId, password) => {
       writeDb({
@@ -328,7 +330,7 @@ export async function requestOtpAction(fd: FormData) {
 
   const outcome = await requestLoginOtp(phone, (p) => {
     const u = getUserByPhone(p);
-    return u ? { id: u.id, name: u.name } : undefined;
+    return u && !demoAccountBlocked(u) ? { id: u.id, name: u.name } : undefined;
   });
 
   await audit({ action: "auth.otp.requested", level: "security" });
@@ -348,7 +350,8 @@ export async function verifyOtpAction(fd: FormData) {
   const limited = rateLimit(`otp:use:${phone || "anon"}`, LIMITS.otp.limit, LIMITS.otp.windowMs);
   if (!limited.ok) redirect("/auth?tab=otp&error=locked");
 
-  const user = getUserByPhone(phone);
+  const foundUser = getUserByPhone(phone);
+  const user = demoAccountBlocked(foundUser) ? undefined : foundUser;
   const outcome = await verifyLoginOtp(phone, code);
   if (!outcome.ok) {
     await audit({

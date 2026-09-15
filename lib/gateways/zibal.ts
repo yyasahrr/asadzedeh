@@ -28,7 +28,7 @@ export const zibal: PaymentDriver = {
   async request({ order, callbackUrl }: PaymentRequestInput, c: GatewayCredentials): Promise<PaymentRequestResult> {
     try {
       // Money movement: never retried.
-      const res = await fetchWithTimeout(`${BASE}/merchant/start`, {
+      const res = await fetchWithTimeout(`${BASE}/request`, {
         timeoutMs: 15_000,
         event: "payment.request",
         method: "POST",
@@ -57,7 +57,7 @@ export const zibal: PaymentDriver = {
   async verify(order: Order, authority: string, c: GatewayCredentials): Promise<PaymentVerifyResult> {
     try {
       // Idempotent: result 201 means this trackId was already verified.
-      const res = await fetchWithTimeout(`${BASE}/merchant/verify`, {
+      const res = await fetchWithTimeout(`${BASE}/verify`, {
         timeoutMs: 15_000,
         retry: { attempts: 3 },
         event: "payment.verify",
@@ -72,7 +72,7 @@ export const zibal: PaymentDriver = {
         amount?: number;
         message?: string;
       };
-      if (data.result === 100 && data.status === 1 && data.refNumber !== undefined) {
+      if ((data.result === 100 || data.result === 201) && data.refNumber !== undefined) {
         // A reference number that does not match the amount we asked for is not
         // proof that this order was paid — refuse it rather than trust the ref.
         const expected = tomanToRial(order.amount);
@@ -80,7 +80,11 @@ export const zibal: PaymentDriver = {
           logger.warn({ event: "payment.verify.amountMismatch", gateway: "zibal", orderId: order.id, got: data.amount, expected });
           return { ok: false, error: "مبلغ تأییدشده با مبلغ سفارش همخوانی ندارد" };
         }
-        return { ok: true, refId: String(data.refNumber) };
+        return {
+          ok: true,
+          refId: String(data.refNumber),
+          ...(data.result === 201 ? { alreadyVerified: true } : {}),
+        };
       }
       return { ok: false, error: data.message || "تأیید پرداخت ناموفق بود" };
     } catch (e) {

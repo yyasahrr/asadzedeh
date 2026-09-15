@@ -37,11 +37,13 @@ export function AuthTabs({
   error,
   notice,
   next,
+  showDemoAccounts = false,
 }: {
   initialTab: "login" | "register" | "reset" | "otp";
   error?: string;
   notice?: string;
   next?: string;
+  showDemoAccounts?: boolean;
 }) {
   const [tab, setTab] = useState<"login" | "register" | "reset" | "otp">(initialTab);
   // The reset action redirects back with sent=1, so the step is driven by the
@@ -213,7 +215,7 @@ export function AuthTabs({
         با ورود یا ثبت‌نام، <Link href="/terms" className="font-bold text-navy-800">قوانین و مقررات</Link> اسدزاده را می‌پذیرید.
       </p>
 
-      <details className="mt-5 rounded-xl bg-sand-100 p-4 text-[13px] leading-7 text-ink-600">
+      {showDemoAccounts && <details className="mt-5 rounded-xl bg-sand-100 p-4 text-[13px] leading-7 text-ink-600">
         <summary className="cursor-pointer font-bold text-navy-900">حساب‌های نمایشی (برای تست)</summary>
         <ul className="mt-2 space-y-1">
           <li>مدیر کل: <span dir="ltr" className="font-bold">09120000001 / admin123</span></li>
@@ -222,7 +224,7 @@ export function AuthTabs({
           <li>استاد (پنل اساتید): <span dir="ltr" className="font-bold">09120000004 / dyer1234</span></li>
           <li>هنرجو: <span dir="ltr" className="font-bold">09123456789 / sara1234</span></li>
         </ul>
-      </details>
+      </details>}
     </div>
   );
 }

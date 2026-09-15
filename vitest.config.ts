@@ -8,6 +8,11 @@ export default defineConfig({
     // Each file boots its own in-memory PGlite database; keep them isolated.
     isolate: true,
     testTimeout: 30_000,
+    hookTimeout: 60_000,
+    // PostgreSQL suites each boot a real server. Serial files avoid port/initdb
+    // contention on small CI runners while tests inside a suite still exercise
+    // true concurrent database connections.
+    fileParallelism: false,
   },
   resolve: {
     alias: {

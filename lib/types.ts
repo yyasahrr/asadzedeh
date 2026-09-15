@@ -632,6 +632,8 @@ export interface SupportChannelSettings {
 export interface SmsSettings {
   provider: SmsProviderId;
   apiKey: string;
+  /** Password/secret for providers such as MeliPayamak. */
+  secret: string;
   sender: string;
   /** Template id, required by template-based panels (sms.ir) to deliver a code. */
   templateId: string;
@@ -660,7 +662,7 @@ export interface ChannelSettings {
 }
 
 /** SMS panels the shop can be wired to. */
-export const SMS_PROVIDERS = ["demo", "kavenegar", "ghasedak", "smsir"] as const;
+export const SMS_PROVIDERS = ["demo", "melipayamak", "kavenegar", "ghasedak", "smsir"] as const;
 export type SmsProviderId = (typeof SMS_PROVIDERS)[number];
 
 /** Payment gateways the shop can be wired to. */
