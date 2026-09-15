@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useRef, useState } from "react";
-import { ArrowDown, ArrowUp, ChevronDown, Clapperboard, Eye, FileText, GripVertical, Lock, Pencil, Plus, X } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronDown, Clapperboard, Eye, GripVertical, Lock, Pencil, Plus, X } from "lucide-react";
 import type { InPersonClass, Lesson, OnlineCourse, VideoAsset } from "@/lib/types";
 import { formatDuration, toFa } from "@/lib/format";
 import { FieldLabel, Input, Select, Textarea } from "../ui/Input";

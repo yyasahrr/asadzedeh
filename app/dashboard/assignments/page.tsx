@@ -12,6 +12,7 @@ const errorMessages: Record<string, string> = {
   empty: "فایلی انتخاب نشده است.",
   type: "فقط تصویر، PDF یا ZIP مجاز است.",
   size: "حجم فایل بیش از ۱۰ مگابایت است.",
+  storage: "فضای ذخیره‌سازی پیکربندی نشده است — لطفاً بعداً تلاش کنید.",
 };
 
 export default async function AssignmentsPage({
@@ -58,7 +59,7 @@ export default async function AssignmentsPage({
 
               {sub && (
                 <div className="mt-3 flex flex-wrap items-center gap-3 rounded-xl bg-sand-50 px-4 py-3 text-sm ring-1 ring-ink-900/5">
-                  <a href={sub.file} download target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 font-bold text-navy-800 hover:underline">
+                  <a href={`/api/assignments/${sub.id}`} download target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 font-bold text-navy-800 hover:underline">
                     <Download className="h-4 w-4" />
                     مشاهده فایل ارسالی ({sub.date})
                   </a>

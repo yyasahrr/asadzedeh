@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic";
  * a lesson to anyone who could name the key — the bucket being private would
  * not help, because this route holds the credentials.
  */
-const PRIVATE_PREFIXES = [`${VIDEO_PREFIX}/`, `${LESSON_FILE_PREFIX}/`];
+const PRIVATE_PREFIXES = [`${VIDEO_PREFIX}/`, `${LESSON_FILE_PREFIX}/`, `assignments/`];
 
 /**
  * Serve an uploaded media object (site imagery, PDFs) from object storage.

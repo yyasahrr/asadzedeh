@@ -44,7 +44,7 @@ export default async function InstructorStudentsPage() {
               <Td className="text-sm text-ink-700">
                 {s.assignment}
                 <br />
-                <a href={s.file} target="_blank" rel="noreferrer" className="text-xs font-bold text-teal-700 hover:underline">مشاهده فایل</a>
+                <a href={`/api/assignments/${s.id}`} target="_blank" rel="noreferrer" className="text-xs font-bold text-teal-700 hover:underline">مشاهده فایل</a>
               </Td>
               <Td className="text-xs text-ink-500 whitespace-nowrap">{s.date}</Td>
               <Td><StatusBadge status={s.status} /></Td>

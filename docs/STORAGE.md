@@ -25,6 +25,7 @@ deploy, so anything written there is lost on the next restart.
 | Audit log (operational stream) | stdout → platform logs | survives redeploys, ships to Loki/ELK |
 | Course videos | Object Storage `videos/` | paid-for material, must outlive deploys |
 | Lesson attachments | Object Storage `lesson-files/` | same |
+| Assignment submissions | Object Storage `assignments/` | student work, must outlive deploys, private |
 | Site imagery, admin uploads | Object Storage `uploads/` | same |
 | SEO redirects | PostgreSQL (`seo_redirects`) | editable without a rebuild |
 | Multipart upload staging | object storage parts | never on local disk |
@@ -64,12 +65,13 @@ a browser.
 | `/api/video/[id]/token` | session + enrolment | issues a short-lived signed playback token |
 | `/api/video/[id]/stream` | signed token + live session | video bytes, with `Range` support |
 | `/api/lesson-files/[id]` | session + enrolment | attachment bytes |
+| `/api/assignments/[id]` | session + owner/staff | assignment submission file |
 | `/api/media/[key]` | **none** (public site imagery) | `uploads/` only |
 
 `/api/media` is deliberately unauthenticated — it is how the public pages load
-their images — which is exactly why it refuses the `videos/` and
-`lesson-files/` prefixes outright. Those keys are valid; the route is what
-declines them. Both answer `404`, the same as a missing object, so an
+their images — which is exactly why it refuses the `videos/`, `lesson-files/`
+and `assignments/` prefixes outright. Those keys are valid; the route is what
+declines them. All answer `404`, the same as a missing object, so an
 unauthorised caller cannot probe which keys exist.
 
 ### What this does and does not guarantee

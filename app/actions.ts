@@ -1,8 +1,6 @@
 "use server";
 
 import crypto from "node:crypto";
-import fs from "node:fs";
-import path from "node:path";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { faToday } from "@/lib/format";
@@ -14,6 +12,9 @@ import {
   getSubscribers,
   writeDb,
 } from "@/lib/store";
+import { putObject } from "@/lib/storage";
+import { objectStorageConfigured } from "@/lib/env";
+import { isProduction } from "@/lib/env";
 
 /* ---------- newsletter ---------- */
 
@@ -65,8 +66,6 @@ export async function submitComment(fd: FormData) {
 
 /* ---------- assignment upload ---------- */
 
-/** Private storage for assignments — not under public/ */
-const ASSIGN_DIR = path.join(process.cwd(), "data", "assignments");
 const OK_TYPES = ["image/png", "image/jpeg", "image/webp", "application/pdf", "application/zip", "application/x-zip-compressed"];
 const MAX_SIZE = 10 * 1024 * 1024;
 
@@ -96,12 +95,20 @@ export async function submitAssignment(fd: FormData) {
     redirect("/dashboard/assignments?error=size");
   }
 
+  // In production without object storage, refuse rather than writing to ephemeral disk
+  if (isProduction() && !objectStorageConfigured()) {
+    redirect("/dashboard/assignments?error=storage");
+  }
+
   // Generate safe random filename (no user-controlled input in path)
   const safeExt = allowedExtensions.includes(ext) ? ext : "bin";
   const randomName = `${crypto.randomBytes(16).toString("hex")}.${safeExt}`;
+  const key = `assignments/${randomName}`;
 
-  fs.mkdirSync(ASSIGN_DIR, { recursive: true });
-  fs.writeFileSync(path.join(ASSIGN_DIR, randomName), Buffer.from(await file.arrayBuffer()));
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const contentType = file.type || (safeExt === "pdf" ? "application/pdf" : safeExt === "zip" ? "application/zip" : `image/${safeExt}`);
+
+  await putObject(key, buffer, contentType);
 
   const student = user.name;
   const rest = getSubmissions().filter((s) => !(s.assignment === assignment && s.student === student));
@@ -111,7 +118,7 @@ export async function submitAssignment(fd: FormData) {
     course,
     student,
     userId: user.id,
-    file: randomName,
+    file: key,
     date: faToday(),
     status: "در حال بررسی",
   });

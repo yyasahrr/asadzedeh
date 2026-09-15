@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import { Download } from "lucide-react";
 import { getSubmissions } from "@/lib/store";
 import { getSessionUser, can } from "@/lib/auth";
@@ -37,7 +36,7 @@ export default async function SubmissionsPage() {
                 <span className="flex items-center gap-2">
                   <StatusBadge status={s.status} />
                   <a
-                    href={s.file}
+                    href={`/api/assignments/${s.id}`}
                     download
                     target="_blank"
                     rel="noreferrer"
@@ -48,9 +47,6 @@ export default async function SubmissionsPage() {
                   </a>
                 </span>
               </div>
-              {s.file.match(/\.(png|jpe?g|webp|gif)$/i) && (
-                <Image src={s.file} alt={s.assignment} width={800} height={160} className="mt-3 h-40 w-full rounded-xl object-cover ring-1 ring-ink-900/10" />
-              )}
               <form action={reviewSubmission} className="mt-4 flex flex-col gap-2 border-t border-dashed border-ink-900/10 pt-4 sm:flex-row">
                 <input type="hidden" name="id" value={s.id} />
                 <label htmlFor={`rs-${s.id}`} className="sr-only">وضعیت</label>
