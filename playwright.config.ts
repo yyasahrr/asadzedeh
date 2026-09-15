@@ -9,7 +9,9 @@ import { E2E_BASE_URL, e2eEnv } from "./e2e/env";
  * Demo payment is enabled on purpose: it is the only way to exercise the whole
  * checkout → verification → enrolment path without gateway credentials.
  *
- * Requires a Playwright browser: `npx playwright install --with-deps chromium`.
+ * CI uses the stable Chrome preinstalled on GitHub's Ubuntu runner. Local
+ * environments need a system Chrome installation because the project below
+ * intentionally selects `channel: "chrome"`.
  */
 export default defineConfig({
   testDir: "./e2e",
@@ -19,7 +21,9 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   retries: process.env.CI ? 1 : 0,
-  reporter: process.env.CI ? [["github"], ["list"]] : [["list"]],
+  reporter: process.env.CI
+    ? [["github"], ["list"], ["html", { outputFolder: "playwright-report", open: "never" }]]
+    : [["list"]],
   use: {
     baseURL: E2E_BASE_URL,
     trace: "on-first-retry",
