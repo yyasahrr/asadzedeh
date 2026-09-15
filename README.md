@@ -90,7 +90,7 @@ curl -s https://asadzedeh.ir/api/health | jq '.integrations'
 |---|---|---|
 | تیزر دوره/کلاس | فرم دوره و کلاس در ادمین | آپلود اختصاصی یا embed؛ نمایش با `components/video/TrailerBlock.tsx` |
 | جلسات دوره | `/admin/courses/[slug]/lessons` | آپلود تکه‌تکه (`/api/video/upload`)، فصل‌بندی، پیش‌نمایش رایگان |
-| پلیر امن | `components/video/SecurePlayer.tsx` | توکن امضاشده کوتاه‌عمر، واترمارک متحرک با شماره موبایل بیننده، Range streaming از `data/videos/` |
+| پلیر امن | `components/video/SecurePlayer.tsx` | توکن امضاشده کوتاه‌عمر، واترمارک متحرک با شماره موبایل بیننده، Range streaming از Object Storage خصوصی |
 | اسپات‌پلیر | `lib/spotplayer.ts` | صدور لایسنس با واترمارک شماره پس از پرداخت (API Key از ادمین) |
 | پنل هنرجو | `/dashboard/courses/[slug]` | پخش جلسات، پیشرفت، تکمیل خودکار، گواهی |
 | ۲FA | `/account/security`, `/auth/verify` | TOTP سازگار با Google Authenticator + کد بازیابی؛ سیاست اجباری کارکنان از `/admin/security` |
@@ -113,7 +113,7 @@ curl -s https://asadzedeh.ir/api/health | jq '.integrations'
 
 3. متغیرهای `.env.example` را در بخش Environment Variables cPanel ثبت کنید. در production مقدار تصادفی و ثابت برای `APP_SECRET` الزامی است.
 4. Startup file را `server.mjs` و Application startup command را `npm start` بگذارید. پورت را cPanel از متغیر `PORT` تزریق می‌کند؛ آن را دستی hardcode نکنید.
-5. پوشه‌های `data/videos/` و `data/lesson-files/` باید برای کاربر برنامه قابل نوشتن باشند.
+5. ویدیوها و فایل‌های درس روی **Object Storage خصوصی** ذخیره می‌شوند، نه روی دیسک کانتینر — دیسک PaaS با هر دیپلوی پاک می‌شود. `S3_ENDPOINT`، `S3_BUCKET`، `S3_ACCESS_KEY` و `S3_SECRET_KEY` را تنظیم کنید؛ بدون آن‌ها آپلود در Production رد می‌شود. جزئیات در `docs/STORAGE.md`.
    داده‌های اصلی در PostgreSQL است؛ پیش از اولین اجرا `npm run db:migrate` را بزنید.
 6. پس از تغییر کد، `npm run build` را دوباره اجرا و برنامه Node.js را از cPanel با **Restart** راه‌اندازی کنید. دامنه را با SSL به برنامه متصل کنید.
 
@@ -152,7 +152,7 @@ lib/
   stock.ts              # موجودی/ظرفیت قابل فروش (منهای رزروها)
   auth.ts / totp.ts     # نشست، نقش‌ها، امضای توکن، TOTP
   access.ts             # چه کسی چه ویدیویی را می‌بیند
-  video.ts              # مخزن ویدیو، ffmpeg (اختیاری)، واترمارک
+  video.ts              # مخزن ویدیو روی Object Storage، آپلود چندبخشی
   spotplayer.ts         # API اسپات‌پلیر
   audit.ts              # لاگ ممیزی با زنجیره هش
   format.ts             # اعداد و قیمت فارسی

@@ -19,7 +19,10 @@ The process refuses to start (`instrumentation.ts` → `assertProductionSecrets`
 - **Other gateways** `PAYMENT_PROVIDER`, `PAYMENT_MERCHANT_ID`, `PAYMENT_SECRET`, `PAYMENT_SANDBOX`, `ZARINPAL_MERCHANT_ID`.
 - **S3** `S3_*` — Liara / Arvan / MinIO / AWS. Without them, uploads go to `data/object-store` and `/api/media/...`.
 - **Sentry** `SENTRY_DSN` — no-op unless set.
-- **SpotPlayer / ffmpeg / Neshan** — same as before.
+- **Object storage** — `S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY`, `S3_SECRET_KEY` (or the AWS-standard `S3_ACCESS_KEY_ID`/`S3_SECRET_ACCESS_KEY`). Required in production: videos and lesson attachments live there. See `docs/STORAGE.md`.
+- **SpotPlayer / Neshan** — same as before.
+
+The authoritative list, grouped by *required in production* / *optional* / *development only*, is `.env.example`.
 
 ## Environment vs. the admin panel
 

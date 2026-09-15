@@ -9,8 +9,8 @@ no dump, the data is gone.
 | Data | Where it lives | How |
 |---|---|---|
 | Everything transactional | PostgreSQL | `pg_dump` (below) |
-| Lesson videos | `data/videos/` or the S3 bucket | file/bucket snapshot |
-| Lesson attachments | `data/lesson-files/` | file/bucket snapshot |
+| Lesson videos | S3 bucket, `videos/` prefix | provider-side bucket versioning / snapshot |
+| Lesson attachments | S3 bucket, `lesson-files/` prefix | provider-side bucket versioning / snapshot |
 | Uploaded media | `data/object-store/` **only if S3 is not configured** | file snapshot |
 | Redirects imported before v0.1.0 | `data/seo-redirects.json` | file snapshot |
 
