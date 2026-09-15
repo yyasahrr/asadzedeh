@@ -89,9 +89,9 @@ curl -s https://asadzedeh.ir/api/health | jq '.integrations'
 | بخش | مسیر | توضیح |
 |---|---|---|
 | تیزر دوره/کلاس | فرم دوره و کلاس در ادمین | آپلود اختصاصی یا embed؛ نمایش با `components/video/TrailerBlock.tsx` |
-| جلسات دوره | `/admin/courses/[slug]/lessons` | آپلود تکه‌تکه (`/api/video/upload`) + دریافت از لینک ابری (`/api/video/import`)، فصل‌بندی، پیش‌نمایش رایگان |
+| جلسات دوره | `/admin/courses/[slug]/lessons` | آپلود تکه‌تکه مستقیم به فضای خصوصی (`/api/video/upload`)، فصل‌بندی، پیش‌نمایش رایگان |
 | پلیر امن | `components/video/SecurePlayer.tsx` | توکن امضاشده کوتاه‌عمر، واترمارک متحرک با شماره موبایل بیننده، Range streaming از Object Storage خصوصی (باکت private) |
-| کتابخانه ویدیو | `/admin/videos` | مدیریت متمرکز ویدیوها: آپلود از دستگاه یا انتقال مستقیم از فضای ابری (S3/آروان/لیارا) به باکت خصوصی، بدون URL عمومی |
+| کتابخانه ویدیو | `/admin/videos` | مدیریت متمرکز ویدیوها: آپلود مستقیم فایل به باکت خصوصی `videos/`، بدون URL عمومی، فقط پلیر امن |
 | پنل هنرجو | `/dashboard/courses/[slug]` | پخش جلسات، پیشرفت، تکمیل خودکار، گواهی |
 | ۲FA | `/account/security`, `/auth/verify` | TOTP سازگار با Google Authenticator + کد بازیابی؛ سیاست اجباری کارکنان از `/admin/security` |
 | لاگ سیستم | `/admin/audit` | ممیزی ساخت‌یافته با زنجیره هش، فیلتر و خروجی CSV |

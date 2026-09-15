@@ -84,12 +84,30 @@ Guaranteed:
   an expiry), and dies immediately if the session is revoked
 
 **Not** guaranteed: a video that plays in a browser can always be captured,
-because the bytes have to reach the player. No web technology changes that. DRM
-and per-student burned-in watermarking are scheduled for a later phase; until
-then the player draws a moving overlay with the viewer's phone number, which
-deters recording without preventing it.
+because the bytes have to reach the player. No web technology changes that.
+This release prevents unauthorised and direct public access; DRM and
+per-student burned-in watermarking are deferred. Until then the player draws a
+moving overlay with the viewer's phone number, which deters recording without
+preventing it.
+
+> Web video cannot be made absolutely impossible to capture. This release
+> prevents unauthorised and direct public access; DRM is deferred.
 
 ## Uploads
+
+Admin chooses a local video file in `/admin/videos`:
+
+```
+Admin chooses local video file
+        ↓
+Application multipart upload (8 MB parts)
+        ↓
+Private S3 bucket videos/<generated-key>
+        ↓
+VideoAsset object key (never a URL)
+        ↓
+Attach video to lesson
+```
 
 Videos upload in 8 MB chunks. Each chunk becomes one object-storage part, so a
 4 GB file is never buffered in memory and never staged on local disk.
@@ -103,26 +121,15 @@ means:
   forever,
 - a failure mid-finalise aborts the multipart upload, leaving no orphan.
 
-### Import from cloud URL (admin)
+Validation:
 
-In addition to direct upload, `/admin/videos` and the lesson manager offer
-**“دریافت از لینک ابری”** → `POST /api/video/import`:
+- max size 4 GB enforced
+- MIME/extension allowlist: mp4, mov, webm, mkv, m4v, avi
+- uploader authorization: staff with `videos`/`courses` or linked instructor
+- in production without S3 credentials: `503`, never fallback to local disk
 
-- Admin provides a public `https://` URL (e.g. a file already on Liara/Arvan/S3).
-- Server validates the URL (no private IP, no localhost, no metadata service,
-  only https, SSRF-safe with manual redirect checks).
-- Server streams the remote file in 8 MB parts directly into the private bucket
-  (`videos/`), creating a `VideoAsset` with `status: ready` on success.
-- On any failure the multipart upload is aborted, the record is marked `failed`,
-  and no orphan parts remain.
-- The imported file is then available in the video library and can be attached
-  to lessons exactly like an uploaded file — same secure player, same token
-  flow, same private bucket guarantee.
-
-This satisfies the requirement “receive and play a course's videos from a cloud
-link using exactly the infrastructure we built”: the file ends up in the same
-private `videos/` prefix, never as a public URL, and is always served via
-`/api/video/[id]/stream` with enrolment check.
+The browser never receives a public S3 URL. Playback is always via the secure
+player and signed token flow.
 
 ## Local development
 

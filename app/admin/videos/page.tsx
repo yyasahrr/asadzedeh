@@ -6,7 +6,6 @@ import { Denied } from "@/components/admin/Denied";
 import { DeleteButton } from "@/components/admin/DeleteButton";
 import { TableShell, Td } from "@/components/admin/TableShell";
 import { VideoUploader } from "@/components/admin/VideoUploader";
-import { VideoImportFromUrl } from "@/components/admin/VideoImportFromUrl";
 import { SecurePlayer } from "@/components/video/SecurePlayer";
 import { can, getSessionUser } from "@/lib/auth";
 import { toFa } from "@/lib/format";
@@ -19,7 +18,7 @@ export const metadata: Metadata = { title: "کتابخانه ویدیو" };
 export const dynamic = "force-dynamic";
 
 const statusMeta: Record<string, { label: string; cls: string }> = {
-  uploading: { label: "در حال انتقال", cls: "bg-amber-100 text-amber-800 ring-amber-200" },
+  uploading: { label: "در حال آپلود", cls: "bg-amber-100 text-amber-800 ring-amber-200" },
   uploaded: { label: "آپلودشده", cls: "bg-sand-100 text-ink-700 ring-ink-900/10" },
   processing: { label: "در حال پردازش", cls: "bg-amber-100 text-amber-800 ring-amber-200" },
   ready: { label: "آماده پخش", cls: "bg-teal-50 text-teal-800 ring-teal-200" },
@@ -154,10 +153,9 @@ export default async function VideosPage({ searchParams }: { searchParams: Promi
         </div>
       )}
 
-      {/* Upload / Import */}
-      <div className="grid gap-6 xl:grid-cols-2">
+      {/* Upload only — single source of truth for this RC */}
+      <div className="mx-auto max-w-2xl">
         <VideoUploader />
-        <VideoImportFromUrl />
       </div>
 
       {/* Video table */}
@@ -176,7 +174,7 @@ export default async function VideosPage({ searchParams }: { searchParams: Promi
                     <Video className="h-6 w-6" />
                   </div>
                   <p className="text-sm font-bold text-navy-900">هنوز ویدیویی نیست</p>
-                  <p className="max-w-sm text-xs leading-6 text-ink-500">از بخش بالا فایل را آپلود کنید یا لینک مستقیم فضای ابری را وارد کنید تا به باکت خصوصی منتقل شود.</p>
+                  <p className="max-w-sm text-xs leading-6 text-ink-500">از بخش بالا فایل را مستقیم به فضای ابری خصوصی آپلود کنید. فایل‌ها در videos/ ذخیره و فقط با پلیر امن پخش می‌شوند.</p>
                 </div>
               </Td>
             </tr>

@@ -3,31 +3,16 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useRef, useState } from "react";
-import {
-  ArrowDown,
-  ArrowUp,
-  ChevronDown,
-  Clapperboard,
-  Eye,
-  FileText,
-  GripVertical,
-  Link2,
-  Lock,
-  Pencil,
-  Plus,
-  Upload,
-  X,
-} from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronDown, Clapperboard, Eye, FileText, GripVertical, Lock, Pencil, Plus, X } from "lucide-react";
 import type { InPersonClass, Lesson, OnlineCourse, VideoAsset } from "@/lib/types";
 import { formatDuration, toFa } from "@/lib/format";
 import { FieldLabel, Input, Select, Textarea } from "../ui/Input";
 import { DeleteButton } from "./DeleteButton";
 import { LessonAttachmentsField } from "./LessonAttachmentsField";
 import { VideoUploader } from "./VideoUploader";
-import { VideoImportFromUrl } from "./VideoImportFromUrl";
 
 const statusLabel: Record<string, string> = {
-  uploading: "در حال انتقال",
+  uploading: "در حال آپلود",
   uploaded: "آپلودشده",
   processing: "در حال پردازش",
   ready: "آماده",
@@ -68,7 +53,6 @@ export function LessonManager({
   const [editingChapterTitle, setEditingChapterTitle] = useState("");
   const [selectedChapterId, setSelectedChapterId] = useState<string>(urlChapterId ?? editing?.chapterId ?? chapters[0]?.id ?? "");
   const [userChangedChapter, setUserChangedChapter] = useState(false);
-  const [videoTab, setVideoTab] = useState<"upload" | "import">("upload");
 
   const effectiveChapterId = userChangedChapter ? selectedChapterId : urlChapterId ?? editing?.chapterId ?? selectedChapterId;
 
@@ -98,7 +82,7 @@ export function LessonManager({
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_400px]">
-      {/* ── Left: Curriculum builder ── */}
+      {/* Left */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-black text-navy-900">ساختار دوره (فصل‌ها و درس‌ها)</h2>
@@ -204,11 +188,6 @@ export function LessonManager({
                             ) : (
                               <span className="ms-1 text-ochre-600">• بدون ویدیو</span>
                             )}
-                            {l.attachments?.length ? (
-                              <span className="ms-1 inline-flex items-center gap-1 text-teal-700">
-                                • <FileText className="inline h-3 w-3" /> {toFa(l.attachments.length)} فایل
-                              </span>
-                            ) : null}
                           </p>
                         </div>
                         <div className="flex items-center gap-1">
@@ -321,7 +300,7 @@ export function LessonManager({
         )}
       </div>
 
-      {/* ── Right: Add/Edit lesson form + Video uploader/import ── */}
+      {/* Right: Add/Edit lesson + Uploader */}
       <div className="space-y-4">
         <form action={editing ? actions.update : actions.add} className="grid gap-3 rounded-2xl bg-card p-5 shadow-card ring-1 ring-ink-900/5">
           <h2 className="flex items-center gap-2 font-black text-navy-900">
@@ -365,7 +344,7 @@ export function LessonManager({
                 </option>
               ))}
             </Select>
-            <p className="mt-1 text-[11px] text-ink-500">ویدیوها از کتابخانه خصوصی (S3) می‌آیند و فقط با پلیر امن و احراز هویت پخش می‌شوند.</p>
+            <p className="mt-1 text-[11px] text-ink-500">ویدیوها از کتابخانه خصوصی (S3) می‌آیند و فقط با پلیر امن پخش می‌شوند.</p>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -404,39 +383,16 @@ export function LessonManager({
           </div>
         </form>
 
-        {/* Video source tabs: upload from device OR import from cloud URL */}
-        <div className="rounded-2xl bg-card p-3 shadow-card ring-1 ring-ink-900/5">
-          <div className="mb-3 flex gap-2 rounded-xl bg-sand-100 p-1">
-            <button
-              type="button"
-              onClick={() => setVideoTab("upload")}
-              className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-bold transition-colors ${videoTab === "upload" ? "bg-navy-800 text-white" : "text-ink-600 hover:bg-white"}`}
-            >
-              <Upload className="h-3.5 w-3.5" /> آپلود از دستگاه
-            </button>
-            <button
-              type="button"
-              onClick={() => setVideoTab("import")}
-              className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-bold transition-colors ${videoTab === "import" ? "bg-navy-800 text-white" : "text-ink-600 hover:bg-white"}`}
-            >
-              <Link2 className="h-3.5 w-3.5" /> دریافت از لینک ابری
-            </button>
-          </div>
-          {videoTab === "upload" ? (
-            <VideoUploader compact defaultTitle={`${ownerTitle} — درس ${toFa(allLessons.length + 1)}`} />
-          ) : (
-            <VideoImportFromUrl compact defaultTitle={`${ownerTitle} — درس ${toFa(allLessons.length + 1)}`} />
+        <VideoUploader defaultTitle={`${ownerTitle} — درس ${toFa(allLessons.length + 1)}`} />
+        <p className="text-xs leading-6 text-ink-500">
+          پس از آپلود مستقیم به فضای ابری خصوصی، ویدیو در فهرست بالا ظاهر می‌شود و می‌توانید آن را به جلسه متصل کنید.
+          {videoLibraryHref && (
+            <>
+              {" "}
+              مدیریت کل در <Link href={videoLibraryHref} className="font-bold text-teal-700">کتابخانه ویدیو</Link>.
+            </>
           )}
-          <p className="mt-3 text-xs leading-6 text-ink-500">
-            پس از افزودن، ویدیو در فهرست بالا ظاهر می‌شود و می‌توانید آن را به جلسه متصل کنید. همه ویدیوها در فضای ابری خصوصی ذخیره و فقط از طریق پلیر امن پخش می‌شوند.
-            {videoLibraryHref && (
-              <>
-                {" "}
-                مدیریت کل در <Link href={videoLibraryHref} className="font-bold text-teal-700">کتابخانه ویدیو</Link>.
-              </>
-            )}
-          </p>
-        </div>
+        </p>
       </div>
     </div>
   );
