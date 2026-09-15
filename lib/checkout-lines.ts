@@ -15,6 +15,8 @@ export interface PriceChange {
 
 export interface BuiltLines {
   lines: OrderLine[];
+  /** Cart-shaped values rebuilt from authoritative catalogue fields. */
+  canonicalItems: CartItem[];
   problems: string[];
   priceChanges: PriceChange[];
 }
@@ -33,6 +35,7 @@ export function buildLines(items: CartItem[]): BuiltLines {
   const classes = getClasses();
   const products = getProducts();
   const lines: OrderLine[] = [];
+  const canonicalItems: CartItem[] = [];
   const problems: string[] = [];
   const priceChanges: PriceChange[] = [];
 
@@ -63,6 +66,7 @@ export function buildLines(items: CartItem[]): BuiltLines {
       }
       notePrice("course", c.slug, c.title, i.price, c.price);
       lines.push({ kind: "course", slug: c.slug, title: c.title, price: c.price, qty: 1 });
+      canonicalItems.push({ kind: "course", slug: c.slug, title: c.title, price: c.price, image: i.image });
     } else if (i.kind === "class") {
       const k = classes.find((x) => x.slug === i.slug);
       if (!k) {
@@ -74,6 +78,7 @@ export function buildLines(items: CartItem[]): BuiltLines {
       } else {
         notePrice("class", k.slug, k.title, i.price, k.price);
         lines.push({ kind: "class", slug: k.slug, title: k.title, price: k.price, qty: 1 });
+        canonicalItems.push({ kind: "class", slug: k.slug, title: k.title, price: k.price, image: i.image });
       }
     } else if (i.kind === "learning_path") {
       const lp = getLearningPath(i.slug);
@@ -85,6 +90,7 @@ export function buildLines(items: CartItem[]): BuiltLines {
       const serverPrice = getLearningPathFinalPrice(lp);
       notePrice("learning_path", lp.slug, lp.title, i.price, serverPrice);
       lines.push({ kind: "learning_path", slug: lp.slug, title: lp.title, price: serverPrice, qty: 1 });
+      canonicalItems.push({ kind: "learning_path", slug: lp.slug, title: lp.title, price: serverPrice, image: i.image });
     } else if (i.kind === "product") {
       const p = products.find((x) => x.slug === i.slug && x.active);
       if (!p) {
@@ -99,10 +105,19 @@ export function buildLines(items: CartItem[]): BuiltLines {
       }
       notePrice("product", p.slug, p.title, i.price, p.price);
       lines.push({ kind: p.kind === "preorder" ? "preorder" : "product", slug: p.slug, title: p.title, price: p.price, qty });
+      canonicalItems.push({
+        kind: "product",
+        slug: p.slug,
+        title: p.title,
+        price: p.price,
+        image: i.image,
+        qty,
+        physical: p.kind === "physical",
+      });
     }
   }
 
-  return { lines, problems, priceChanges };
+  return { lines, canonicalItems, problems, priceChanges };
 }
 
 /** Subtotal of already-verified lines. Never called with client-supplied prices. */

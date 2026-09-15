@@ -7,13 +7,13 @@ import { cartCount } from "@/lib/cart";
 import { toFa } from "@/lib/format";
 
 export function CartBadge() {
-  const [count, setCount] = useState(() => {
-    if (typeof window === "undefined") return 0;
-    return cartCount();
-  });
+  // The server and the first client render must agree. localStorage is read
+  // only after hydration, then cart/storage events keep the badge current.
+  const [count, setCount] = useState(0);
 
   useEffect(() => {
     const onChange = () => setCount(cartCount());
+    onChange();
     window.addEventListener("az:cart", onChange);
     window.addEventListener("storage", onChange);
     return () => {

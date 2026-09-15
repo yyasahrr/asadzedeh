@@ -1,13 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Package, Store, Truck, TriangleAlert } from "lucide-react";
-import { cartTotal, couponDiscount, getCart, hasPhysical, itemQty, type CartItem } from "@/lib/cart";
+import { couponDiscount, getCart } from "@/lib/cart";
 import { formatPrice, toFa } from "@/lib/format";
 import type { ShippingMethod } from "@/lib/types";
 import { FieldLabel, Input, Textarea } from "../ui/Input";
-import { startCheckout } from "@/app/checkout/actions";
+import { quoteCheckout, startCheckout } from "@/app/checkout/actions";
+
+type CheckoutQuote = Awaited<ReturnType<typeof quoteCheckout>>;
 
 export function CheckoutForm({
   userName,
@@ -22,21 +24,41 @@ export function CheckoutForm({
   freeShippingOver: number;
   error?: string;
 }) {
-  const [items, setItems] = useState<CartItem[] | null>(() => {
-    if (typeof window === "undefined") return null;
-    return getCart();
-  });
+  const [quote, setQuote] = useState<CheckoutQuote | null>(null);
+  const [quoteError, setQuoteError] = useState("");
   const [coupon, setCoupon] = useState("");
   const [method, setMethod] = useState(shippingMethods[0]?.id ?? "");
 
   useEffect(() => {
-    const onChange = () => setItems(getCart());
+    let active = true;
+    let requestId = 0;
+    const onChange = async () => {
+      const currentRequest = ++requestId;
+      setQuote(null);
+      setQuoteError("");
+      try {
+        const result = await quoteCheckout(getCart());
+        if (active && currentRequest === requestId) setQuote(result);
+      } catch {
+        if (active && currentRequest === requestId) {
+          setQuoteError("محاسبه مبلغ سفارش انجام نشد. لطفاً دوباره تلاش کنید.");
+        }
+      }
+    };
+    void onChange();
     window.addEventListener("az:cart", onChange);
-    return () => window.removeEventListener("az:cart", onChange);
+    window.addEventListener("storage", onChange);
+    return () => {
+      active = false;
+      window.removeEventListener("az:cart", onChange);
+      window.removeEventListener("storage", onChange);
+    };
   }, []);
 
-  const physical = useMemo(() => (items ? hasPhysical(items) : false), [items]);
-  const total = items ? cartTotal(items) : 0;
+  const items = quote?.canonicalItems ?? [];
+  const lines = quote?.lines ?? [];
+  const physical = lines.some((line) => line.kind === "product");
+  const total = lines.reduce((sum, line) => sum + line.price * line.qty, 0);
   const discount = couponDiscount(total, coupon);
   const chosen = shippingMethods.find((m) => m.id === method);
   const shippingCost = (() => {
@@ -46,16 +68,24 @@ export function CheckoutForm({
   })();
   const payable = Math.max(0, total - discount + shippingCost);
 
-  if (items === null) {
+  if (quoteError) {
+    return (
+      <div className="rounded-2xl bg-card p-10 text-center shadow-card">
+        <p className="font-extrabold text-madder-700">{quoteError}</p>
+      </div>
+    );
+  }
+
+  if (quote === null) {
     return <div className="rounded-2xl bg-card p-10 text-center shadow-card">در حال بارگذاری…</div>;
   }
 
-  if (items.length === 0) {
+  if (quote.problems.length > 0 || items.length === 0) {
     return (
       <div className="rounded-2xl bg-card p-10 text-center shadow-card">
-        <p className="font-extrabold text-navy-900">سبد خرید خالی است.</p>
+        <p className="font-extrabold text-navy-900">{quote.problems[0] ?? "سبد خرید خالی است."}</p>
         <Link href="/courses" className="mt-3 inline-block text-sm font-bold text-teal-600 hover:underline">
-          بازگشت به دوره‌ها ←
+          بازبینی سبد خرید ←
         </Link>
       </div>
     );
@@ -69,6 +99,14 @@ export function CheckoutForm({
         {error && (
           <p className="flex items-center gap-2 rounded-xl bg-madder-50 px-4 py-3 text-sm font-bold text-madder-700">
             <TriangleAlert className="h-4 w-4" /> {error}
+          </p>
+        )}
+
+        {quote.priceChanges.length > 0 && (
+          <p className="flex items-center gap-2 rounded-xl bg-ochre-50 px-4 py-3 text-sm font-bold text-ochre-800">
+            <TriangleAlert className="h-4 w-4 shrink-0" />
+            قیمت {quote.priceChanges.length === 1 ? `«${quote.priceChanges[0].title}»` : `${toFa(quote.priceChanges.length)} قلم`}{" "}
+            به مبلغ به‌روز فروشگاه اصلاح شد.
           </p>
         )}
 
@@ -161,13 +199,13 @@ export function CheckoutForm({
         <div className="rounded-2xl bg-card p-6 shadow-card ring-1 ring-ink-900/5">
           <h2 className="font-black text-navy-900">اقلام سفارش ({toFa(items.length)})</h2>
           <ul className="mt-4 space-y-3">
-            {items.map((i) => (
-              <li key={i.slug} className="flex items-center justify-between gap-3 text-sm">
+            {lines.map((line) => (
+              <li key={`${line.kind}:${line.slug}`} className="flex items-center justify-between gap-3 text-sm">
                 <span className="font-semibold text-ink-700">
-                  {i.title}
-                  {itemQty(i) > 1 && <span className="ms-1 text-xs text-ink-500">×{toFa(itemQty(i))}</span>}
+                  {line.title}
+                  {line.qty > 1 && <span className="ms-1 text-xs text-ink-500">×{toFa(line.qty)}</span>}
                 </span>
-                <span className="font-bold whitespace-nowrap text-navy-900">{formatPrice(i.price * itemQty(i))}</span>
+                <span className="font-bold whitespace-nowrap text-navy-900">{formatPrice(line.price * line.qty)}</span>
               </li>
             ))}
           </ul>

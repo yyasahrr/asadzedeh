@@ -17,6 +17,11 @@ import { getEnrollments, getOrders, getPayments, getSettings, getUserByPhone, ge
 import { rateLimit, LIMITS } from "@/lib/rate-limit";
 import type { OrderLine, PaymentRecord, ShippingInfo, User } from "@/lib/types";
 
+/** Resolve every checkout display field from the same server truth used to charge. */
+export async function quoteCheckout(items: CartItem[]) {
+  return buildLines(items);
+}
+
 function nextOrderId(): string {
   return `AZ-${crypto.randomBytes(8).toString("hex").toUpperCase()}`;
 }

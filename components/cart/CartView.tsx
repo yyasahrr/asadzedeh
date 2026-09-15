@@ -19,16 +19,14 @@ import { checkAlreadyOwned } from "@/app/checkout/actions";
 import { formatPrice, toFa } from "@/lib/format";
 
 export function CartView() {
-  const [items, setItems] = useState<CartItem[] | null>(() => {
-    if (typeof window === "undefined") return null;
-    return getCart();
-  });
+  const [items, setItems] = useState<CartItem[] | null>(null);
   const [coupon, setCoupon] = useState("");
   const [applied, setApplied] = useState("");
   const [ownedSlugs, setOwnedSlugs] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const onChange = () => setItems(getCart());
+    onChange();
     window.addEventListener("az:cart", onChange);
     return () => window.removeEventListener("az:cart", onChange);
   }, []);
