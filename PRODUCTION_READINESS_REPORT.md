@@ -34,7 +34,7 @@ Everything else on the go-live path is done and verified — see the evidence ta
 |---|---|---|
 | Types | `npm run typecheck` | **clean** |
 | Lint | `npm run lint` | **0 errors** (1 pre-existing warning, `elementor-template-kit-v4/generator.mjs:106`) |
-| Unit + integration | `npm test` | **325 passed / 325** across 34 files (was 279 before this pass) |
+| Unit + integration | `npm test` | **327 passed / 327** across 34 files (was 279 before this pass) |
 | Production build | `npm run build` | **compiled successfully**, 47 routes |
 | SEO | `npm run seo:audit` | **0 ERROR, 0 WARN** |
 | Dependency audit (prod tree) | `npm audit --omit=dev` | **0 vulnerabilities** |
@@ -46,8 +46,10 @@ Everything else on the go-live path is done and verified — see the evidence ta
 | Demo-account retirement | production boot against a real PostgreSQL | **4 accounts disabled, sessions revoked, audited** |
 | Admin bootstrap | `npm run db:bootstrap-admin` | **super_admin created, demo admin disabled** |
 | Real login over HTTP | Server Action POST | **303 → /admin, `az_session` set (Secure; HttpOnly; SameSite=lax)** |
+| First-deploy rehearsal on an **empty** database | `db:migrate` → `db:bootstrap-admin` → `db:disable-demo` → `NODE_ENV=production npm start` | **migrations applied, super_admin created, demo accounts blocked, server boots, scenario suite 16/16** |
+| Integration wiring from the environment alone | `integrationStatus()` with only the launch vars set | **`{sms:{configured:true,provider:"melipayamak"},payment:{configured:true,provider:"zibal",sandbox:false}}`, `commerceReady:true`, no credential in the payload** |
 
-The last six rows were run against a **real production-mode server**
+The last rows were run against a **real production-mode server**
 (`NODE_ENV=production node server.mjs`) backed by a real PostgreSQL cluster, not a
 mock — including a staged database copied from the development seed, which is the
 exact situation a first deploy is in.
@@ -184,7 +186,7 @@ Recommended fix:
 Test required:
           lib/__tests__/integrations.test.ts (each case runs with the variables
           deleted rather than emptied, so a regression fails loudly)
-Status:   FIXED / VERIFIED — `npm test` 325/325
+Status:   FIXED / VERIFIED — `npm test` 327/327
 ```
 
 ### 5
@@ -276,6 +278,31 @@ Risk:     It iterated a list of plausible local connection strings and printed
 Status:   FIXED — removed (git rm)
 ```
 
+### 10
+
+```
+Severity: MEDIUM
+Issue:    The MeliPayamak response parser recognised only the legacy success
+          shape.
+Location: lib/sms.ts (meliPayamakOk)
+Risk:     The panel answers either { RetStatus, StrRetStatus, Value } or the
+          newer REST shape { IsSuccessful, Message, Value }. Reading only the
+          first meant a panel-side response change would report every successful
+          send as a failure — the operator sees "the SMS is not sending", the
+          user has in fact received the code, and any retry logic doubles the
+          cost. The failure direction was safe (it never claims a false "sent"),
+          which is why no unit test caught it: the fixture used the legacy shape.
+Reproduce: stub the panel to return {"IsSuccessful":true,"Message":"success",
+           "Value":"12345"} and call the driver's send() — before the fix it
+           returned { ok: false }.
+Fix:      accept either success indicator, and keep requiring a positive Value so
+          a body that claims success without queuing anything is still a failure.
+Test:     2 new cases in lib/__tests__/integrations.test.ts ("accepts the newer
+          IsSuccessful response shape", "refuses a body that claims success but
+          carries no reception id").
+Status:   FIXED / VERIFIED — `npm test` 327/327
+```
+
 ---
 
 ## Launch integrations
@@ -312,12 +339,15 @@ SMS_SENDER_NUMBER=<line>        # optional, until a dedicated line is issued
 SMS_TEMPLATE_ID=<template>      # service-number template for one-time codes
 ```
 
-Verified by 6 driver cases: `SendSMS/SendSMS` form fields
+Verified by 8 driver cases: `SendSMS/SendSMS` form fields
 (`username`/`password`/`to`/`from`/`text`/`isFlash=false`), the
 `SendSMS/BaseServiceNumber` template path for one-time codes, fallback to a
-freeform code when no template is set, the panel's own `StrRetStatus` surfaced on
-failure, refusal to send without a password, and one bad recipient failing the
-batch rather than being dropped silently.
+freeform code when no template is set, the panel's own error text surfaced on
+failure (both `StrRetStatus` and `Message`), **both** documented success shapes
+accepted (`RetStatus === 1` and `IsSuccessful === true`, each still requiring a
+positive `Value` reception id), a success claim with no reception id refused,
+refusal to send without a password, and one bad recipient failing the batch
+rather than being dropped silently. See finding 10.
 
 The one-time code never reaches the notify log or Sentry; only
 `"کد یک‌بار مصرف"` and the delivery status are recorded.
@@ -384,7 +414,7 @@ Full operational sequence: `GO_LIVE_CHECKLIST.md`.
 ```
 $ npm test
  Test Files  34 passed (34)
-      Tests  325 passed (325)
+      Tests  327 passed (327)
 
 $ npm run typecheck          # no output, exit 0
 $ npm run lint               # 0 errors, 1 pre-existing warning
