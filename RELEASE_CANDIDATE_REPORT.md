@@ -90,10 +90,10 @@ Code, configuration, storage architecture, security posture and tests are releas
    - **Regression test:** `lib/__tests__/jsonld-escaping.test.ts` (3 tests) — pins the helper against `</script>` breakout, and scans every `dangerouslySetInnerHTML` in `app/` so a future page cannot reintroduce a raw `JSON.stringify`.
 
 ### LOW
-7. `server.mjs` had no listen-error handler (an opaque throw and a restart loop) and no unhandled-rejection handler (serving from a corrupted state).
-8. Shutdown dereferenced `sql` when `DATABASE_URL` was unset, turning a clean stop into a crash on the way out.
-9. Committed runtime artefacts: `data/db.json.migrated`, an uploaded lesson PDF.
-10. Dead ffmpeg stubs that always returned `null`/`false` — misleading, since a caller could read them as a working feature. Removed.
+8. `server.mjs` had no listen-error handler (an opaque throw and a restart loop) and no unhandled-rejection handler (serving from a corrupted state).
+9. Shutdown dereferenced `sql` when `DATABASE_URL` was unset, turning a clean stop into a crash on the way out.
+10. Committed runtime artefacts: `data/db.json.migrated`, an uploaded lesson PDF.
+11. Dead ffmpeg stubs that always returned `null`/`false` — misleading, since a caller could read them as a working feature. Removed.
 
 ### Fixed after the first pass — instructor pages assumed a session exists
 
