@@ -264,7 +264,31 @@ describe("MeliPayamak driver", () => {
       templateId: "",
     });
     expect(result.ok).toBe(false);
-    expect(result.error).toBe("اعتبار کافی نیست");
+    expect(result.error).toContain("اعتبار کافی نیست");
+  });
+
+  it("accepts the newer IsSuccessful response shape", async () => {
+    stubFetch(() => jsonResponse({ IsSuccessful: true, Message: "success", Value: "12345" }));
+    const { sms } = await loadModules({});
+    const result = await sms.getSmsDriver("melipayamak")!.send(["09121112233"], "x", {
+      apiKey: "u",
+      secret: "p",
+      sender: "3000505",
+      templateId: "",
+    });
+    expect(result.ok).toBe(true);
+  });
+
+  it("refuses a body that claims success but carries no reception id", async () => {
+    stubFetch(() => jsonResponse({ IsSuccessful: true, Message: "success" }));
+    const { sms } = await loadModules({});
+    const result = await sms.getSmsDriver("melipayamak")!.send(["09121112233"], "x", {
+      apiKey: "u",
+      secret: "p",
+      sender: "3000505",
+      templateId: "",
+    });
+    expect(result.ok).toBe(false);
   });
 
   it("refuses to send without the web-service password", async () => {

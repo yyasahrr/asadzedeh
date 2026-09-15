@@ -27,13 +27,36 @@ export interface SmsCredentials {
   templateId: string;
 }
 
-type MeliPayamakResponse = { Value?: string | number; RetStatus?: number; StrRetStatus?: string };
+type MeliPayamakResponse = {
+  Value?: string | number;
+  RetStatus?: number;
+  StrRetStatus?: string;
+  /** Newer REST responses report success here instead of `RetStatus`. */
+  IsSuccessful?: boolean;
+  Message?: string;
+};
 
+/**
+ * Did the panel accept the message?
+ *
+ * Both documented response shapes are honoured: the classic
+ * `{ RetStatus, StrRetStatus, Value }` and the newer
+ * `{ IsSuccessful, Message, Value }`. Reading only one of them means a panel
+ * upgrade turns every successful send into a reported failure — and an operator
+ * chasing "the SMS is not sending" while customers are in fact receiving two.
+ *
+ * A positive `Value` (the panel's reception id) is still required: a body that
+ * claims success but carries no id has not actually queued anything we could
+ * later check delivery on.
+ */
 function meliPayamakOk(body: unknown): SmsResult {
-  const data = body as MeliPayamakResponse;
-  const value = Number(data?.Value);
-  if (data?.RetStatus === 1 && Number.isFinite(value) && value > 0) return { ok: true };
-  return { ok: false, error: data?.StrRetStatus || `خطای ملی پیامک (${String(data?.Value ?? "پاسخ نامعتبر")})` };
+  const data = (body ?? {}) as MeliPayamakResponse;
+  const value = Number(data.Value);
+  const succeeded = data.RetStatus === 1 || data.IsSuccessful === true;
+  if (succeeded && Number.isFinite(value) && value > 0) return { ok: true };
+  const detail =
+    data.StrRetStatus || data.Message || `پاسخ نامعتبر (${String(data.Value ?? "بدون شناسه")})`;
+  return { ok: false, error: `خطای ملی پیامک: ${detail}` };
 }
 
 /** MeliPayamak/FaraPayamak REST API. `apiKey` is the panel username. */
