@@ -66,7 +66,7 @@ export function Logo({ dark = false, className, name = "اسدزاده", tagline
   return (
     <Link href="/" className={cn("group flex items-center gap-2.5", className)} aria-label="اسدزاده — صفحه اصلی">
       <Image
-        src="/logo.webp"
+        src="/images/logo.webp"
         alt="اسدزاده"
         width={64}
         height={64}
