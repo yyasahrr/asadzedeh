@@ -189,7 +189,6 @@ async function s3Fetch(options: SignedRequestOptions): Promise<Response> {
     if (name === "host") continue;
     requestHeaders[name] = headerMap[name];
   }
-  if (options.contentType) requestHeaders["Content-Type"] = options.contentType;
   if (options.method === "PUT" || options.method === "POST") {
     requestHeaders["Content-Length"] = String(body.length);
   }
