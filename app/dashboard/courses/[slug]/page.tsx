@@ -21,6 +21,7 @@ export default async function CoursePlayerPage({ params, searchParams }: { param
   if (!course) notFound();
   const enrolled = isEnrolled(user, slug);
   const enrollment = getEnrollment(user.id, slug);
+  const progressEnabled = !!enrollment;
   const videos = new Map(getVideos().map((v) => [v.id, v]));
   const lessons = [...(course.lessons ?? [])].sort((a, b) => a.order - b.order);
   const completed = new Set(enrollment?.completed ?? []);
@@ -49,10 +50,14 @@ export default async function CoursePlayerPage({ params, searchParams }: { param
           <Link href="/dashboard/courses" className="inline-flex items-center gap-1 text-xs font-bold text-ink-500 hover:text-teal-700"><ArrowRight className="h-3.5 w-3.5" /> دوره‌های من</Link>
           <h1 className="mt-1 text-xl font-black text-navy-900 sm:text-2xl">{course.title}</h1>
         </div>
-        {enrolled ? (
+        {progressEnabled ? (
           <div className="w-full max-w-xs">
             <ProgressBar value={pct} showLabel />
             <p className="mt-1 text-xs text-ink-500">{toFa(completed.size)} از {toFa(lessons.length)} جلسه تکمیل شده</p>
+          </div>
+        ) : enrolled ? (
+          <div className="rounded-xl bg-sand-100 px-4 py-2 text-xs font-bold text-ink-600 ring-1 ring-ink-900/5">
+            حالت پیش‌نمایش — پیشرفت آموزشی برای این حساب ذخیره نمی‌شود.
           </div>
         ) : (
           <Link href={`/courses/${slug}`} className="inline-flex h-10 items-center rounded-xl bg-madder-700 px-5 text-sm font-bold text-white hover:bg-madder-600">خرید دوره برای دسترسی کامل</Link>
@@ -78,6 +83,7 @@ export default async function CoursePlayerPage({ params, searchParams }: { param
                 attachments: current.attachments,
               }}
               initiallyCompleted={completed.has(current.id)}
+              progressEnabled={progressEnabled}
               spotLicense={enrollment?.spotLicense}
             />
             <div className="flex items-center justify-between gap-3">
@@ -87,7 +93,7 @@ export default async function CoursePlayerPage({ params, searchParams }: { param
               {next ? (
                 <Link href={`/dashboard/courses/${slug}?lesson=${next.id}`} className="inline-flex h-10 items-center gap-1 rounded-xl bg-navy-800 px-4 text-sm font-bold text-white hover:bg-navy-700">جلسه بعد: {next.title}</Link>
               ) : (
-                enrolled && pct === 100 && (
+                progressEnabled && pct === 100 && (
                   <Link href="/dashboard/certificates" className="inline-flex h-10 items-center gap-1 rounded-xl bg-teal-600 px-4 text-sm font-bold text-white hover:bg-teal-700">دریافت گواهی</Link>
                 )
               )}
