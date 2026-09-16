@@ -3,6 +3,7 @@ import { generateCertificatePdf } from "@/lib/certificate-pdf";
 import { getSessionUser } from "@/lib/auth";
 import { canAccessCertificate } from "@/lib/certificate-access";
 import { audit } from "@/lib/audit";
+import { readObject } from "@/lib/storage";
 
 export const dynamic = "force-dynamic";
 
@@ -34,6 +35,21 @@ export async function GET(
     return Response.json({ error: "گواهی پیدا نشد" }, { status: 404 });
   }
 
+  if (cert!.deliveryType === "uploaded" && cert!.pdfObjectKey) {
+    const stored = await readObject(cert!.pdfObjectKey);
+    if (!stored) return Response.json({ error: "فایل گواهی پیدا نشد" }, { status: 404 });
+    return new Response(stored.body as BodyInit, {
+      status: stored.status,
+      headers: {
+        "content-type": "application/pdf",
+        "content-disposition": `attachment; filename="certificate-${cert!.code}.pdf"`,
+        "content-length": String(stored.contentLength ?? stored.size),
+        "cache-control": "private, no-store",
+        "x-content-type-options": "nosniff",
+      },
+    });
+  }
+
   const pdf = await generateCertificatePdf(cert!);
   return new Response(new Uint8Array(pdf), {
     headers: {
@@ -42,6 +58,7 @@ export async function GET(
       "content-length": String(pdf.length),
       // A personal document must never be kept by a shared cache.
       "cache-control": "no-store",
+      "x-content-type-options": "nosniff",
     },
   });
 }

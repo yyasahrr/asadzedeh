@@ -320,6 +320,33 @@ export interface Certificate {
   userId?: string;
   issuedAt?: string;
   revokedAt?: string;
+  /** Delivery affects the protected download only; database data remains authoritative. */
+  deliveryType?: "generated" | "uploaded";
+  /** Private object-storage key. Never expose this key as a public URL. */
+  pdfObjectKey?: string;
+  requestId?: string;
+}
+
+export type CertificateRequestStatus = "pending" | "approved" | "issued" | "rejected";
+
+export interface CertificateRequest {
+  id: string;
+  userId: string;
+  courseSlug: string;
+  status: CertificateRequestStatus;
+  studentName: string;
+  studentPhone: string;
+  courseTitle: string;
+  instructorName?: string;
+  hours: number;
+  completedAt: string;
+  requestedAt: string;
+  reviewedAt?: string;
+  reviewedBy?: string;
+  adminNote?: string;
+  certificateCode?: string;
+  deliveryType?: "generated" | "uploaded";
+  pdfObjectKey?: string;
 }
 
 /* ---------- Backend ---------- */

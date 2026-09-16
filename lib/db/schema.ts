@@ -243,6 +243,26 @@ export const certificates = pgTable(
   (t) => [index("certificates_user_idx").on(t.userId), index("certificates_user_code_idx").on(t.userId, t.code)],
 );
 
+export const certificateRequests = pgTable(
+  "certificate_requests",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    courseSlug: text("course_slug").notNull(),
+    status: text("status").notNull().default("pending"),
+    requestedAt: ts("requested_at").notNull().defaultNow(),
+    completedAt: ts("completed_at").notNull(),
+    reviewedAt: ts("reviewed_at"),
+    reviewedBy: text("reviewed_by"),
+    certificateCode: text("certificate_code"),
+    payload: jsonb("payload").notNull(),
+  },
+  (t) => [
+    uniqueIndex("certificate_requests_user_course_idx").on(t.userId, t.courseSlug),
+    index("certificate_requests_status_idx").on(t.status),
+  ],
+);
+
 export const auditLogs = pgTable(
   "audit_logs",
   {

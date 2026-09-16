@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Award, FileBadge, Lock } from "lucide-react";
 import { getCertificatesByStudent, getCourses, getEnrollmentsByUser } from "@/lib/store";
+import { getCertificateRequestsByUser } from "@/lib/certificate-requests";
 import { getSessionUser } from "@/lib/auth";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 
@@ -10,7 +11,8 @@ export const dynamic = "force-dynamic";
 
 export default async function CertificatesPage() {
   const user = await getSessionUser();
-  const mine = user ? getCertificatesByStudent(user.name) : [];
+  const mine = user ? getCertificatesByStudent(user.name).filter((cert) => !cert.userId || cert.userId === user.id) : [];
+  const requests = user ? await getCertificateRequestsByUser(user.id) : [];
   const courses = getCourses();
   const inProgress = (user ? getEnrollmentsByUser(user.id) : [])
     .map((e) => {
@@ -45,6 +47,19 @@ export default async function CertificatesPage() {
           </article>
         ))}
 
+        {requests.filter((request) => request.status !== "issued").map((request) => (
+          <article key={request.id} className="relative overflow-hidden rounded-2xl bg-card p-6 shadow-card ring-1 ring-ink-900/5">
+            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-sand-200 text-ink-500">
+              <FileBadge className="h-6 w-6" />
+            </span>
+            <h2 className="mt-3 font-extrabold text-navy-900">{request.courseTitle}</h2>
+            <p className="mt-1 text-sm leading-7 text-ink-500">
+              {request.status === "rejected" ? "درخواست نیاز به بررسی دارد." : request.status === "approved" ? "درخواست تأیید شده و در صف صدور است." : "درخواست مدرک ثبت شد و در انتظار بررسی است."}
+            </p>
+            {request.status === "rejected" && request.adminNote ? <p className="mt-2 rounded-lg bg-madder-50 p-3 text-xs text-madder-700">{request.adminNote}</p> : null}
+          </article>
+        ))}
+
         {/* In progress */}
         {inProgress.map(({ course, pct }) => (
           <article key={course.slug} className="relative overflow-hidden rounded-2xl bg-card p-6 shadow-card ring-1 ring-ink-900/5">
@@ -57,7 +72,7 @@ export default async function CertificatesPage() {
             <Link href={`/dashboard/courses/${course.slug}`} className="mt-3 inline-block text-[13px] font-bold text-teal-600 hover:underline">ادامه دوره ←</Link>
           </article>
         ))}
-        {mine.length === 0 && inProgress.length === 0 && (
+        {mine.length === 0 && inProgress.length === 0 && requests.length === 0 && (
           <div className="rounded-2xl bg-card p-10 text-center shadow-card md:col-span-2">
             <p className="font-extrabold text-navy-900">{user ? "هنوز گواهی‌ای صادر نشده است." : "برای مشاهده گواهی‌ها وارد حساب شوید."}</p>
             <Link href={user ? "/courses" : "/auth?next=/dashboard/certificates"} className="mt-3 inline-block text-sm font-bold text-teal-600 hover:underline">

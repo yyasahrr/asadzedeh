@@ -76,20 +76,22 @@ function homeFor(user: Pick<User, "role">): string {
 }
 
 export async function register(fd: FormData) {
+  const next = safeNextPath(String(fd.get("next") ?? ""), "");
+  const nextQuery = next ? `&next=${encodeURIComponent(next)}` : "";
   const { ip } = await requestContext();
   const limited = rateLimit(`register:${ip}`, LIMITS.register.limit, LIMITS.register.windowMs);
-  if (!limited.ok) redirect("/auth?tab=register&error=rate");
+  if (!limited.ok) redirect(`/auth?tab=register&error=rate${nextQuery}`);
   const parsed = validate(registerSchema, {
     name: fd.get("name"),
     phone: fd.get("phone"),
     password: fd.get("password"),
   });
   if (!parsed.ok) {
-    redirect("/auth?tab=register&error=validation");
+    redirect(`/auth?tab=register&error=validation${nextQuery}`);
   }
   const { name, phone, password } = parsed.data;
   if (getUserByPhone(phone)) {
-    redirect("/auth?tab=register&error=dup");
+    redirect(`/auth?tab=register&error=dup${nextQuery}`);
   }
   const users = getUsers();
   const user: User = {
@@ -104,7 +106,7 @@ export async function register(fd: FormData) {
   writeDb({ users });
   await audit({ action: "auth.register", actor: { id: user.id, name: user.name, role: "student" } });
   await createSession(user, false);
-  redirect("/dashboard");
+  redirect(safeNextPath(next, homeFor(user)));
 }
 
 export async function login(fd: FormData) {

@@ -23,6 +23,10 @@ import { deleteVideoFiles, transcodeToHls } from "@/lib/video";
 import { clampText } from "@/lib/validation/legacy";
 import { grantAccessForOrder } from "@/lib/access";
 import { generateCertificateCode } from "@/lib/certificate-code";
+import { insertCertificateIfAbsent } from "@/lib/db/commerce";
+import { getCertificateRequest, updateCertificateRequest } from "@/lib/certificate-requests";
+import { validateCertificatePdf } from "@/lib/certificate-upload";
+import { deleteObject, putObject, randomObjectKey, storageDurable } from "@/lib/storage";
 import { isProduction } from "@/lib/env";
 import {
   getArticle,
@@ -53,7 +57,9 @@ import {
   getVideos,
   deleteStoreRow,
   resetDb,
+  syncCollections,
   writeDb,
+  writeDbAsync,
 } from "@/lib/store";
 import type {
   Chapter,
@@ -1122,6 +1128,147 @@ export async function deleteCertificate(fd: FormData) {
   await audit({ action: "certificate.delete", level: "warn", actor: actor(me), target: `certificate:${code}` });
   revalidatePath("/admin/certificates");
   redirect("/admin/certificates");
+}
+
+export async function reviewCertificateRequest(fd: FormData) {
+  const me = await staff("certificates");
+  const id = str(fd, "id");
+  const decision = str(fd, "decision");
+  const note = str(fd, "adminNote");
+  if (decision !== "approved" && decision !== "rejected") return;
+  const request = await updateCertificateRequest(id, {
+    status: decision,
+    adminNote: note || undefined,
+    reviewedAt: new Date().toISOString(),
+    reviewedBy: me.id,
+  });
+  if (request) {
+    await audit({ action: `certificate.request.${decision}`, actor: actor(me), target: `certificate-request:${id}`, detail: { note: Boolean(note) } });
+  }
+  revalidatePath("/admin/certificates");
+  revalidatePath("/dashboard/certificates");
+}
+
+async function uniqueCertificateCode(): Promise<string> {
+  let code = generateCertificateCode();
+  while (getCertificate(code)) code = generateCertificateCode();
+  return code;
+}
+
+export async function issueRequestedCertificate(fd: FormData) {
+  const me = await staff("certificates");
+  const id = str(fd, "id");
+  const request = await getCertificateRequest(id);
+  if (!request || request.status === "rejected") return;
+  if (request.certificateCode && getCertificate(request.certificateCode)) return;
+  const code = await uniqueCertificateCode();
+  const issuedAt = new Date().toISOString();
+  const created = await insertCertificateIfAbsent({
+    code,
+    userId: request.userId,
+    student: request.studentName,
+    course: request.courseTitle,
+    instructorName: request.instructorName,
+    hours: request.hours,
+    issuedAt,
+    payload: {
+      code, student: request.studentName, course: request.courseTitle, instructorName: request.instructorName,
+      hours: request.hours, date: faToday(), issuedAt, userId: request.userId, requestId: request.id,
+      deliveryType: "generated",
+    },
+  });
+  await syncCollections(["certificates"]);
+  const existing = created ? getCertificate(code) : getCertificates().find((cert) => cert.userId === request.userId && cert.course === request.courseTitle && !cert.revokedAt);
+  if (!existing) return;
+  await updateCertificateRequest(id, {
+    status: "issued", certificateCode: existing.code, deliveryType: existing.deliveryType ?? "generated",
+    reviewedAt: new Date().toISOString(), reviewedBy: me.id,
+  });
+  await audit({ action: "certificate.issue", actor: actor(me), target: `certificate:${existing.code}`, detail: { requestId: id, deliveryType: "generated" } });
+  revalidatePath("/admin/certificates");
+  revalidatePath("/dashboard/certificates");
+}
+
+export async function uploadRequestedCertificatePdf(fd: FormData) {
+  const me = await staff("certificates");
+  const id = str(fd, "id");
+  const request = await getCertificateRequest(id);
+  const file = fd.get("pdf");
+  if (!request || request.status === "rejected" || !(file instanceof File)) return;
+  if (isProduction() && !storageDurable()) redirect("/admin/certificates?error=storage");
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const validationError = validateCertificatePdf(bytes, file.type);
+  if (validationError) redirect(`/admin/certificates?error=pdf_${validationError}`);
+
+  const newKey = randomObjectKey("private/certificates", "pdf");
+  await putObject(newKey, Buffer.from(bytes), "application/pdf");
+  let cert = request.certificateCode ? getCertificate(request.certificateCode) : undefined;
+  try {
+    if (!cert) {
+      const code = await uniqueCertificateCode();
+      const issuedAt = new Date().toISOString();
+      const created = await insertCertificateIfAbsent({
+        code, userId: request.userId, student: request.studentName, course: request.courseTitle,
+        instructorName: request.instructorName, hours: request.hours, issuedAt,
+        payload: {
+          code, student: request.studentName, course: request.courseTitle, instructorName: request.instructorName,
+          hours: request.hours, date: faToday(), issuedAt, userId: request.userId, requestId: request.id,
+          deliveryType: "uploaded", pdfObjectKey: newKey,
+        },
+      });
+      await syncCollections(["certificates"]);
+      cert = created ? getCertificate(code) : getCertificates().find((item) => item.userId === request.userId && item.course === request.courseTitle && !item.revokedAt);
+    }
+    if (!cert) throw new Error("certificate could not be issued");
+    const oldKey = cert.pdfObjectKey;
+    await writeDbAsync({ certificates: getCertificates().map((item) => item.code === cert!.code ? {
+      ...item, deliveryType: "uploaded" as const, pdfObjectKey: newKey, requestId: request.id,
+    } : item) });
+    await updateCertificateRequest(id, {
+      status: "issued", certificateCode: cert.code, deliveryType: "uploaded", pdfObjectKey: newKey,
+      reviewedAt: new Date().toISOString(), reviewedBy: me.id,
+    });
+    if (oldKey && oldKey !== newKey) await deleteObject(oldKey).catch((error) => logger.warn({ event: "certificate.pdf.orphan", key: oldKey, err: String(error) }));
+    await audit({ action: oldKey ? "certificate.pdf.replace" : "certificate.pdf.upload", actor: actor(me), target: `certificate:${cert.code}`, detail: { requestId: id } });
+  } catch (error) {
+    await deleteObject(newKey).catch(() => undefined);
+    throw error;
+  }
+  revalidatePath("/admin/certificates");
+  revalidatePath("/dashboard/certificates");
+}
+
+export async function updateCertificateDetails(fd: FormData) {
+  const me = await staff("certificates");
+  const code = str(fd, "code");
+  const current = getCertificate(code);
+  if (!current) return;
+  const next = {
+    ...current,
+    student: str(fd, "student") || current.student,
+    course: str(fd, "course") || current.course,
+    instructorName: str(fd, "instructor") || current.instructorName,
+    hours: num(fd, "hours", current.hours),
+  };
+  await writeDbAsync({ certificates: getCertificates().map((cert) => cert.code === code ? next : cert) });
+  await audit({ action: "certificate.update", actor: actor(me), target: `certificate:${code}`, detail: { codePreserved: true } });
+  revalidatePath("/admin/certificates");
+  revalidatePath(`/verify/${code}`);
+}
+
+export async function revokeCertificate(fd: FormData) {
+  const me = await staff("certificates");
+  const code = str(fd, "code");
+  const current = getCertificate(code);
+  if (!current || current.revokedAt) return;
+  const revokedAt = new Date().toISOString();
+  await writeDbAsync({ certificates: getCertificates().map((cert) => cert.code === code ? { ...cert, revokedAt, pdfObjectKey: undefined } : cert) });
+  if (current.pdfObjectKey) {
+    await deleteObject(current.pdfObjectKey).catch((error) => logger.warn({ event: "certificate.pdf.orphan", key: current.pdfObjectKey, err: String(error) }));
+  }
+  await audit({ action: "certificate.revoke", level: "warn", actor: actor(me), target: `certificate:${code}`, detail: { pdfRemoved: Boolean(current.pdfObjectKey) } });
+  revalidatePath("/admin/certificates");
+  revalidatePath(`/verify/${code}`);
 }
 
 /* ---------- articles ---------- */

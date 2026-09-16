@@ -3,11 +3,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, Menu, X } from "lucide-react";
+import { ArrowLeft, LogIn, Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { navLinks } from "./nav";
 
-export function MobileMenu() {
+export function MobileMenu({ accountHref }: { accountHref?: string }) {
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
@@ -81,6 +81,13 @@ export function MobileMenu() {
                 );
               })}
             </nav>
+            <Link
+              href={accountHref ?? "/auth"}
+              onClick={() => setOpen(false)}
+              className="mt-2 flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm font-bold text-ink-700 hover:bg-sand-100"
+            >
+              <LogIn className="h-4 w-4" /> {accountHref ? "حساب کاربری" : "ورود / ثبت‌نام"}
+            </Link>
             <Link
               href="/courses"
               onClick={() => setOpen(false)}

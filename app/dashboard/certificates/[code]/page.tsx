@@ -36,15 +36,19 @@ export default async function CertificatePage({ params }: { params: Promise<{ co
             <FileDown className="h-5 w-5" />
             دانلود PDF
           </a>
-          <PrintButton label="چاپ" />
+          {cert.deliveryType !== "uploaded" ? <PrintButton label="چاپ" /> : null}
         </span>
       </div>
 
-      <Certificate cert={cert} />
+      {cert.deliveryType !== "uploaded" ? <Certificate cert={cert} /> : (
+        <div className="rounded-2xl bg-card p-8 text-center shadow-card ring-1 ring-ink-900/5">
+          <h1 className="text-xl font-black text-navy-900">{cert.course}</h1>
+          <p className="mt-2 text-sm text-ink-600">نسخه نهایی مدرک به‌صورت PDF اختصاصی صادر شده است.</p>
+        </div>
+      )}
 
       <p className="mx-auto max-w-xl rounded-2xl bg-teal-50 p-4 text-center text-sm leading-7 text-teal-800 ring-1 ring-teal-600/20 ring-inset print:hidden">
-        برای ذخیره به‌صورت PDF، روی «دانلود PDF / چاپ» بزنید و در پنجره چاپ، گزینه
-        «Save as PDF» را انتخاب کنید. اندازه پیشنهادی: A4 افقی (Landscape).
+        {cert.deliveryType === "uploaded" ? "فایل PDF فقط برای صاحب مدرک و کارکنان مجاز قابل دریافت است." : "برای ذخیره به‌صورت PDF، روی «دانلود PDF / چاپ» بزنید. اندازه پیشنهادی: A4 افقی (Landscape)."}
       </p>
     </div>
   );

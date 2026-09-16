@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Plus, Search } from "lucide-react";
-import { getStudents } from "@/lib/store";
+import { getEnrollments, getStudents, getUsers } from "@/lib/store";
+import { buildAdminStudents } from "@/lib/admin-students";
 import { toFa } from "@/lib/format";
 import { TableShell, Td } from "@/components/admin/TableShell";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
@@ -16,7 +17,10 @@ export default async function AdminStudentsPage({
   searchParams: Promise<{ q?: string }>;
 }) {
   const { q = "" } = await searchParams;
-  const filtered = getStudents().filter((s) => q.trim() === "" || s.name.includes(q.trim()));
+  const filtered = buildAdminStudents(getUsers(), getEnrollments(), getStudents()).filter((s) => {
+    const needle = q.trim();
+    return needle === "" || s.name.includes(needle) || s.phone.includes(needle);
+  });
 
   return (
     <div className="space-y-5">
@@ -80,9 +84,9 @@ export default async function AdminStudentsPage({
             <Td className="font-bold">{toFa(s.courses)}</Td>
             <Td className="text-ink-600">{s.joinDate}</Td>
             <Td><StatusBadge status={s.status} /></Td>
-            <Td>
+            <Td>{s.source === "legacy" ? (
               <DeleteButton action={deleteStudent} hidden={{ name: "phone", value: s.phone }} label={s.name} />
-            </Td>
+            ) : <span className="text-xs text-ink-500">حساب کاربری</span>}</Td>
           </tr>
         ))}
       </TableShell>

@@ -62,7 +62,7 @@ export function LogoMark({ className }: { className?: string }) {
   );
 }
 
-export function Logo({ dark = false, className, name = "اسدزاده", tagline = "آموزش فرش و گلیم ایرانی" }: { dark?: boolean; className?: string; name?: string; tagline?: string }) {
+export function Logo({ dark = false, compactOnMobile = false, className, name = "اسدزاده", tagline = "آموزش فرش و گلیم ایرانی" }: { dark?: boolean; compactOnMobile?: boolean; className?: string; name?: string; tagline?: string }) {
   return (
     <Link href="/" className={cn("group flex items-center gap-2.5", className)} aria-label="اسدزاده — صفحه اصلی">
       <Image
@@ -71,9 +71,9 @@ export function Logo({ dark = false, className, name = "اسدزاده", tagline
         width={64}
         height={64}
         priority
-        className="h-12 w-12 object-contain transition-transform duration-300 group-hover:scale-105"
+        className={cn("h-12 w-12 object-contain transition-transform duration-300 group-hover:scale-105", compactOnMobile && "max-[430px]:h-10 max-[430px]:w-10")}
       />
-      <span className="flex flex-col leading-none">
+      <span className={cn("flex flex-col leading-none", compactOnMobile && "max-[430px]:hidden")}>
         <span className={cn("font-display text-[2rem] leading-7", dark ? "text-white" : "text-navy-900")}>{name}</span>
         <span className={cn("mt-1 text-[11px] font-semibold", dark ? "text-white/60" : "text-ink-500")}>{tagline}</span>
       </span>

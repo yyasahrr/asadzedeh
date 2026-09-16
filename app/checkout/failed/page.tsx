@@ -5,8 +5,12 @@ import { XCircle } from "lucide-react";
 export const metadata: Metadata = { title: "پرداخت ناموفق" };
 
 const reasons: Record<string, string> = {
+  gateway_not_configured: "درگاه پرداخت پیکربندی نشده است. لطفاً بعداً دوباره تلاش کنید یا با پشتیبانی تماس بگیرید.",
   cancelled: "پرداخت توسط شما لغو شد.",
   notfound: "سفارشی پیدا نشد.",
+  verify: "تأیید پرداخت از سمت درگاه انجام نشد.",
+  security: "اطلاعات بازگشت پرداخت معتبر نبود.",
+  network: "ارتباط با درگاه پرداخت برقرار نشد. لطفاً دوباره تلاش کنید.",
 };
 
 export default async function FailedPage({
@@ -21,7 +25,7 @@ export default async function FailedPage({
         <XCircle className="h-14 w-14 text-madder-700" />
         <h1 className="text-2xl font-black text-navy-900">پرداخت انجام نشد</h1>
         <p className="text-sm leading-7 text-ink-600">
-          {reasons[reason ?? ""] ?? reason ?? "خطایی رخ داد."}
+          {reasons[reason ?? ""] ?? "تأیید پرداخت انجام نشد. لطفاً دوباره تلاش کنید."}
           {order && <> (سفارش <span dir="ltr" className="font-bold">{order}</span>)</>}
           {" "}اگر مبلغی از حسابتان کم شده، حداکثر تا ۷۲ ساعت آینده برمی‌گردد.
         </p>

@@ -195,6 +195,7 @@ export function AuthTabs({
         </div>
       ) : (
         <form action={register} className="mt-6 space-y-4">
+          {next && <input type="hidden" name="next" value={next} />}
           <div>
             <FieldLabel htmlFor="reg-name">نام و نام خانوادگی</FieldLabel>
             <Input id="reg-name" name="name" required placeholder="مثلاً سارا محمدی" autoComplete="name" />

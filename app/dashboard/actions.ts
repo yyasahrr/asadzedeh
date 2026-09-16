@@ -3,11 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getSessionUser, hashPassword, verifyPassword } from "@/lib/auth";
-import { getCourse, getEnrollments, getUsers, syncCollections, writeDb } from "@/lib/store";
-import { insertCertificateIfAbsent } from "@/lib/db/commerce";
+import { getCourse, getEnrollments, getUsers, writeDb } from "@/lib/store";
+import { ensureCertificateRequest } from "@/lib/certificate-requests";
 import { audit } from "@/lib/audit";
-import { generateCertificateCode } from "@/lib/certificate-code";
-import { faToday } from "@/lib/format";
 
 /** Mark a lesson as completed / not completed and remember the last watched lesson. */
 export async function setLessonProgress(courseSlug: string, lessonId: string, completed: boolean) {
@@ -41,40 +39,28 @@ export async function setLessonProgress(courseSlug: string, lessonId: string, co
   const required = (course?.lessons ?? []).filter((l) => !l.free);
   const requiredIds = required.length > 0 ? required.map((l) => l.id) : (course?.lessons ?? []).map((l) => l.id);
   const done = requiredIds.length > 0 && requiredIds.every((id) => set.has(id));
-  if (done && course && user) {
-    // Two tabs finishing the last lesson at once must not produce two
-    // certificates. The insert is `ON CONFLICT DO NOTHING` against a partial
-    // unique index, so the loser is a clean no-op.
-    let code = generateCertificateCode();
-    let issued = false;
-    for (let attempt = 0; attempt < 5 && !issued; attempt += 1) {
-      issued = await insertCertificateIfAbsent({
-        code,
-        userId: user.id,
-        student: user.name,
-        course: course.title,
-        instructorName: course.instructor,
-        hours: course.hours,
-        issuedAt: new Date().toISOString(),
-        payload: {
-          code,
-          student: user.name,
-          course: course.title,
-          date: faToday(),
-          hours: course.hours,
-          instructorName: course.instructor,
-          userId: user.id,
-        },
+  writeDb({ enrollments });
+  if (done) {
+    // The database unique key on user+course makes refreshes, replay and two
+    // tabs completing the final lesson converge on one pending request.
+    const outcome = await ensureCertificateRequest({
+      userId: user.id,
+      courseSlug: course.slug,
+      studentName: user.name,
+      studentPhone: user.phone,
+      courseTitle: course.title,
+      instructorName: course.instructor,
+      hours: course.hours,
+      completedAt: new Date().toISOString(),
+    });
+    if (outcome.created) {
+      await audit({
+        action: "certificate.request",
+        actor: { id: user.id, name: user.name, role: user.role },
+        target: `certificate-request:${outcome.request.id}`,
+        detail: { course: course.slug },
       });
-      if (!issued) code = generateCertificateCode();
     }
-    await syncCollections(["certificates"]);
-    if (issued) {
-      await audit({ action: "certificate.issue", actor: { id: user.id, name: user.name, role: user.role }, target: `certificate:${code}`, detail: { via: "progress", course: course.slug } });
-    }
-    writeDb({ enrollments });
-  } else {
-    writeDb({ enrollments });
   }
   revalidatePath(`/dashboard/courses/${courseSlug}`);
   revalidatePath("/dashboard/courses");

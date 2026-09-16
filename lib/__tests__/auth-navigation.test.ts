@@ -8,6 +8,10 @@ describe("safeNextPath", () => {
     );
   });
 
+  it("keeps checkout as a post-login or post-registration destination", () => {
+    expect(safeNextPath("/checkout", "/dashboard")).toBe("/checkout");
+  });
+
   it.each(["//evil.example", "/\\evil.example", "https://evil.example", "\n/location"])(
     "rejects an external or malformed redirect: %s",
     (value) => {

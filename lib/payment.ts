@@ -67,6 +67,13 @@ function resolve(): { credentials: GatewayCredentials; driver: NonNullable<Retur
   return { credentials: { merchantId: payment.merchantId, secret: payment.secret, sandbox: payment.sandbox }, driver };
 }
 
+/** Safe preflight used before reserving stock or creating an order. */
+export function paymentConfigurationError(): string | null {
+  if (isDemoPayment()) return null;
+  const result = resolve();
+  return "error" in result ? result.error : null;
+}
+
 export async function requestPayment(order: Order, callbackUrl: string): Promise<RequestResult> {
   if (isDemoPayment()) {
     return { ok: false, error: "درگاه نمایشی فعال است" };

@@ -7,15 +7,15 @@ import { headers } from "next/headers";
 import { audit } from "@/lib/audit";
 import { faToday, formatPrice, normalizeDigits, toFa } from "@/lib/format";
 import type { CartItem } from "@/lib/cart";
-import { getSessionUser, hashPassword } from "@/lib/auth";
+import { getSessionUser } from "@/lib/auth";
 import { buildLines, linesSubtotal } from "@/lib/checkout-lines";
-import { sendSms } from "@/lib/notify";
-import { configuredPaymentProvider, isDemoPayment, requestPayment } from "@/lib/payment";
+import { checkoutRequiresAccount } from "@/lib/checkout-access";
+import { configuredPaymentProvider, isDemoPayment, paymentConfigurationError, requestPayment } from "@/lib/payment";
 import { finalizePaidOrder, releaseOrder } from "@/lib/order-payment";
 import { reserveOrderLines, writeOrderItems } from "@/lib/db/commerce";
-import { getEnrollments, getOrders, getPayments, getSettings, getUserByPhone, getUsers, syncCollections, withStoreLock, writeDbAsync } from "@/lib/store";
+import { getEnrollments, getOrders, getPayments, getSettings, getUsers, syncCollections, withStoreLock, writeDbAsync } from "@/lib/store";
 import { rateLimit, LIMITS } from "@/lib/rate-limit";
-import type { OrderLine, PaymentRecord, ShippingInfo, User } from "@/lib/types";
+import type { OrderLine, PaymentRecord, ShippingInfo } from "@/lib/types";
 
 /** Resolve every checkout display field from the same server truth used to charge. */
 export async function quoteCheckout(items: CartItem[]) {
@@ -54,6 +54,12 @@ export async function startCheckout(fd: FormData) {
   const { lines, problems, priceChanges } = buildLines(items);
   if (problems.length > 0 || lines.length === 0) {
     redirect(`/checkout?error=${encodeURIComponent(problems[0] ?? "سبد خرید معتبر نیست")}`);
+  }
+
+  // Digital access must always belong to an authenticated identity. Keep the
+  // browser cart intact and resume checkout after a safe same-origin redirect.
+  if (!user && checkoutRequiresAccount(lines)) {
+    redirect("/auth?tab=register&next=%2Fcheckout");
   }
 
   /**
@@ -133,30 +139,7 @@ export async function startCheckout(fd: FormData) {
     };
   }
 
-  // Course access is tied to an account. Guests buying a course get (or are matched to)
-  // a student account by phone number so the enrolment has somewhere to live.
-  let ownerId = user?.id;
-  let provisionedPassword: string | undefined;
-  if (!user && lines.some((l) => l.kind === "course")) {
-    if (!/^09\d{9}$/.test(phone)) redirect(`/checkout?error=${encodeURIComponent("برای خرید دوره آنلاین شماره موبایل معتبر لازم است")}`);
-    const existing = getUserByPhone(phone);
-    if (existing) {
-      ownerId = existing.id;
-    } else {
-      provisionedPassword = crypto.randomBytes(8).toString("base64url").slice(0, 12);
-      const created: User = {
-        id: `u-${Date.now().toString(36)}`,
-        name,
-        phone,
-        passwordHash: hashPassword(provisionedPassword),
-        role: "student",
-        createdAt: faToday(),
-      };
-      await writeDbAsync({ users: [...getUsers(), created] });
-      ownerId = created.id;
-      await audit({ action: "auth.register", actor: { id: created.id, name: created.name, role: "student" }, detail: { via: "checkout" } });
-    }
-  }
+  const ownerId = user?.id;
 
   const final = Math.max(0, subtotal - discount + (shipping?.cost ?? 0));
   const id = nextOrderId();
@@ -165,6 +148,10 @@ export async function startCheckout(fd: FormData) {
     .join(" + ");
 
   const demo = isDemoPayment();
+  const gatewayError = paymentConfigurationError();
+  if (!demo && gatewayError) {
+    redirect(`/checkout/failed?reason=gateway_not_configured`);
+  }
   const paymentId = `pay-${crypto.randomBytes(6).toString("hex")}`;
 
   // Stock and seats are held by conditional SQL UPDATEs inside one transaction:
@@ -238,13 +225,9 @@ export async function startCheckout(fd: FormData) {
   revalidatePath("/admin/shop");
   revalidatePath("/shop");
 
-  if (provisionedPassword && phone) {
-    await sendSms([phone], `اسدزاده: حساب هنرجویی شما ساخته شد. ورود با شماره موبایل و رمز ${provisionedPassword} — لطفاً پس از ورود رمز را تغییر دهید.`);
-  }
-
   if (demo) {
     await finalizePaidOrder(id);
-    redirect(`/checkout/success?order=${id}${provisionedPassword ? "&account=new" : ""}`);
+    redirect(`/checkout/success?order=${id}`);
   }
 
   const order = getOrders().find((o) => o.id === id);

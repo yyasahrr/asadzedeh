@@ -23,9 +23,9 @@ export async function Header() {
         </Link>
       )}
       <header className="sticky top-2 z-40 px-2 print:hidden sm:top-3 sm:px-4">
-        <div className="shell glass-surface flex h-[66px] items-center justify-between gap-3 rounded-[22px] px-3 sm:px-5">
-            <div className="flex items-center gap-6">
-              <Logo name={site.siteName} tagline={site.tagline} />
+        <div className="shell glass-surface flex h-[66px] items-center justify-between gap-1 rounded-[22px] px-2 min-[360px]:gap-2 min-[360px]:px-3 sm:px-5">
+            <div className="min-w-0 flex items-center gap-3 lg:gap-6">
+              <Logo name={site.siteName} tagline={site.tagline} compactOnMobile />
               <nav className="hidden items-center gap-1 lg:flex" aria-label="ناوبری اصلی">
                 {navLinks.slice(1).map((l) => (
                   <Link
@@ -64,7 +64,7 @@ export async function Header() {
                 <Link
                   href="/auth"
                   aria-label="ورود به حساب"
-                  className="hidden h-10 w-10 items-center justify-center rounded-xl text-ink-700 transition-colors hover:bg-sand-200/70 hover:text-navy-900 sm:flex"
+                  className="flex h-10 w-10 items-center justify-center rounded-xl text-ink-700 transition-colors hover:bg-sand-200/70 hover:text-navy-900"
                 >
                   <UserRound className="h-5 w-5" />
                 </Link>
@@ -72,7 +72,7 @@ export async function Header() {
               <Button href="/courses" size="sm" className="mr-1 hidden md:inline-flex">
                 مشاهده دوره‌ها
               </Button>
-              <MobileMenu />
+              <MobileMenu accountHref={user ? (isStaff(user) ? "/admin" : "/dashboard") : undefined} />
             </div>
         </div>
       </header>

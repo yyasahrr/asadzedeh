@@ -67,8 +67,8 @@ export function CartView() {
   const hasOwned = ownedSlugs.size > 0;
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
-      <div className="space-y-4">
+    <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-8">
+      <div className="min-w-0 space-y-4">
         {hasOwned && (
           <div className="flex items-start gap-3 rounded-2xl bg-ochre-50 p-4 ring-1 ring-ochre-500/20">
             <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-ochre-600" />
@@ -81,17 +81,17 @@ export function CartView() {
         {items.map((c) => {
           const isOwned = ownedSlugs.has(c.slug);
           return (
-          <article key={c.slug} className={`flex flex-col gap-4 rounded-2xl bg-card p-4 shadow-card ring-1 ring-ink-900/5 sm:flex-row ${isOwned ? "opacity-60 ring-2 ring-ochre-400/40" : ""}`}>
-            <div className="relative h-40 w-full shrink-0 overflow-hidden rounded-xl sm:w-52">
+          <article data-testid="cart-item" key={`${c.kind}:${c.slug}`} className={`grid min-w-0 grid-cols-[88px_minmax(0,1fr)] gap-3 rounded-2xl bg-card p-3 shadow-card ring-1 ring-ink-900/5 min-[390px]:grid-cols-[104px_minmax(0,1fr)] sm:flex sm:gap-4 sm:p-4 ${isOwned ? "opacity-60 ring-2 ring-ochre-400/40" : ""}`}>
+            <div className="relative aspect-square w-full shrink-0 overflow-hidden rounded-xl sm:h-40 sm:w-52 sm:aspect-auto">
               <Image src={c.image} alt={c.title} fill sizes="220px" className="object-cover" />
             </div>
             <div className="flex flex-1 flex-col">
               <p className="text-xs font-bold text-teal-600">{c.kind === "course" ? "دوره آنلاین" : c.kind === "class" ? "کلاس حضوری" : c.physical === false ? "پیش‌سفارش" : "کالای فروشگاه"}</p>
-              <h2 className="mt-1 leading-8 font-extrabold text-navy-900">{c.title}</h2>
+              <h2 className="mt-1 line-clamp-2 text-sm leading-6 font-extrabold text-navy-900 sm:text-base sm:leading-8">{c.title}</h2>
               {isOwned && <span className="mt-1 inline-flex w-fit items-center gap-1 rounded-md bg-ochre-100 px-2 py-0.5 text-[11px] font-bold text-ochre-700"><AlertTriangle className="h-3 w-3" /> قبلاً خریداری شده</span>}
               {c.meta && <p className="mt-1 text-sm text-ink-500">{c.meta}</p>}
-              <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-3">
-                <span className="text-lg font-black text-navy-900">
+              <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-2 sm:gap-3 sm:pt-3">
+                <span className="text-sm font-black text-navy-900 sm:text-lg">
                   {formatPrice(c.price * itemQty(c))}
                   {itemQty(c) > 1 && <span className="ms-1 text-xs font-normal text-ink-500">({formatPrice(c.price)} × {toFa(itemQty(c))})</span>}
                 </span>
@@ -121,18 +121,18 @@ export function CartView() {
         </Link>
       </div>
 
-      <aside className="lg:sticky lg:top-28 lg:self-start">
-        <div className="rounded-2xl bg-card p-6 shadow-lift ring-1 ring-ink-900/5">
+      <aside className="min-w-0 lg:sticky lg:top-28 lg:self-start">
+        <div className="min-w-0 rounded-2xl bg-card p-4 shadow-lift ring-1 ring-ink-900/5 sm:p-6">
           <h2 className="font-black text-navy-900">خلاصه سفارش</h2>
           <dl className="mt-4 space-y-2.5 text-sm">
-            <div className="flex justify-between"><dt className="text-ink-600">جمع ({toFa(items.length)} مورد)</dt><dd className="font-bold">{formatPrice(total)}</dd></div>
+            <div className="flex min-w-0 justify-between gap-2"><dt className="text-ink-600">جمع ({toFa(items.length)} مورد)</dt><dd className="shrink-0 font-bold">{formatPrice(total)}</dd></div>
             {hasPhysical(items) && (
               <div className="flex justify-between text-xs text-ink-500"><dt>هزینه ارسال</dt><dd>در مرحله بعد محاسبه می‌شود</dd></div>
             )}
             {discount > 0 && (
               <div className="flex justify-between text-teal-700"><dt>تخفیف ({COUPON_CODE})</dt><dd className="font-bold">− {formatPrice(discount)}</dd></div>
             )}
-            <div className="flex justify-between border-t border-dashed border-ink-900/10 pt-3 text-base"><dt className="font-extrabold text-navy-900">مبلغ نهایی</dt><dd className="font-black text-navy-900">{formatPrice(total - discount)}</dd></div>
+            <div className="flex min-w-0 justify-between gap-2 border-t border-dashed border-ink-900/10 pt-3 text-sm min-[360px]:text-base"><dt className="font-extrabold text-navy-900">مبلغ نهایی</dt><dd className="shrink-0 font-black text-navy-900">{formatPrice(total - discount)}</dd></div>
           </dl>
           <div className="mt-4 flex gap-2">
             <label htmlFor="coupon" className="sr-only">کد تخفیف</label>
