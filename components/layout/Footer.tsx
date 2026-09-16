@@ -96,6 +96,22 @@ export async function Footer() {
                 </a>
               ))}
             </div>
+            <div className="mt-6">
+              <a
+                referrerPolicy="origin"
+                target="_blank"
+                rel="noopener noreferrer"
+                href="https://trustseal.enamad.ir/?id=7782853&Code=K2fp9CXiOAcXBNwgCQyrLJy35Ka8PXqy"
+              >
+                <img
+                  referrerPolicy="origin"
+                  src="https://trustseal.enamad.ir/logo.aspx?id=7782853&Code=K2fp9CXiOAcXBNwgCQyrLJy35Ka8PXqy"
+                  alt="نماد اعتماد الکترونیکی"
+                  style={{ cursor: "pointer" }}
+                  code="K2fp9CXiOAcXBNwgCQyrLJy35Ka8PXqy"
+                />
+              </a>
+            </div>
           </div>
 
           <div className="grid gap-8 sm:grid-cols-3">
