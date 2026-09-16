@@ -7,7 +7,7 @@ import { SupportDock } from "@/components/support/SupportDock";
 import { getSettings } from "@/lib/store";
 import { jsonLd, organizationJsonLd, websiteJsonLd } from "@/lib/seo";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://asadzedeh.ir";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://ghalibafiasadzedeh.ir";
 
 const peyda = localFont({
   src: [
@@ -33,6 +33,9 @@ export const metadata: Metadata = {
   },
   description:
     "آموزش تخصصی فرش‌بافی، گلیم‌بافی، گبه‌بافی، رنگرزی، مرمت و طراحی نقشه به‌صورت آنلاین و حضوری؛ هنر ایرانی را از استاد یاد بگیرید.",
+    other:{
+      enamad : "66038387",
+    },
   openGraph: {
     type: "website",
     locale: "fa_IR",
