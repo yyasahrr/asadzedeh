@@ -27,10 +27,11 @@ const neirizi = localFont({
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: {
-    default: "اسدزاده | آموزش فرش، گلیم و هنرهای بافت ایرانی",
-    template: "%s | اسدزاده",
-  },
+title: {
+  default: "66038387",
+  template: "%s | اسدزاده",
+},
+
   description:
     "آموزش تخصصی فرش‌بافی، گلیم‌بافی، گبه‌بافی، رنگرزی، مرمت و طراحی نقشه به‌صورت آنلاین و حضوری؛ هنر ایرانی را از استاد یاد بگیرید.",
     other:{
