@@ -28,7 +28,7 @@ const neirizi = localFont({
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
 title: {
-  default: "66038387",
+  default: "اسدزاده | آموزش فرش، گلیم و هنرهای بافت ایرانی",
   template: "%s | اسدزاده",
 },
 
