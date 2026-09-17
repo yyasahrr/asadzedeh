@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatJalaliDate, gregorianToJalali, isValidJalaliDate, jalaliToGregorian, parseStoredDate, toEnglishDigits, toPersianDigits } from "../jalali-date";
+import { formatJalaliDate, gregorianToJalali, isValidJalaliDate, jalaliSelectionToStoredDate, jalaliToGregorian, parseStoredDate, toEnglishDigits, toPersianDigits } from "../jalali-date";
 
 describe("Jalali date utilities", () => {
   it("converts date-only values without timezone drift", () => {
@@ -12,6 +12,11 @@ describe("Jalali date utilities", () => {
     expect(jalaliToGregorian("۱۴۰۵/۰۷/۲۵")).toBe("2026-10-17");
     expect(toEnglishDigits("۱۴۰۵/۰۷/۲۵")).toBe("1405/07/25");
     expect(toPersianDigits("1405/07/25")).toBe("۱۴۰۵/۰۷/۲۵");
+  });
+
+  it("stores a selected Jalali calendar day as Gregorian ISO", () => {
+    expect(jalaliSelectionToStoredDate(1405, 7, 25)).toBe("2026-10-17");
+    expect(parseStoredDate(jalaliSelectionToStoredDate(1405, 7, 25))).toBe("2026-10-17");
   });
 
   it("validates leap-day and rejects invalid or empty values", () => {

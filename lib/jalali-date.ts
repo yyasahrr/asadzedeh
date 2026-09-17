@@ -59,6 +59,12 @@ export function isValidJalaliDate(value: string): boolean {
   return jalaliToGregorian(value) !== null;
 }
 
+/** Convert a calendar selection to the canonical date-only storage value. */
+export function jalaliSelectionToStoredDate(year: number, month: number, day: number): string | null {
+  if (![year, month, day].every(Number.isInteger)) return null;
+  return jalaliToGregorian(`${year}/${String(month).padStart(2, "0")}/${String(day).padStart(2, "0")}`);
+}
+
 export function formatJalaliDate(value?: string | null): string {
   if (!value) return "—";
   const jalali = gregorianToJalali(value);

@@ -7,6 +7,7 @@ import { ArrowDown, ArrowUp, ChevronDown, Clapperboard, Eye, GripVertical, Lock,
 import type { InPersonClass, Lesson, OnlineCourse, VideoAsset } from "@/lib/types";
 import { formatDuration, toFa } from "@/lib/format";
 import { FieldLabel, Input, Select, Textarea } from "../ui/Input";
+import { JalaliDatePicker } from "./JalaliDatePicker";
 import { DeleteButton } from "./DeleteButton";
 import { LessonAttachmentsField } from "./LessonAttachmentsField";
 import { VideoUploader } from "./VideoUploader";
@@ -360,7 +361,7 @@ export function LessonManager({
           </div>
           <div>
             <FieldLabel htmlFor="l-completedDate">تاریخ برگزاری جلسه</FieldLabel>
-            <Input id="l-completedDate" name="completedDate" type="date" defaultValue={editing?.completedDate ?? ""} dir="ltr" className="text-left" />
+            <JalaliDatePicker id="l-completedDate" name="completedDate" value={editing?.completedDate ?? ""} />
           </div>
           <div>
             <FieldLabel htmlFor="l-desc">توضیحات درس</FieldLabel>
