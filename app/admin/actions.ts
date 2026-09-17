@@ -12,6 +12,8 @@ import {
 } from "@/lib/validation/admin";
 import { getDriver } from "@/lib/gateways/registry";
 import { validate } from "@/lib/validation/schema";
+import { parseClassSessions } from "@/lib/class-sessions";
+import { parseStoredDate } from "@/lib/jalali-date";
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -550,15 +552,20 @@ export async function createClass(fd: FormData) {
   const instructorSlug = str(fd, "instructorSlug");
   const inst = instructorSlug ? getInstructor(instructorSlug) : undefined;
   const slug = uniqueSlug(newSlug("k"), (s) => classes.some((c) => c.slug === s));
+  const schedule = parseClassSessions(fd.get("sessionSchedule"));
+  if (!schedule.ok) redirect(`/admin/classes/new?error=${encodeURIComponent(schedule.error)}`);
+  const manualStartDate = parseStoredDate(str(fd, "startDate"));
+  if (!schedule.startDate && str(fd, "startDate") && !manualStartDate) redirect("/admin/classes/new?error=date");
   classes.unshift({
     slug,
     title,
     instructor: inst?.name || str(fd, "instructor") || "استاد ناصر اسد زاده",
     instructorSlug: inst?.slug,
-    startDate: str(fd, "startDate"),
+    startDate: schedule.startDate || manualStartDate || "",
     days: str(fd, "days"),
     time: str(fd, "time"),
-    sessions: num(fd, "sessions", 8),
+    sessions: schedule.sessions.length || num(fd, "sessions", 8),
+    sessionSchedule: schedule.sessions,
     capacity,
     remaining: capacity,
     location: str(fd, "location") || "کارگاه اسدزاده، ارومیه",
@@ -583,6 +590,10 @@ export async function updateClass(fd: FormData) {
   const capacity = num(fd, "capacity", prev.capacity);
   const instructorSlug = str(fd, "instructorSlug");
   const inst = instructorSlug ? getInstructor(instructorSlug) : undefined;
+  const schedule = parseClassSessions(fd.get("sessionSchedule"));
+  if (!schedule.ok) redirect(`/admin/classes/${encodeURIComponent(slug)}/edit?error=${encodeURIComponent(schedule.error)}`);
+  const manualStartDate = parseStoredDate(str(fd, "startDate"));
+  if (!schedule.startDate && str(fd, "startDate") && !manualStartDate) redirect(`/admin/classes/${encodeURIComponent(slug)}/edit?error=date`);
   const classes = getClasses().map((c) =>
     c.slug === slug
       ? {
@@ -590,10 +601,11 @@ export async function updateClass(fd: FormData) {
           title: str(fd, "title") || c.title,
           instructor: inst?.name || str(fd, "instructor") || c.instructor,
           instructorSlug: inst?.slug ?? c.instructorSlug,
-          startDate: str(fd, "startDate") || c.startDate,
+          startDate: schedule.startDate || manualStartDate || c.startDate,
           days: str(fd, "days") || c.days,
           time: str(fd, "time") || c.time,
-          sessions: num(fd, "sessions", c.sessions),
+          sessions: schedule.sessions.length || num(fd, "sessions", c.sessions),
+          sessionSchedule: schedule.sessions,
           capacity,
           remaining: Math.min(num(fd, "remaining", c.remaining), capacity),
           location: str(fd, "location") || c.location,

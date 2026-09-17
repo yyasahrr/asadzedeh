@@ -86,9 +86,7 @@ export function NeshanMap({ lat, lng, mapKey }: Props) {
         <MapPinned className="h-9 w-9 text-teal-600" />
         <p className="mt-3 font-black text-navy-900">نقشه نشان آماده اتصال است</p>
         <p className="mt-1 max-w-sm text-sm leading-7 text-ink-600">
-          کلید Web SDK نشان را در
-          <span dir="ltr" className="mx-1 font-mono text-xs">NEXT_PUBLIC_NESHAN_MAP_KEY</span>
-          قرار دهید.
+          کلید Web Map نشان را در تنظیمات مدیریت یا متغیر محیطی عمومی آن وارد کنید.
         </p>
       </div>
     );

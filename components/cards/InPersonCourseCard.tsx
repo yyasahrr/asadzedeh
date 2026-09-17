@@ -5,6 +5,7 @@ import type { InPersonClass } from "@/lib/types";
 import { formatPriceCompact, toFa } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { availableSeats } from "@/lib/stock";
+import { formatJalaliDateLong } from "@/lib/jalali-date";
 
 /** Visually distinct from online cards: schedule-first layout with capacity meter. */
 export function InPersonCourseCard({ cls, className }: { cls: InPersonClass; className?: string }) {
@@ -31,7 +32,7 @@ export function InPersonCourseCard({ cls, className }: { cls: InPersonClass; cla
         <div className="absolute inset-0 bg-gradient-to-t from-navy-950/80 via-navy-950/10 to-transparent" />
         <span className="absolute top-3 right-3 inline-flex items-center gap-1.5 rounded-full bg-sand-100 px-3 py-1 text-xs font-bold text-navy-900">
           <CalendarDays className="h-3.5 w-3.5 text-madder-700" />
-          شروع: {cls.startDate}
+          شروع: {formatJalaliDateLong(cls.startDate)}
         </span>
         <span className="absolute bottom-3 right-3 rounded-full bg-teal-600 px-3 py-1 text-xs font-bold text-white">
           حضوری • {cls.location}

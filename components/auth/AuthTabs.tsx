@@ -11,25 +11,27 @@ import {
   requestOtpAction,
   requestPasswordResetAction,
   resetPasswordAction,
-  verifyOtpAction,
 } from "@/app/auth/actions";
 import { cn } from "@/lib/utils";
+import { OtpChallengeForm } from "./OtpChallengeForm";
 
 const errors: Record<string, string> = {
   invalid: "شماره موبایل یا رمز عبور اشتباه است.",
   dup: "این شماره قبلاً ثبت شده؛ وارد شوید.",
   validation: "اطلاعات را کامل وارد کنید (شماره معتبر و رمز حداقل ۶ رقم).",
   locked: "به‌دلیل تلاش‌های ناموفق زیاد، حساب موقتاً قفل شده است. چند دقیقه بعد دوباره تلاش کنید.",
-  expired: "زمان تأیید دومرحله‌ای تمام شد؛ دوباره وارد شوید.",
-  missing: "کد بازیابی یافت نشد یا پیش‌تر استفاده شده است.",
+  expired: "کد منقضی شده است؛ کد جدید دریافت کنید.",
+  missing: "کد یافت نشد یا پیش‌تر استفاده شده است؛ کد جدید دریافت کنید.",
   attempts: "تعداد تلاش‌های ناموفق بیش از حد مجاز است؛ کد جدید درخواست دهید.",
   cooldown: "به‌تازگی برای این شماره کد ارسال شده است. کمی بعد دوباره درخواست دهید.",
+  challenge: "نشست ورود با کد معتبر نیست یا منقضی شده است؛ دوباره کد دریافت کنید.",
 };
 
 const notices: Record<string, string> = {
   sent: "اگر این شماره در اسدزاده ثبت شده باشد، کد بازیابی پیامک شد. کد ۱۵ دقیقه اعتبار دارد.",
   reset: "رمز عبور با موفقیت تغییر کرد. اکنون می‌توانید وارد شوید.",
   otpSent: "اگر این شماره در اسدزاده ثبت شده باشد، کد ورود پیامک شد. کد ۵ دقیقه اعتبار دارد.",
+  otpResent: "کد جدید ارسال شد.",
 };
 
 export function AuthTabs({
@@ -38,25 +40,29 @@ export function AuthTabs({
   notice,
   next,
   showDemoAccounts = false,
+  otpChallenge,
+  resent = false,
 }: {
   initialTab: "login" | "register" | "reset" | "otp";
   error?: string;
   notice?: string;
   next?: string;
   showDemoAccounts?: boolean;
+  otpChallenge?: { maskedPhone: string; expiresAt: number; resendAvailableAt: number };
+  resent?: boolean;
 }) {
   const [tab, setTab] = useState<"login" | "register" | "reset" | "otp">(initialTab);
   // The reset action redirects back with sent=1, so the step is driven by the
   // URL rather than client state — a reload must not lose the user's place.
   const sent = notice === "sent";
   // The OTP notice differs from the reset one, so it is keyed on the tab too.
-  const otpSent = sent && tab === "otp";
+  const otpSent = Boolean(otpChallenge) && tab === "otp";
 
   return (
     <div>
       {notice && notices[notice] && (
         <p className="mb-4 rounded-xl bg-sage-50 px-4 py-3 text-sm font-bold text-sage-800 ring-1 ring-sage-800/20 ring-inset">
-          {otpSent ? notices.otpSent : notices[notice]}
+          {otpSent ? (resent ? notices.otpResent : notices.otpSent) : notices[notice]}
         </p>
       )}
 
@@ -155,7 +161,7 @@ export function AuthTabs({
         </div>
       ) : tab === "otp" ? (
         <div className="mt-6 space-y-4">
-          {!otpSent ? (
+          {!otpChallenge ? (
             <form action={requestOtpAction} className="space-y-4">
               {next && <input type="hidden" name="next" value={next} />}
               <div>
@@ -172,17 +178,8 @@ export function AuthTabs({
               </button>
             </form>
           ) : (
-            <form action={verifyOtpAction} className="space-y-4">
-              {next && <input type="hidden" name="next" value={next} />}
-              <div>
-                <FieldLabel htmlFor="otp-phone2">شماره موبایل</FieldLabel>
-                <Input id="otp-phone2" name="phone" required inputMode="tel" placeholder="۰۹۱۲۳۴۵۶۷۸۹" dir="ltr" className="text-left" />
-              </div>
-              <div>
-                <FieldLabel htmlFor="otp-code">کد ۶ رقمی</FieldLabel>
-                <Input id="otp-code" name="code" required inputMode="numeric" maxLength={6} placeholder="۱۲۳۴۵۶" dir="ltr" className="text-left" autoComplete="one-time-code" />
-              </div>
-              <Button type="submit" size="lg" className="w-full">ورود</Button>
+            <div className="space-y-4">
+              <OtpChallengeForm {...otpChallenge} />
               <button
                 type="button"
                 onClick={() => setTab("login")}
@@ -190,7 +187,7 @@ export function AuthTabs({
               >
                 ورود با رمز عبور
               </button>
-            </form>
+            </div>
           )}
         </div>
       ) : (

@@ -34,6 +34,7 @@ export async function saveWorkshopLocation(fd: FormData) {
   const lng = numAllowZero(fd, "lng");
   const address = clampText(str(fd, "address"), 300);
   const mapProvider = (str(fd, "mapProvider") as "neshan" | "openstreetmap") || "neshan";
+  const rawMapKey = String(fd.get("neshanWebMapKey") ?? "").trim();
 
   if (!isValidLatitude(lat) || !isValidLongitude(lng)) {
     redirect("/admin/workshop?error=" + encodeURIComponent("مختصات نامعتبر است. عرض بین -90 تا 90 و طول بین -180 تا 180 باشد."));
@@ -42,6 +43,10 @@ export async function saveWorkshopLocation(fd: FormData) {
   if (!address) {
     redirect("/admin/workshop?error=" + encodeURIComponent("نشانی را وارد کنید."));
   }
+  if (!(["neshan", "openstreetmap"] as const).includes(mapProvider)) redirect("/admin/workshop?error=provider");
+  if (rawMapKey.length > 200) redirect("/admin/workshop?error=map_key");
+  const previousMapKey = getSettings().site.workshop?.neshanWebMapKey;
+  const neshanWebMapKey = mapProvider === "neshan" ? rawMapKey : previousMapKey;
 
   writeDb({
     settings: {
@@ -53,11 +58,12 @@ export async function saveWorkshopLocation(fd: FormData) {
           lng,
           address,
           mapProvider,
+          neshanWebMapKey,
         },
       },
     },
   });
-  await audit({ action: "settings.update", actor: actor(me), detail: { section: "workshop" } });
+  await audit({ action: "settings.update", actor: actor(me), detail: { section: "workshop", mapProvider, mapKeyConfigured: Boolean(neshanWebMapKey) } });
   revalidateAll();
   redirect("/admin/workshop?saved=1");
 }

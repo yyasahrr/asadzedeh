@@ -5,6 +5,8 @@ import { getInstructors, getVideos } from "@/lib/store";
 import { FieldLabel, Input, Select, Textarea } from "../ui/Input";
 import { UploadField } from "./UploadField";
 import { TrailerFields } from "./TrailerFields";
+import { JalaliDatePicker } from "./JalaliDatePicker";
+import { ClassSessionEditor } from "./ClassSessionEditor";
 
 export function ClassForm({
   action,
@@ -40,7 +42,7 @@ export function ClassForm({
       </div>
       <div>
         <FieldLabel htmlFor="k-start">تاریخ شروع</FieldLabel>
-        <Input id="k-start" name="startDate" defaultValue={c?.startDate} placeholder="مثلاً: ۲۵ مهر" />
+        <JalaliDatePicker id="k-start" name="startDate" value={c?.startDate} />
       </div>
       <div>
         <FieldLabel htmlFor="k-days">روزها</FieldLabel>
@@ -80,6 +82,8 @@ export function ClassForm({
         <FieldLabel htmlFor="k-inc">شهریه شامل (هر خط یک مورد)</FieldLabel>
         <Textarea id="k-inc" name="includes" defaultValue={c?.includes.join("\n")} placeholder={"دار و ابزار در کارگاه\nگواهی پایان دوره"} />
       </div>
+
+      <ClassSessionEditor initial={c?.sessionSchedule} />
 
       <TrailerFields initial={c?.trailer} videos={videos} gallery={galleryImages} />
 

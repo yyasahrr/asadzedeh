@@ -6,6 +6,7 @@ import { Clapperboard, ExternalLink, Users } from "lucide-react";
 import { getSessionUser } from "@/lib/auth";
 import { formatPrice, toFa } from "@/lib/format";
 import { getClasses, getCourses, getEnrollments, getInstructorByUser, getVideos } from "@/lib/store";
+import { formatJalaliDateLong } from "@/lib/jalali-date";
 
 export const metadata: Metadata = { title: "دوره‌های من" };
 export const dynamic = "force-dynamic";
@@ -73,7 +74,7 @@ export default async function InstructorCoursesPage() {
                 <Image src={k.image} alt={k.title} width={56} height={56} className="h-14 w-14 rounded-xl object-cover" />
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-bold text-ink-900">{k.title}</p>
-                  <p className="text-xs text-ink-500">{k.days} {k.time} • شروع {k.startDate}</p>
+                  <p className="text-xs text-ink-500">{k.days} {k.time} • شروع {formatJalaliDateLong(k.startDate)}</p>
                 </div>
                 <span className="inline-flex items-center gap-1 text-xs text-ink-600"><Users className="h-3.5 w-3.5" /> {toFa(k.capacity - k.remaining)}/{toFa(k.capacity)}</span>
               </li>

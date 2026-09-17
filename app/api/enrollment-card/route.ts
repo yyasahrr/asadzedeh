@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth";
 import { getClass, getOrder, getSettings } from "@/lib/store";
 import { generateEnrollmentCardPdf, type EnrollmentCardData } from "@/lib/enrollment-card-pdf";
+import { formatJalaliDateLong } from "@/lib/jalali-date";
 
 function generateCode(classSlug: string, orderId: string): string {
   const base = `${classSlug}-${orderId}`;
@@ -51,7 +52,7 @@ export async function GET(request: Request) {
     studentName: user.name,
     classTitle: inPersonClass.title,
     instructor: inPersonClass.instructor,
-    startDate: inPersonClass.startDate,
+    startDate: formatJalaliDateLong(inPersonClass.startDate),
     days: inPersonClass.days,
     time: inPersonClass.time,
     sessions: inPersonClass.sessions,

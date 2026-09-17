@@ -5,19 +5,22 @@ import { AuthTabs } from "@/components/auth/AuthTabs";
 import { Logo } from "@/components/Logo";
 import { isProduction } from "@/lib/env";
 import { safeNextPath } from "@/lib/auth-navigation";
+import { cookies } from "next/headers";
+import { maskIranianPhone, OTP_CHALLENGE_COOKIE, readOtpChallenge } from "@/lib/otp-challenge";
 
 export const metadata: Metadata = { title: "ورود | ثبت‌نام" };
 
 export default async function AuthPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string; error?: string; next?: string; sent?: string; reset?: string }>;
+  searchParams: Promise<{ tab?: string; error?: string; next?: string; sent?: string; reset?: string; resent?: string }>;
 }) {
-  const { tab, error, next, sent, reset } = await searchParams;
+  const { tab, error, next, sent, reset, resent } = await searchParams;
   // Never echo an attacker-supplied redirect target into the form. The action
   // validates `next` again before redirecting (`safeNextPath`), but the value
   // should not reach the HTML in the first place.
   const safeNext = next ? safeNextPath(next, "") : undefined;
+  const challenge = readOtpChallenge((await cookies()).get(OTP_CHALLENGE_COOKIE)?.value);
   return (
     <>
       <PageHero
@@ -44,6 +47,8 @@ export default async function AuthPage({
               notice={sent ? "sent" : reset ? "reset" : undefined}
               next={safeNext}
               showDemoAccounts={!isProduction()}
+              otpChallenge={challenge ? { maskedPhone: maskIranianPhone(challenge.phone), expiresAt: challenge.otpExpiresAt, resendAvailableAt: challenge.resendAvailableAt } : undefined}
+              resent={resent === "1"}
             />
           </div>
         </div>

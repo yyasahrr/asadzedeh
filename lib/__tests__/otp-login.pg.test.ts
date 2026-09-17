@@ -163,6 +163,12 @@ describe("verifying a code", () => {
     const r = await otp.verifyLoginOtp(PHONE, "913570");
     expect(r).toEqual({ ok: true });
   });
+
+  it("accepts Persian digits", async () => {
+    await seedCode("otp-fa", PHONE, "913570");
+    const r = await otp.verifyLoginOtp(PHONE, "۹۱۳۵۷۰");
+    expect(r).toEqual({ ok: true });
+  });
 });
 
 describe("the single-use primitive itself", () => {

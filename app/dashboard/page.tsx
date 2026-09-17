@@ -15,6 +15,7 @@ import {
 import { formatPriceCompact, toFa } from "@/lib/format";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
+import { formatJalaliDateLong } from "@/lib/jalali-date";
 
 export const metadata: Metadata = { title: "پنل هنرجو" };
 export const dynamic = "force-dynamic";
@@ -146,7 +147,7 @@ export default async function DashboardPage() {
                 <Clock3 className="h-4 w-4 text-ochre-200" />
                 {nextClass.days} • {nextClass.time}
               </p>
-              <p className="mt-1 text-xs text-white/60">شروع: {nextClass.startDate}</p>
+              <p className="mt-1 text-xs text-white/60">شروع: {formatJalaliDateLong(nextClass.startDate)}</p>
             </>
           ) : (
             <>

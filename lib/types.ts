@@ -154,6 +154,7 @@ export interface InPersonClass {
   days: string;
   time: string;
   sessions: number;
+  sessionSchedule?: ClassSession[];
   capacity: number;
   remaining: number;
   /** Seats held by unpaid orders. Managed by the database, never by the client. */
@@ -171,6 +172,16 @@ export interface InPersonClass {
   lessons?: Lesson[];
   /** سؤالات پرتکرار اختصاصی این کلاس */
   faq?: { q: string; a: string }[];
+}
+
+export type ClassSessionStatus = "scheduled" | "completed" | "cancelled" | "postponed";
+export interface ClassSession {
+  id: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  title?: string;
+  status: ClassSessionStatus;
 }
 
 export interface LearningPathCourse {
@@ -659,6 +670,8 @@ export interface SiteSettings {
     lng: number;
     address: string;
     mapProvider: "neshan" | "openstreetmap";
+    /** Browser-safe Web SDK key; the service/geocoding secret remains env-only. */
+    neshanWebMapKey?: string;
   };
 }
 

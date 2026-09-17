@@ -31,4 +31,27 @@ for (const width of widths) {
     expect(layout.itemLeft).toBeGreaterThanOrEqual(0);
     expect(layout.itemRight).toBeLessThanOrEqual(layout.viewport);
   });
+
+  test(`OTP challenge fits and keeps the phone read-only at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 800 });
+    await page.goto("/auth?tab=otp&next=/checkout");
+    await page.locator("#otp-phone").fill("09129998877");
+    await page.getByRole("button", { name: "ارسال کد ورود", exact: true }).click();
+    await page.waitForURL(/tab=otp.*sent=1/);
+
+    await expect(page.locator("input[aria-label^='رقم']")).toHaveCount(6);
+    await expect(page.locator("#otp-phone2")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "ارسال مجدد کد", exact: true })).toBeDisabled();
+    await expect(page.getByText(/اعتبار کد:/)).toBeVisible();
+
+    const layout = await page.evaluate(() => ({
+      viewport: document.documentElement.clientWidth,
+      page: document.documentElement.scrollWidth,
+    }));
+    expect(layout.page).toBeLessThanOrEqual(layout.viewport);
+
+    await page.getByRole("button", { name: "تغییر شماره موبایل", exact: true }).click();
+    await expect(page.locator("#otp-phone")).toBeVisible();
+    await expect(page).toHaveURL(/next=%2Fcheckout/);
+  });
 }

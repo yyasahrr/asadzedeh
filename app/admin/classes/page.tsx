@@ -6,6 +6,7 @@ import { toFa } from "@/lib/format";
 import { TableShell, Td } from "@/components/admin/TableShell";
 import { DeleteButton } from "@/components/admin/DeleteButton";
 import { deleteClass } from "../actions";
+import { formatJalaliDate } from "@/lib/jalali-date";
 
 export const metadata: Metadata = { title: "کلاس‌های حضوری" };
 
@@ -25,7 +26,7 @@ export default function AdminClassesPage() {
           return (
             <tr key={c.slug} className="transition-colors hover:bg-sand-50">
               <Td className="font-bold text-navy-900">{c.title}</Td>
-              <Td className="whitespace-nowrap text-ink-600">{c.startDate}</Td>
+              <Td className="whitespace-nowrap text-ink-600">{formatJalaliDate(c.startDate)}</Td>
               <Td className="whitespace-nowrap text-ink-600">{c.days} • {c.time}</Td>
               <Td>
                 <span className="flex items-center gap-2">

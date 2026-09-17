@@ -1,0 +1,3 @@
+export const OTP_CODE_TTL_SECONDS = 5 * 60;
+export const OTP_RESEND_COOLDOWN_SECONDS = 90;
+export const OTP_CHALLENGE_TTL_SECONDS = 10 * 60;

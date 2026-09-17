@@ -3,6 +3,7 @@ import { getSql } from "@/lib/db/client";
 import { logger } from "@/lib/logger";
 import { sendSmsCode } from "@/lib/notify";
 import { normalizeDigits } from "@/lib/format";
+import { OTP_CODE_TTL_SECONDS, OTP_RESEND_COOLDOWN_SECONDS } from "@/lib/otp-constants";
 
 /**
  * One-time-code phone login.
@@ -21,11 +22,11 @@ import { normalizeDigits } from "@/lib/format";
  * stores nothing, so this cannot enumerate accounts.
  */
 
-const CODE_TTL_MINUTES = 5;
+const CODE_TTL_MINUTES = OTP_CODE_TTL_SECONDS / 60;
 const CODE_LENGTH = 6;
 const MAX_ATTEMPTS = 5;
 /** Minimum seconds between two code requests for the same phone. */
-const RESEND_COOLDOWN_SECONDS = 90;
+const RESEND_COOLDOWN_SECONDS = OTP_RESEND_COOLDOWN_SECONDS;
 
 export type OtpRequestOutcome =
   | { ok: true; sent: boolean }
@@ -122,7 +123,7 @@ export async function requestLoginOtp(
  */
 export async function verifyLoginOtp(rawPhone: string, code: string): Promise<OtpVerifyOutcome> {
   const phone = validPhone(rawPhone);
-  const digits = (code ?? "").replace(/\D/g, "");
+  const digits = normalizeDigits(code ?? "").replace(/\D/g, "");
   if (!phone || digits.length !== CODE_LENGTH) return { ok: false, reason: "invalid" };
 
   const sql = await getSql();

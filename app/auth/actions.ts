@@ -30,6 +30,12 @@ import { resetPasswordSchema } from "@/lib/validation/auth";
 import { getSettings, getUserById, getUserByPhone, getUsers, getSessions, writeDb } from "@/lib/store";
 import { rateLimit, LIMITS } from "@/lib/rate-limit";
 import type { User } from "@/lib/types";
+import {
+  createOtpChallenge,
+  OTP_CHALLENGE_COOKIE,
+  OTP_CHALLENGE_TTL_SECONDS,
+  readOtpChallenge,
+} from "@/lib/otp-challenge";
 
 const SESSION_DAYS = 30;
 
@@ -342,7 +348,8 @@ export async function resetPasswordAction(fd: FormData) {
  */
 export async function requestOtpAction(fd: FormData) {
   const phone = normalizeDigits(String(fd.get("phone") ?? "").trim());
-  const next = String(fd.get("next") ?? "");
+  const next = safeNextPath(String(fd.get("next") ?? ""), "");
+  if (!/^09\d{9}$/.test(phone)) redirect(`/auth?tab=otp&error=validation${next ? `&next=${encodeURIComponent(next)}` : ""}`);
   const limited = rateLimit(`otp:req:${phone || "anon"}`, LIMITS.otp.limit, LIMITS.otp.windowMs);
   if (!limited.ok) redirect(`/auth?tab=otp&error=locked${next ? `&next=${encodeURIComponent(next)}` : ""}`);
 
@@ -356,15 +363,26 @@ export async function requestOtpAction(fd: FormData) {
   if (!outcome.ok) {
     redirect(`/auth?tab=otp&error=cooldown&retry=${outcome.retryAfterSeconds}${next ? `&next=${encodeURIComponent(next)}` : ""}`);
   }
+  const jar = await cookies();
+  jar.set(OTP_CHALLENGE_COOKIE, createOtpChallenge(phone, next), {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/auth",
+    maxAge: OTP_CHALLENGE_TTL_SECONDS,
+  });
   // An unknown number reports the same "sent" page as a known one.
-  redirect(`/auth?tab=otp&sent=1${next ? `&next=${encodeURIComponent(next)}` : ""}`);
+  redirect("/auth?tab=otp&sent=1");
 }
 
 /** Step 2: consume the code and open a session. */
 export async function verifyOtpAction(fd: FormData) {
-  const phone = normalizeDigits(String(fd.get("phone") ?? "").trim());
+  const jar = await cookies();
+  const challenge = readOtpChallenge(jar.get(OTP_CHALLENGE_COOKIE)?.value);
+  if (!challenge) redirect("/auth?tab=otp&error=challenge");
+  const { phone, next, otpExpiresAt } = challenge;
+  if (Date.now() >= otpExpiresAt) redirect("/auth?tab=otp&sent=1&error=expired");
   const code = String(fd.get("code") ?? "");
-  const next = String(fd.get("next") ?? "");
   const limited = rateLimit(`otp:use:${phone || "anon"}`, LIMITS.otp.limit, LIMITS.otp.windowMs);
   if (!limited.ok) redirect("/auth?tab=otp&error=locked");
 
@@ -388,7 +406,7 @@ export async function verifyOtpAction(fd: FormData) {
 
   // Staff holding TOTP still face it: an OTP proves the phone, not the person.
   if (user.totp?.enabled) {
-    const jar = await cookies();
+    jar.delete(OTP_CHALLENGE_COOKIE);
     const ticket = signPayload({ uid: user.id, exp: Date.now() + 5 * 60_000, next });
     jar.set(MFA_COOKIE, ticket, { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: 300 });
     await audit({ action: "auth.2fa.challenge", level: "security", actor: { id: user.id, name: user.name, role: user.role } });
@@ -396,6 +414,39 @@ export async function verifyOtpAction(fd: FormData) {
   }
 
   await createSession(user, false);
+  jar.delete(OTP_CHALLENGE_COOKIE);
   await audit({ action: "auth.login", actor: { id: user.id, name: user.name, role: user.role }, detail: { method: "otp" } });
   redirect(safeNextPath(next, homeFor(user)));
+}
+
+export async function resendOtpAction() {
+  const jar = await cookies();
+  const challenge = readOtpChallenge(jar.get(OTP_CHALLENGE_COOKIE)?.value);
+  if (!challenge) redirect("/auth?tab=otp&error=challenge");
+  if (Date.now() < challenge.resendAvailableAt) redirect("/auth?tab=otp&sent=1&error=cooldown");
+
+  const limited = rateLimit(`otp:req:${challenge.phone}`, LIMITS.otp.limit, LIMITS.otp.windowMs);
+  if (!limited.ok) redirect("/auth?tab=otp&sent=1&error=locked");
+  const outcome = await requestLoginOtp(challenge.phone, (phone) => {
+    const user = getUserByPhone(phone);
+    return user && !demoAccountBlocked(user) ? { id: user.id, name: user.name } : undefined;
+  });
+  await audit({ action: "auth.otp.requested", level: "security", detail: { resend: true } });
+  if (!outcome.ok) redirect("/auth?tab=otp&sent=1&error=cooldown");
+  jar.set(OTP_CHALLENGE_COOKIE, createOtpChallenge(challenge.phone, challenge.next), {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/auth",
+    maxAge: OTP_CHALLENGE_TTL_SECONDS,
+  });
+  redirect("/auth?tab=otp&sent=1&resent=1");
+}
+
+export async function changeOtpPhoneAction() {
+  const jar = await cookies();
+  const challenge = readOtpChallenge(jar.get(OTP_CHALLENGE_COOKIE)?.value);
+  jar.delete(OTP_CHALLENGE_COOKIE);
+  const next = challenge?.next ?? "";
+  redirect(`/auth?tab=otp${next ? `&next=${encodeURIComponent(next)}` : ""}`);
 }

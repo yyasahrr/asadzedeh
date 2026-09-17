@@ -2,6 +2,7 @@ import { ExternalLink, Landmark, MapPin, Navigation } from "lucide-react";
 import { getWorkshopMapLocation, WORKSHOP_ADDRESS } from "@/lib/neshan";
 import { getSettings } from "@/lib/store";
 import { NeshanMap } from "./NeshanMap";
+import { resolveNeshanWebMapKey } from "@/lib/workshop-map";
 
 export async function WorkshopLocation() {
   const location = await getWorkshopMapLocation();
@@ -82,7 +83,7 @@ export async function WorkshopLocation() {
             <NeshanMap
               lat={location.lat}
               lng={location.lng}
-              mapKey={process.env.NEXT_PUBLIC_NESHAN_MAP_KEY}
+              mapKey={resolveNeshanWebMapKey(settings.site.workshop?.neshanWebMapKey, process.env.NEXT_PUBLIC_NESHAN_MAP_KEY)}
             />
           ) : (
             <div className="flex min-h-80 flex-col items-center justify-center bg-sand-100 px-6 text-center">

@@ -16,6 +16,7 @@ import { TrailerBlock } from "@/components/video/TrailerBlock";
 import { hasPaidClassAccess } from "@/lib/access";
 import { getSessionUser } from "@/lib/auth";
 import { availableSeats } from "@/lib/stock";
+import { formatJalaliDateLong } from "@/lib/jalali-date";
 
 export function generateStaticParams() {
   return getClasses().map((c) => ({ slug: c.slug }));
@@ -140,7 +141,7 @@ export default async function ClassDetailPage({
             <h2 className="font-black text-navy-900">برنامه کلاس</h2>
             <dl className="mt-4 grid gap-3 sm:grid-cols-2">
               {[
-                { icon: CalendarDays, k: "تاریخ شروع", v: cls.startDate },
+                { icon: CalendarDays, k: "تاریخ شروع", v: formatJalaliDateLong(cls.startDate) },
                 { icon: Clock3, k: "روزها و ساعت", v: `${cls.days} • ${cls.time}` },
                 { icon: UsersRound, k: "تعداد جلسات", v: `${toFa(cls.sessions)} جلسه` },
                 { icon: MapPin, k: "محل برگزاری", v: cls.location },
@@ -158,6 +159,23 @@ export default async function ClassDetailPage({
               مدرس: <strong className="text-navy-900">{cls.instructor}</strong>
             </p>
           </section>
+
+          {cls.sessionSchedule?.length ? (
+            <section className="rounded-xl bg-card p-4 ring-1 ring-ink-900/5" aria-labelledby="class-session-schedule">
+              <h2 id="class-session-schedule" className="font-black text-navy-900">تقویم جلسات</h2>
+              <ol className="mt-4 grid gap-2 sm:grid-cols-2">
+                {cls.sessionSchedule.map((session, index) => (
+                  <li key={session.id} className="rounded-xl bg-sand-100 px-4 py-3 text-sm">
+                    <div className="flex items-start justify-between gap-3">
+                      <strong className="text-navy-900">جلسه {toFa(index + 1)}{session.title ? ` — ${session.title}` : ""}</strong>
+                      {session.status !== "scheduled" ? <span className="rounded-full bg-card px-2 py-0.5 text-xs text-ink-600">{session.status === "cancelled" ? "لغوشده" : session.status === "postponed" ? "به‌تعویق‌افتاده" : "برگزارشده"}</span> : null}
+                    </div>
+                    <p className="mt-1 text-ink-600">{formatJalaliDateLong(session.date)}، {session.startTime} تا {session.endTime}</p>
+                  </li>
+                ))}
+              </ol>
+            </section>
+          ) : null}
 
           {lessons.length > 0 ? (
             <section className="rounded-xl bg-card p-4 ring-1 ring-ink-900/5" aria-labelledby="class-curriculum-title">

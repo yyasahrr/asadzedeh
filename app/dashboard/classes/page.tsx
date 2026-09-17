@@ -4,6 +4,7 @@ import { BookOpen, CalendarDays, Clock3, CreditCard, MapPin } from "lucide-react
 import { getSessionUser } from "@/lib/auth";
 import { getClasses, getOrders } from "@/lib/store";
 import { toFa } from "@/lib/format";
+import { formatJalaliDateLong } from "@/lib/jalali-date";
 
 export const metadata: Metadata = { title: "کلاس‌های من" };
 export const dynamic = "force-dynamic";
@@ -66,7 +67,7 @@ export default async function MyClassesPage() {
                 </div>
               </dl>
               <p className="mt-4 text-sm leading-7 text-ink-600">
-                شروع دوره: <strong className="text-navy-900">{cls.startDate}</strong> • {toFa(cls.sessions)} جلسه • مدرس: {cls.instructor}
+                شروع دوره: <strong className="text-navy-900">{formatJalaliDateLong(cls.startDate)}</strong> • {toFa(cls.sessions)} جلسه • مدرس: {cls.instructor}
                 <br />
                 لطفاً ۱۵ دقیقه زودتر در کارگاه حاضر باشید. ابزار و مواد اولیه در کارگاه در اختیار شما قرار می‌گیرد.
               </p>

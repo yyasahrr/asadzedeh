@@ -6,6 +6,8 @@ import { Button } from "../ui/Button";
 export function MasterSpotlight() {
   const instructors = getInstructors();
   const master = instructors.find((i) => i.featured && i.active !== false) ?? instructors[0];
+  if (!master) return null;
+  const experience = master.experience?.trim() || "سابقه حرفه‌ای";
   return (
     <section className="bg-sand-50" aria-labelledby="master">
       <div className="section-pad shell grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
@@ -21,7 +23,7 @@ export function MasterSpotlight() {
             />
           </div>
           <div className="absolute -bottom-5 left-6 rounded-2xl bg-navy-900 px-5 py-3 text-white shadow-lift">
-            <p className="text-2xl font-black">۳۲ سال</p>
+            <p className="text-2xl font-black">{experience}</p>
             <p className="text-xs text-white/70">تجربه بافت و آموزش</p>
           </div>
         </div>
