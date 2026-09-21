@@ -65,6 +65,15 @@ export function jalaliSelectionToStoredDate(year: number, month: number, day: nu
   return jalaliToGregorian(`${year}/${String(month).padStart(2, "0")}/${String(day).padStart(2, "0")}`);
 }
 
+/** Read legacy display-only values such as "۲۵ مهر" without changing storage. */
+export function legacyJalaliLabelToGregorian(value: string, year: number): string | null {
+  const normalized = toEnglishDigits(value.trim());
+  const month = JALALI_MONTHS.findIndex(name => normalized.includes(name));
+  const day = Number(normalized.match(/\d{1,2}/)?.[0]);
+  if (month < 0 || !Number.isInteger(day)) return null;
+  return jalaliSelectionToStoredDate(year, month + 1, day);
+}
+
 export function formatJalaliDate(value?: string | null): string {
   if (!value) return "—";
   const jalali = gregorianToJalali(value);

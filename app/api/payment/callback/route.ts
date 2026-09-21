@@ -35,6 +35,7 @@ export async function GET(req: Request) {
   }
 
   const pendingPayment = orderPayments.find((p) => p.status === "pending") ?? orderPayments[0];
+  if (!pendingPayment) redirect(`/checkout/failed?order=${orderId}&reason=payment_not_found`);
   const callback = parsePaymentCallback(url.searchParams, pendingPayment?.provider);
   const authority = callback.authority;
 
@@ -55,7 +56,7 @@ export async function GET(req: Request) {
     redirect(`/checkout/failed?order=${orderId}&reason=cancelled`);
   }
 
-  if (order.authority && order.authority !== authority) {
+  if (!pendingPayment.authority || pendingPayment.authority !== authority || (order.authority && order.authority !== authority)) {
     await audit({
       action: "order.security",
       level: "security",
@@ -72,7 +73,7 @@ export async function GET(req: Request) {
     redirect(`/checkout/success?order=${duplicateTx.orderId}`);
   }
 
-  const v = await verifyPayment(order, authority);
+  const v = await verifyPayment(order, authority, pendingPayment.provider);
   if (v.ok) {
     const payment =
       getPayments().find((p) => p.orderId === orderId && p.status !== "paid") ??

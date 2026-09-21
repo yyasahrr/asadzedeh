@@ -1,5 +1,5 @@
 import type { Order } from "./types";
-import { demoPaymentAllowed } from "./env";
+import { appUrl, demoPaymentAllowed } from "./env";
 import { effectivePaymentSettings } from "./integrations";
 import { logger } from "./logger";
 import { getDriver } from "./gateways/registry";
@@ -33,6 +33,10 @@ interface VerifyResult {
 
 const NOT_CONFIGURED = "درگاه پرداخت پیکربندی نشده است";
 
+export function paymentCallbackUrl(): string {
+  return `${appUrl()}/api/payment/callback`;
+}
+
 export function isDemoPayment(): boolean {
   const payment = effectivePaymentSettings();
   if (!demoPaymentAllowed()) return false;
@@ -57,9 +61,10 @@ export function paymentGatewayId() {
 }
 
 /** Credentials for the configured gateway, or null when it cannot run. */
-function resolve(): { credentials: GatewayCredentials; driver: NonNullable<ReturnType<typeof getDriver>> } | { error: string } {
+function resolve(provider?: string): { credentials: GatewayCredentials; driver: NonNullable<ReturnType<typeof getDriver>> } | { error: string } {
   const payment = effectivePaymentSettings();
-  const driver = getDriver(payment.provider);
+  if (provider && provider !== payment.provider) return { error: "اعتبارنامه درگاه ثبت‌شده برای این تراکنش در دسترس نیست" };
+  const driver = getDriver((provider ?? payment.provider) as Parameters<typeof getDriver>[0]);
   if (!driver) return { error: "درگاه پرداخت پشتیبانی‌نشده" };
   if (!payment.merchantId) return { error: NOT_CONFIGURED };
   // OAuth gateways need both halves of the pair.
@@ -89,11 +94,11 @@ export async function requestPayment(order: Order, callbackUrl: string): Promise
   return result;
 }
 
-export async function verifyPayment(order: Order, authority: string): Promise<VerifyResult> {
+export async function verifyPayment(order: Order, authority: string, provider?: string): Promise<VerifyResult> {
   if (isDemoPayment()) {
     return { ok: true, refId: `DEMO-${Date.now().toString(36).toUpperCase()}` };
   }
-  const r = resolve();
+  const r = resolve(provider);
   if ("error" in r) return { ok: false, error: r.error };
 
   const result = await r.driver.verify(order, authority, r.credentials);

@@ -53,12 +53,14 @@ type MeliPayamakResponse = {
  */
 function meliPayamakOk(body: unknown): SmsResult {
   const data = (body ?? {}) as MeliPayamakResponse;
-  const value = Number(data.Value);
-  const succeeded = data.RetStatus === 1 || data.IsSuccessful === true;
-  if (succeeded && Number.isFinite(value) && value > 0) return { ok: true };
-  const detail =
-    data.StrRetStatus || data.Message || `پاسخ نامعتبر (${String(data.Value ?? "بدون شناسه")})`;
-  return { ok: false, error: `خطای ملی پیامک: ${detail}` };
+  const rawValue = String(data.Value ?? "").trim();
+  const value = Number(rawValue);
+  const providerError = decodeMeliPayamakBaseServiceError(rawValue);
+  const statusOk = data.RetStatus === 1;
+  const textOk = data.StrRetStatus === undefined || /^ok$/i.test(data.StrRetStatus.trim());
+  if (!providerError && statusOk && textOk && /^\d+$/.test(rawValue) && Number.isSafeInteger(value) && value > 0) return { ok: true, receiptId: rawValue };
+  const detail = providerError || data.StrRetStatus || data.Message || "پاسخ نامعتبر از سامانه پیامکی";
+  return { ok: false, error: `خطای ملی پیامک: ${detail}`, providerCode: rawValue || undefined };
 }
 
 /** MeliPayamak/FaraPayamak REST API. `apiKey` is the panel username. */
@@ -86,11 +88,11 @@ const melipayamak: SmsDriver = {
 
   async sendCode(phone, code, c) {
     if (!c.secret) return { ok: false, error: "رمز وب‌سرویس ملی پیامک لازم است" };
-    if (!c.templateId) return this.send([phone], `کد ورود اسدزاده: ${code}`, c);
-    const form = new URLSearchParams({ username: c.apiKey, password: c.secret, text: code, to: phone, bodyId: c.templateId });
+    if (!/^\d+$/.test(c.templateId)) return { ok: false, error: "Body ID تأییدشده برای کد ورود تنظیم نشده است" };
+    if (!validIranianMobile(phone)) return { ok: false, error: "شماره موبایل معتبر نیست" };
+    const form = new URLSearchParams({ username: c.apiKey, password: c.secret, text: serializeMeliPayamakTemplateParams([code]), to: phone, bodyId: c.templateId });
     const { body } = await json("https://rest.payamak-panel.com/api/SendSMS/BaseServiceNumber", {
       event: "sms.melipayamak.template",
-      retry: { attempts: 2 },
       method: "POST",
       headers: { "content-type": "application/x-www-form-urlencoded" },
       body: form.toString(),
@@ -99,25 +101,51 @@ const melipayamak: SmsDriver = {
   },
 
   async sendTemplate(phone, templateId, parameters, c) {
-    if (!c.secret || !templateId) return { ok: false, error: "رمز وب‌سرویس و شناسه قالب ملی پیامک لازم است" };
+    if (!c.secret || !/^\d+$/.test(templateId)) return { ok: false, error: "اعتبارنامه و Body ID معتبر ملی پیامک لازم است" };
+    if (!validIranianMobile(phone)) return { ok: false, error: "شماره موبایل معتبر نیست" };
     const form = new URLSearchParams({
       username: c.apiKey,
       password: c.secret,
-      text: parameters.join(";"),
+      text: serializeMeliPayamakTemplateParams(parameters),
       to: phone,
       bodyId: templateId,
     });
     const { body } = await json("https://rest.payamak-panel.com/api/SendSMS/BaseServiceNumber", {
-      event: "sms.melipayamak.template", retry: { attempts: 2 }, method: "POST",
+      event: "sms.melipayamak.template", method: "POST",
       headers: { "content-type": "application/x-www-form-urlencoded" }, body: form.toString(),
     });
     return meliPayamakOk(body);
   },
 };
 
+const MELIPAYAMAK_BASE_SERVICE_ERRORS: Record<string, string> = {
+  "-110": "حساب به APIKey به‌جای رمز عبور نیاز دارد", "-109": "IP سرور برای وب‌سرویس ملی پیامک مجاز نشده است", "-108": "IP سرور توسط سامانه پیامکی مسدود شده است؛ تنظیمات API را بررسی کنید",
+  "-10": "استفاده از لینک در متغیرهای قالب مجاز نیست", "-6": "خطای داخلی سامانه پیامکی", "-5": "تعداد یا ترتیب متغیرهای قالب صحیح نیست", "-4": "Body ID نامعتبر است یا هنوز تأیید نشده است",
+  "-3": "خط خدماتی اشتراکی تعریف نشده است", "-2": "در هر درخواست فقط یک شماره موبایل مجاز است", "-1": "دسترسی وب‌سرویس غیرفعال است", "0": "نام کاربری یا اعتبارنامه وب‌سرویس صحیح نیست",
+  "2": "اعتبار حساب پیامکی کافی نیست", "6": "سامانه پیامکی در حال به‌روزرسانی است", "7": "یکی از متغیرهای قالب شامل واژه فیلترشده است", "10": "حساب کاربری غیرفعال است",
+  "11": "پیامک ارسال نشد", "12": "مدارک حساب کاربری کامل نیست", "18": "شماره موبایل معتبر نیست", "19": "سقف ارسال روزانه API پر شده است",
+};
+
+export function decodeMeliPayamakBaseServiceError(value: unknown): string | undefined {
+  return MELIPAYAMAK_BASE_SERVICE_ERRORS[String(value).trim()];
+}
+
+export function serializeMeliPayamakTemplateParams(params: string[]): string {
+  if (params.length === 0) throw new Error("متغیرهای قالب پیامک خالی است");
+  return params.map((value) => {
+    const normalized = value.trim();
+    if (!normalized || normalized.includes(";") || /[\r\n]/.test(normalized)) throw new Error("مقدار متغیر قالب پیامک معتبر نیست");
+    return normalized;
+  }).join(";");
+}
+
+function validIranianMobile(phone: string): boolean { return /^09\d{9}$/.test(phone); }
+
 export interface SmsResult {
   ok: boolean;
   error?: string;
+  providerCode?: string;
+  receiptId?: string;
 }
 
 export interface SmsDriver {
@@ -143,6 +171,7 @@ async function json(url: string, init: FetchOptions): Promise<{ res: Response; b
   } catch {
     // Some panels answer a bare string or empty body; that is handled by the caller.
   }
+  if (!res.ok) return { res, body: { RetStatus: 0, StrRetStatus: `پاسخ HTTP نامعتبر (${res.status})` } };
   return { res, body };
 }
 

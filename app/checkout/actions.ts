@@ -10,7 +10,7 @@ import type { CartItem } from "@/lib/cart";
 import { getSessionUser } from "@/lib/auth";
 import { buildLines, linesSubtotal } from "@/lib/checkout-lines";
 import { checkoutRequiresAccount } from "@/lib/checkout-access";
-import { configuredPaymentProvider, isDemoPayment, paymentConfigurationError, requestPayment } from "@/lib/payment";
+import { configuredPaymentProvider, isDemoPayment, paymentCallbackUrl, paymentConfigurationError, requestPayment } from "@/lib/payment";
 import { finalizePaidOrder, releaseOrder } from "@/lib/order-payment";
 import { reserveOrderLines, writeOrderItems } from "@/lib/db/commerce";
 import { getEnrollments, getOrders, getPayments, getSettings, getUsers, syncCollections, withStoreLock, writeDbAsync } from "@/lib/store";
@@ -235,10 +235,13 @@ export async function startCheckout(fd: FormData) {
 
   const order = getOrders().find((o) => o.id === id);
   if (!order) redirect("/checkout/failed?reason=notfound");
-  const base = getSettings().site.siteUrl.replace(/\/$/, "") || "http://localhost:3000";
-  const r = await requestPayment(order, `${base}/api/payment/callback`);
+  const r = await requestPayment(order, paymentCallbackUrl());
   if (!r.ok || !r.payUrl || !r.authority) {
     await releaseOrder(id);
+    await writeDbAsync({
+      orders: getOrders().map((o) => (o.id === id ? { ...o, status: "لغو شده" } : o)),
+      payments: getPayments().map((p) => (p.id === paymentId && p.status === "pending" ? { ...p, status: "failed" } : p)),
+    });
     redirect(`/checkout/failed?order=${id}&reason=${encodeURIComponent(r.error ?? "خطای درگاه")}`);
   }
   await writeDbAsync({

@@ -14,6 +14,12 @@ type EventPayloads = {
   orderShipped: { customerName: string; orderId: string; trackingCode: string };
   certificateReady: { customerName: string; certificateCode: string };
 };
+export const MELIPAYAMAK_TEMPLATE_DEFINITIONS = {
+  otp: { params: ["code"] }, orderCreated: { params: ["customerName", "orderId"] },
+  paymentSuccess: { params: ["customerName", "orderId", "amount"] }, courseEnrollment: { params: ["customerName", "courseTitle"] },
+  classEnrollment: { params: ["customerName", "classTitle"] }, orderShipped: { params: ["customerName", "orderId", "trackingCode"] },
+  certificateReady: { params: ["customerName", "certificateCode"] },
+} as const satisfies Record<SmsTemplateEvent, { params: readonly string[] }>;
 const eventParameters: { [E in BusinessEvent]: (payload: EventPayloads[E]) => string[] } = {
   orderCreated: (p) => [p.customerName, p.orderId], paymentSuccess: (p) => [p.customerName, p.orderId, p.amount],
   courseEnrollment: (p) => [p.customerName, p.courseTitle], classEnrollment: (p) => [p.customerName, p.classTitle],

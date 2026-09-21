@@ -15,6 +15,11 @@ import type { GatewayCredentials, PaymentDriver, PaymentRequestInput, PaymentReq
 const BASE = "https://gateway.zibal.ir/v1";
 const SANDBOX_MERCHANT = "zibal";
 
+function safeGatewayError(result?: number): string {
+  if (result === 102 || result === 103 || result === 104) return "شناسه پذیرنده توسط درگاه پذیرفته نشد";
+  return "درگاه پرداخت پاسخ معتبر نداد";
+}
+
 function merchant(c: GatewayCredentials): string {
   return c.sandbox ? SANDBOX_MERCHANT : c.merchantId;
 }
@@ -42,15 +47,20 @@ export const zibal: PaymentDriver = {
           description: `اسدزاده — ${order.item}`,
         }),
       });
-      const data = (await res.json()) as { result?: number; trackId?: number | string; message?: string };
-      if (data.result === 100 && data.trackId !== undefined) {
-        return { ok: true, authority: String(data.trackId), payUrl: `https://gateway.zibal.ir/start/${data.trackId}` };
+      if (!res.ok) {
+        logger.warn({ event: "payment.request.http", gateway: "zibal", orderId: order.id, status: res.status });
+        return { ok: false, error: "درگاه پرداخت پاسخ معتبر نداد" };
       }
-      logger.warn({ event: "payment.request.failed", gateway: "zibal", orderId: order.id, result: data.result, message: data.message });
-      return { ok: false, error: data.message || "خطای درگاه پرداخت" };
+      const data = (await res.json()) as { result?: number; trackId?: number | string; message?: string };
+      const trackId = String(data.trackId ?? "");
+      if (data.result === 100 && /^\d+$/.test(trackId)) {
+        return { ok: true, authority: trackId, payUrl: `https://gateway.zibal.ir/start/${encodeURIComponent(trackId)}` };
+      }
+      logger.warn({ event: "payment.request.failed", gateway: "zibal", orderId: order.id, result: data.result });
+      return { ok: false, error: safeGatewayError(data.result) };
     } catch (e) {
       logger.error({ event: "payment.request.error", gateway: "zibal", orderId: order.id, err: e instanceof Error ? e.message : String(e) });
-      return { ok: false, error: e instanceof Error ? e.message : "خطای اتصال به درگاه" };
+      return { ok: false, error: "ارتباط با درگاه برقرار نشد" };
     }
   },
 
@@ -65,6 +75,7 @@ export const zibal: PaymentDriver = {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ merchant: merchant(c), trackId: authority }),
       });
+      if (!res.ok) return { ok: false, error: "درگاه پرداخت پاسخ معتبر نداد" };
       const data = (await res.json()) as {
         result?: number;
         status?: number;
@@ -86,10 +97,10 @@ export const zibal: PaymentDriver = {
           ...(data.result === 201 ? { alreadyVerified: true } : {}),
         };
       }
-      return { ok: false, error: data.message || "تأیید پرداخت ناموفق بود" };
+      return { ok: false, error: "تأیید پرداخت ناموفق بود" };
     } catch (e) {
       logger.error({ event: "payment.verify.error", gateway: "zibal", orderId: order.id, err: e instanceof Error ? e.message : String(e) });
-      return { ok: false, error: e instanceof Error ? e.message : "خطای اتصال به درگاه" };
+      return { ok: false, error: "ارتباط با درگاه برقرار نشد" };
     }
   },
 };

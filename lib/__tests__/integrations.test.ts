@@ -194,6 +194,20 @@ describe("integration configuration", () => {
 });
 
 describe("MeliPayamak driver", () => {
+  it("serializes template parameters in declared order and rejects separators", async () => {
+    const { sms } = await loadModules({});
+    expect(sms.serializeMeliPayamakTemplateParams([" A ", "B", "C"])).toBe("A;B;C");
+    expect(() => sms.serializeMeliPayamakTemplateParams(["A;B"])).toThrow();
+  });
+
+  it.each([
+    ["-110", "APIKey"], ["-109", "IP سرور"], ["-108", "مسدود"], ["-10", "لینک"],
+    ["-5", "ترتیب متغیر"], ["-4", "Body ID"], ["18", "موبایل"], ["19", "روزانه"],
+  ])("decodes documented BaseServiceNumber error %s", async (value, message) => {
+    const { sms } = await loadModules({});
+    expect(sms.decodeMeliPayamakBaseServiceError(value)).toContain(message);
+  });
+
   it("posts the documented form fields to the panel endpoint", async () => {
     const calls = stubFetch(() => jsonResponse({ RetStatus: 1, StrRetStatus: "OK", Value: 12345 }));
     const { sms } = await loadModules({});
@@ -241,17 +255,47 @@ describe("MeliPayamak driver", () => {
     expect(form.has("from")).toBe(false);
   });
 
-  it("falls back to a freeform code message when no template is set", async () => {
+  it("sends multiple template values to one recipient in exact order without retry", async () => {
+    const calls = stubFetch(() => jsonResponse({ RetStatus: 1, StrRetStatus: "Ok", Value: "123456789" }));
+    const { sms } = await loadModules({});
+    const result = await sms.getSmsDriver("melipayamak")!.sendTemplate!("09121112233", "74812", ["A", "B", "C"], {
+      apiKey: "user", secret: "credential", sender: "", templateId: "74812",
+    });
+    expect(result).toMatchObject({ ok: true, receiptId: "123456789" });
+    expect(calls).toHaveLength(1);
+    const form = new URLSearchParams(String(calls[0].init.body));
+    expect(form.get("to")).toBe("09121112233");
+    expect(form.get("text")).toBe("A;B;C");
+  });
+
+  it("fails on non-2xx, malformed JSON, and documented negative values", async () => {
+    for (const response of [
+      new Response("{}", { status: 503 }),
+      new Response("not-json", { status: 200 }),
+      jsonResponse({ RetStatus: 1, StrRetStatus: "Ok", Value: "-110" }),
+    ]) {
+      stubFetch(() => response);
+      const { sms } = await loadModules({});
+      const result = await sms.getSmsDriver("melipayamak")!.sendTemplate!("09121112233", "1", ["A"], {
+        apiKey: "u", secret: "p", sender: "", templateId: "1",
+      });
+      expect(result.ok).toBe(false);
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("fails closed without an OTP Body ID and never falls back to freeform", async () => {
     const calls = stubFetch(() => jsonResponse({ RetStatus: 1, Value: 999 }));
     const { sms } = await loadModules({});
-    await sms.getSmsDriver("melipayamak")!.sendCode!("09121112233", "482913", {
+    const result = await sms.getSmsDriver("melipayamak")!.sendCode!("09121112233", "482913", {
       apiKey: "u",
       secret: "p",
       sender: "3000505",
       templateId: "",
     });
-    expect(calls[0].url).toBe("https://rest.payamak-panel.com/api/SendSMS/SendSMS");
-    expect(new URLSearchParams(String(calls[0].init.body)).get("text")).toContain("482913");
+    expect(result.ok).toBe(false);
+    expect(result.error).toContain("Body ID");
+    expect(calls).toHaveLength(0);
   });
 
   it("reports the panel's own error text when it refuses", async () => {
@@ -264,10 +308,10 @@ describe("MeliPayamak driver", () => {
       templateId: "",
     });
     expect(result.ok).toBe(false);
-    expect(result.error).toContain("اعتبار کافی نیست");
+    expect(result.error).toContain("دسترسی وب‌سرویس غیرفعال");
   });
 
-  it("accepts the newer IsSuccessful response shape", async () => {
+  it("does not accept a non-contract IsSuccessful-only response", async () => {
     stubFetch(() => jsonResponse({ IsSuccessful: true, Message: "success", Value: "12345" }));
     const { sms } = await loadModules({});
     const result = await sms.getSmsDriver("melipayamak")!.send(["09121112233"], "x", {
@@ -276,7 +320,7 @@ describe("MeliPayamak driver", () => {
       sender: "3000505",
       templateId: "",
     });
-    expect(result.ok).toBe(true);
+    expect(result.ok).toBe(false);
   });
 
   it("refuses a body that claims success but carries no reception id", async () => {
@@ -357,7 +401,7 @@ describe("Zibal driver", () => {
     const { zibal } = await loadModules({});
     const result = await zibal.request({ order: order(), callbackUrl: "https://x.test/cb" }, creds);
     expect(result.ok).toBe(false);
-    expect(result.error).toBe("merchant not found");
+    expect(result.error).toContain("شناسه پذیرنده");
     expect(result.payUrl).toBeUndefined();
   });
 
@@ -392,7 +436,7 @@ describe("Zibal driver", () => {
     const { zibal } = await loadModules({});
     const result = await zibal.verify(order(), "88776655", creds);
     expect(result.ok).toBe(false);
-    expect(result.error).toBe("socket hang up");
+    expect(result.error).toBe("ارتباط با درگاه برقرار نشد");
   });
 });
 
@@ -424,5 +468,20 @@ describe("payment dispatcher in production", () => {
 
     const verified = await payment.verifyPayment(order(), "424242");
     expect(verified).toMatchObject({ ok: true, refId: "999" });
+  });
+
+  it("builds the production callback from appUrl, independent of stored siteUrl", async () => {
+    const { payment, store } = await loadModules({ ZIBAL_MERCHANT: "merchant" });
+    store.writeDb({ settings: { ...store.getSettings(), site: { ...store.getSettings().site, siteUrl: "https://stale.invalid" } } });
+    expect(payment.paymentCallbackUrl()).toBe("https://ghalibafiasadzadeh.ir/api/payment/callback");
+  });
+
+  it("does not verify a historical payment through a newly selected provider", async () => {
+    const calls = stubFetch(() => jsonResponse({ result: 100, refNumber: 1, amount: 17_500_000 }));
+    const { payment } = await loadModules({ ZIBAL_MERCHANT: "merchant", PAYMENT_PROVIDER: "zibal" });
+    const result = await payment.verifyPayment(order(), "42", "zarinpal");
+    expect(result.ok).toBe(false);
+    expect(result.error).toContain("در دسترس نیست");
+    expect(calls).toHaveLength(0);
   });
 });

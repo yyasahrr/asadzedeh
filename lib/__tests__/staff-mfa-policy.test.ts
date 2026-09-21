@@ -3,11 +3,9 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 /**
  * Staff 2FA policy.
  *
- * The admin-toggleable setting is a convenience for staging and local
- * development. A production deployment must not be able to run with staff 2FA
- * switched off, because one leaked password would then hand over the admin
- * panel. These tests pin that the override holds and that the exemptions still
- * behave.
+ * TOTP is optional by default. Only the explicit stored policy may require it;
+ * a production environment or stale account secret must not silently turn a
+ * selected password/OTP login into a chained login.
  *
  * `getEnv()` memoises on first call, so each case resets the module registry and
  * re-imports — mutating NODE_ENV in place would not be observed.
@@ -50,9 +48,9 @@ describe("staffMfaRequired", () => {
     expect(auth.staffMfaRequired()).toBe(false);
   });
 
-  it("is true in production even when the setting is off", async () => {
+  it("does not silently enable 2FA in production", async () => {
     const { auth } = await load("production", false);
-    expect(auth.staffMfaRequired()).toBe(true);
+    expect(auth.staffMfaRequired()).toBe(false);
   });
 
   it("stays true in production when the setting is already on", async () => {
@@ -89,12 +87,19 @@ describe("needsMfa", () => {
     expect(auth.needsMfa(staff({ role: "instructor", totpEnabled: true }))).toBe("none");
   });
 
-  it("requires enrolment only from super_admin in production", async () => {
+  it("does not challenge super_admin when the explicit policy is off", async () => {
     const { auth } = await load("production", false);
-    expect(auth.needsMfa(staff({ role: "super_admin" }))).toBe("enrol");
-    expect(auth.needsMfa(staff({ role: "super_admin", totpEnabled: true }))).toBe("verify");
+    expect(auth.needsMfa(staff({ role: "super_admin" }))).toBe("none");
+    expect(auth.needsMfa(staff({ role: "super_admin", totpEnabled: true }))).toBe("none");
     for (const role of ["admin", "manager", "editor", "support", "instructor"]) {
       expect(auth.needsMfa(staff({ role })), role).toBe("none");
     }
+  });
+
+  it("honours an explicit owner 2FA policy without affecting other roles", async () => {
+    const { auth } = await load("production", true);
+    expect(auth.needsMfa(staff({ role: "super_admin" }))).toBe("enrol");
+    expect(auth.needsMfa(staff({ role: "super_admin", totpEnabled: true }))).toBe("verify");
+    expect(auth.needsMfa(staff({ role: "admin", totpEnabled: true }))).toBe("none");
   });
 });

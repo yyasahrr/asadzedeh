@@ -29,11 +29,11 @@ const savedMessages: Record<string, string> = {
 export default async function SettingsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ saved?: string }>;
+  searchParams: Promise<{ saved?: string; error?: string }>;
 }) {
   const user = await getSessionUser();
   if (!can(user, "settings")) return <Denied />;
-  const { saved } = await searchParams;
+  const { saved, error } = await searchParams;
   const settings = getSettings();
   // Credentials supplied through the host's environment win over what is stored
   // here, and the operator has to be told that — otherwise a saved form looks
@@ -64,12 +64,14 @@ export default async function SettingsPage({
           {savedMessages[saved]}
         </p>
       )}
+      {error && <p className="rounded-2xl bg-red-50 px-5 py-3.5 text-sm font-bold text-red-700 ring-1 ring-red-600/20 ring-inset">{error}</p>}
 
       <form action={saveSmsSettings} className="rounded-2xl bg-card p-6 shadow-card ring-1 ring-ink-900/5">
         <h2 className="flex items-center gap-2 font-extrabold text-navy-900">
           <MessageSquareText className="h-5 w-5 text-teal-600" />
           اتصال به سامانه پیامکی
         </h2>
+        <p className="mt-3 text-sm font-bold text-ink-700">ملی پیامک · {env.sms.configured ? "پیکربندی‌شده" : "ناقص"} · منبع: {env.sms.fromEnvironment ? "Environment" : "Admin"} · قالب‌ها: {env.sms.templateConfigurationReady ? "آماده" : "نیازمند تکمیل"}</p>
         <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           <div>
             <FieldLabel htmlFor="sms-provider">سامانه</FieldLabel>
@@ -84,11 +86,11 @@ export default async function SettingsPage({
           </div>
           <div>
             <FieldLabel htmlFor="sms-key">کلید API / نام کاربری</FieldLabel>
-            <Input id="sms-key" name="apiKey" defaultValue={settings.sms.apiKey} dir="ltr" className="text-left" />
+            <Input id="sms-key" name="apiKey" defaultValue="" placeholder={settings.sms.apiKey ? "ذخیره شده — برای تغییر وارد کنید" : ""} dir="ltr" className="text-left" autoComplete="off" />
           </div>
           <div>
-            <FieldLabel htmlFor="sms-secret">رمز وب‌سرویس</FieldLabel>
-            <Input id="sms-secret" name="secret" type="password" defaultValue={settings.sms.secret} dir="ltr" className="text-left" autoComplete="off" />
+            <FieldLabel htmlFor="sms-secret">رمز وب‌سرویس یا APIKey</FieldLabel>
+            <Input id="sms-secret" name="secret" type="password" defaultValue="" placeholder={settings.sms.secret ? "ذخیره شده — برای تغییر وارد کنید" : ""} dir="ltr" className="text-left" autoComplete="new-password" />
           </div>
           <div>
             <FieldLabel htmlFor="sms-sender">شماره فرستنده (اختیاری)</FieldLabel>
@@ -100,8 +102,8 @@ export default async function SettingsPage({
           </div>
         </div>
         <p className="mt-3 text-[13px] leading-7 text-ink-500">
-          برای ملی پیامک، نام کاربری را در فیلد کلید و رمز وب‌سرویس را جداگانه وارد کنید؛ شناسه قالب برای
-          ارسال کد از خط خدماتی اشتراکی استفاده می‌شود. ورود با کد پیامکی در صفحه ورود فعال است.
+          برای ملی پیامک، نام کاربری و اعتبارنامه‌ای را که پنل تعیین کرده (رمز وب‌سرویس یا APIKey) وارد کنید.
+          ارسال تراکنشی فقط از قالب تأییدشده خط خدماتی اشتراکی انجام می‌شود. در خطای ‎-109، IP سرور را در پنل ملی پیامک مجاز کنید.
         </p>
         <div className="mt-5 border-t border-ink-900/10 pt-5">
           <h3 className="font-extrabold text-navy-900">قالب‌های پیامک خدماتی</h3>

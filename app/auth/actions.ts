@@ -14,7 +14,6 @@ import {
   isInstructor,
   isStaff,
   newToken,
-  signPayload,
   verifyPassword,
   verifySigned,
 } from "@/lib/auth";
@@ -30,6 +29,7 @@ import { resetPasswordSchema } from "@/lib/validation/auth";
 import { getSettings, getUserById, getUserByPhone, getUsers, getSessions, writeDb } from "@/lib/store";
 import { rateLimit, LIMITS } from "@/lib/rate-limit";
 import type { User } from "@/lib/types";
+import { validAuthIntent } from "@/lib/auth-intent";
 import {
   createOtpChallenge,
   OTP_CHALLENGE_COOKIE,
@@ -116,6 +116,14 @@ export async function register(fd: FormData) {
 }
 
 export async function login(fd: FormData) {
+  const rawNext = safeNextPath(String(fd.get("next") ?? ""), "");
+  const nextQuery = rawNext ? `&next=${encodeURIComponent(rawNext)}` : "";
+  if (!validAuthIntent({ method: fd.get("method"), code: fd.get("code") }, "password")) {
+    redirect(`/auth?tab=login&error=method${nextQuery}`);
+  }
+  const { ip } = await requestContext();
+  const limited = rateLimit(`login:${ip}`, LIMITS.login.limit, LIMITS.login.windowMs);
+  if (!limited.ok) redirect(`/auth?tab=login&error=locked${nextQuery}`);
   const parsed = validate(loginSchema, {
     phone: fd.get("phone"),
     password: fd.get("password"),
@@ -123,7 +131,7 @@ export async function login(fd: FormData) {
   });
   if (!parsed.ok) {
     await audit({ action: "auth.login.rejected", level: "security", detail: { field: parsed.issues[0]?.field } });
-    redirect("/auth?error=validation");
+    redirect(`/auth?tab=login&error=validation${nextQuery}`);
   }
   const { phone, password, next } = parsed.data;
   const foundUser = getUserByPhone(phone);
@@ -142,17 +150,12 @@ export async function login(fd: FormData) {
       actor: foundUser ? { id: foundUser.id, name: foundUser.name, role: foundUser.role } : undefined,
       detail: { reason: blockReason },
     });
-    redirect("/auth?error=invalid");
+    redirect(`/auth?tab=login&error=invalid${nextQuery}`);
   }
 
   if (user?.lockedUntil && Date.parse(user.lockedUntil) > Date.now()) {
     await audit({ action: "auth.login.locked", level: "security", actor: { id: user.id, name: user.name, role: user.role } });
-    redirect("/auth?error=locked");
-  }
-
-  if (user && user.role !== "super_admin") {
-    await audit({ action: "auth.password.non_owner_denied", level: "security", actor: { id: user.id, name: user.name, role: user.role } });
-    redirect("/auth?tab=otp&error=use-otp");
+    redirect(`/auth?tab=login&error=locked${nextQuery}`);
   }
 
   if (!user || !verifyPassword(password, user.passwordHash)) {
@@ -172,29 +175,15 @@ export async function login(fd: FormData) {
         actor: { id: user.id, name: user.name, role: user.role },
         detail: { attempt: failed },
       });
-      if (lock) redirect("/auth?error=locked");
+      if (lock) redirect(`/auth?tab=login&error=locked${nextQuery}`);
     } else {
       await audit({ action: "auth.login.failed", level: "security", detail: { phone } });
     }
-    redirect("/auth?error=invalid");
-  }
-
-  // Second factor?
-  if (user.role === "super_admin" && user.totp?.enabled) {
-    const jar = await cookies();
-    const ticket = signPayload({ uid: user.id, exp: Date.now() + 5 * 60_000, next });
-    jar.set(MFA_COOKIE, ticket, { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: 300 });
-    await audit({ action: "auth.2fa.challenge", level: "security", actor: { id: user.id, name: user.name, role: user.role } });
-    redirect("/auth/verify");
-  }
-
-  if (user.role === "super_admin") {
-    await createSession(user, false);
-    redirect("/account/security?required=1");
+    redirect(`/auth?tab=login&error=invalid${nextQuery}`);
   }
 
   await createSession(user, false);
-  await audit({ action: "auth.login", actor: { id: user.id, name: user.name, role: user.role } });
+  await audit({ action: "auth.login", actor: { id: user.id, name: user.name, role: user.role }, detail: { method: "password" } });
   redirect(safeNextPath(next, homeFor(user)));
 }
 
@@ -359,6 +348,7 @@ export async function resetPasswordAction(fd: FormData) {
 export async function requestOtpAction(fd: FormData) {
   const phone = normalizeDigits(String(fd.get("phone") ?? "").trim());
   const next = safeNextPath(String(fd.get("next") ?? ""), "");
+  if (!validAuthIntent({ method: fd.get("method"), password: fd.get("password") }, "otp")) redirect(`/auth?tab=otp&error=method${next ? `&next=${encodeURIComponent(next)}` : ""}`);
   if (!/^09\d{9}$/.test(phone)) redirect(`/auth?tab=otp&error=validation${next ? `&next=${encodeURIComponent(next)}` : ""}`);
   const limited = rateLimit(`otp:req:${phone || "anon"}`, LIMITS.otp.limit, LIMITS.otp.windowMs);
   if (!limited.ok) redirect(`/auth?tab=otp&error=locked${next ? `&next=${encodeURIComponent(next)}` : ""}`);
@@ -391,6 +381,7 @@ export async function verifyOtpAction(fd: FormData) {
   const challenge = readOtpChallenge(jar.get(OTP_CHALLENGE_COOKIE)?.value);
   if (!challenge) redirect("/auth?tab=otp&error=challenge");
   const { phone, next, otpExpiresAt } = challenge;
+  if (!validAuthIntent({ method: fd.get("method"), password: fd.get("password") }, "otp")) redirect(`/auth?tab=otp&error=method${next ? `&next=${encodeURIComponent(next)}` : ""}`);
   if (Date.now() >= otpExpiresAt) redirect("/auth?tab=otp&sent=1&error=expired");
   const code = String(fd.get("code") ?? "");
   const limited = rateLimit(`otp:use:${phone || "anon"}`, LIMITS.otp.limit, LIMITS.otp.windowMs);
@@ -412,14 +403,6 @@ export async function verifyOtpAction(fd: FormData) {
   // lock check still applies.
   if (!user || (user.lockedUntil && Date.parse(user.lockedUntil) > Date.now())) {
     redirect("/auth?tab=otp&error=locked");
-  }
-
-  // The site owner may only authenticate through password + TOTP. OTP must
-  // never create or advance a super-admin session.
-  if (user.role === "super_admin") {
-    jar.delete(OTP_CHALLENGE_COOKIE);
-    await audit({ action: "auth.otp.super_admin_denied", level: "security", actor: { id: user.id, name: user.name, role: user.role } });
-    redirect("/auth?tab=login&error=otp-owner");
   }
 
   await createSession(user, false);

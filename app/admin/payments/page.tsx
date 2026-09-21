@@ -9,6 +9,8 @@ import { Denied } from "@/components/admin/Denied";
 import { FieldLabel, Input, Select } from "@/components/ui/Input";
 import { listDrivers, getDriver } from "@/lib/gateways/registry";
 import { savePaymentSettings } from "../actions";
+import { appUrl } from "@/lib/env";
+import { effectivePaymentSettings, integrationStatus } from "@/lib/integrations";
 
 export const metadata: Metadata = { title: "پرداخت" };
 
@@ -21,6 +23,8 @@ export default async function PaymentsPage({
   if (!can(user, "payments")) return <Denied />;
   const { saved, error } = await searchParams;
   const payment = getSettings().payment;
+  const effective = effectivePaymentSettings();
+  const status = integrationStatus().payment;
   // Label the credential field after the gateway actually selected, so the
   // operator is never asked for a "merchant code" when they chose IDPay.
   const activeDriver = getDriver(payment.provider);
@@ -29,6 +33,14 @@ export default async function PaymentsPage({
   return (
     <div className="space-y-5">
       <h1 className="text-2xl font-black text-navy-900">درگاه پرداخت و تراکنش‌ها</h1>
+      <div className="grid gap-2 rounded-2xl bg-sand-100 p-4 text-sm sm:grid-cols-2 lg:grid-cols-5">
+        <span>درگاه مؤثر: <b>{getDriver(effective.provider)?.label ?? "نمایشی"}</b></span>
+        <span>وضعیت: <b>{status.configured ? "پیکربندی‌شده" : "ناقص"}</b></span>
+        <span>محیط: <b>{status.sandbox ? "آزمایشی" : "عملیاتی"}</b></span>
+        <span>منبع: <b>{status.fromEnvironment ? "Environment" : "Admin"}</b></span>
+        <span className="break-all" dir="ltr">{`${appUrl()}/api/payment/callback`}</span>
+      </div>
+      {status.fromEnvironment && <p className="rounded-2xl bg-amber-50 px-5 py-3 text-sm font-bold text-amber-800">مقادیر محیط سرور بر فرم ذخیره‌شده اولویت دارند؛ هیچ شناسه پذیرنده‌ای در این صفحه نمایش داده نمی‌شود.</p>}
       {saved && (
         <p className="flex items-center gap-2 rounded-2xl bg-teal-50 px-5 py-3.5 text-sm font-bold text-teal-800 ring-1 ring-teal-600/25 ring-inset">
           <CheckCircle2 className="h-5 w-5" />
@@ -58,10 +70,10 @@ export default async function PaymentsPage({
             <Input
               id="pg-merchant"
               name="merchantId"
-              defaultValue={payment.merchantId}
+              defaultValue=""
               dir="ltr"
               className="text-left"
-              placeholder={payment.merchantId ? "••••••••••••" : ""}
+              placeholder={payment.merchantId ? "ذخیره شده — برای تغییر وارد کنید" : ""}
               autoComplete="off"
             />
           </div>
@@ -72,7 +84,7 @@ export default async function PaymentsPage({
                 id="pg-secret"
                 name="secret"
                 type="password"
-                defaultValue={payment.secret}
+                defaultValue=""
                 dir="ltr"
                 className="text-left"
                 autoComplete="off"

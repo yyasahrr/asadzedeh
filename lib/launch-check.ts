@@ -146,7 +146,7 @@ export async function runLaunchChecks(): Promise<LaunchReport> {
     findings.push({
       code: "STAFF_2FA_OFF",
       level: "info",
-      message: "۲FA کارکنان خاموش است (در تولید همیشه اجباری است).",
+      message: "سیاست اجباری TOTP خاموش است؛ ورود با رمز و ورود پیامکی مستقل باقی می‌مانند.",
     });
   }
 

@@ -64,7 +64,7 @@ export default async function SecurityPage({
                 ورود دومرحله‌ای (Google Authenticator)
               </h2>
               <p className="mt-1 text-sm leading-7 text-ink-600">
-                پس از رمز عبور، یک کد ۶ رقمی که هر ۳۰ ثانیه عوض می‌شود لازم است. حتی اگر رمزتان لو برود، کسی نمی‌تواند وارد شود.
+                Google Authenticator به‌صورت اختیاری برای تأیید عملیات حساس در دسترس است. فعال‌بودن آن به‌تنهایی ورود عادی با رمز یا پیامک را دومرحله‌ای نمی‌کند.
               </p>
             </div>
             <span className={`rounded-full px-3 py-1 text-xs font-bold ring-1 ring-inset ${user.totp?.enabled ? "bg-teal-50 text-teal-700 ring-teal-600/25" : "bg-sand-200/70 text-ink-700 ring-ink-900/15"}`}>

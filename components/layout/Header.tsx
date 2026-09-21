@@ -4,7 +4,8 @@ import { Logo } from "../Logo";
 import { Button } from "../ui/Button";
 import { MobileMenu } from "./MobileMenu";
 import { CartBadge } from "../cart/CartBadge";
-import { navLinks } from "./nav";
+import { primaryNavLinks } from "./nav";
+import { EducationMenu } from "./EducationMenu";
 import { getSessionUser, isStaff } from "@/lib/auth";
 import { getSettings } from "@/lib/store";
 
@@ -27,7 +28,8 @@ export async function Header() {
             <div className="min-w-0 flex items-center gap-3 lg:gap-6">
               <Logo name={site.siteName} tagline={site.tagline} compactOnMobile />
               <nav className="hidden items-center gap-1 lg:flex" aria-label="ناوبری اصلی">
-                {navLinks.slice(1).map((l) => (
+                <EducationMenu />
+                {primaryNavLinks.map((l) => (
                   <Link
                     key={l.href}
                     href={l.href}
@@ -69,7 +71,7 @@ export async function Header() {
                   <UserRound className="h-5 w-5" />
                 </Link>
               )}
-              <Button href="/courses" size="sm" className="mr-1 hidden md:inline-flex">
+              <Button href="/courses" size="sm" className="mr-1 hidden md:inline-flex lg:hidden">
                 مشاهده دوره‌ها
               </Button>
               <MobileMenu accountHref={user ? (isStaff(user) ? "/admin" : "/dashboard") : undefined} />

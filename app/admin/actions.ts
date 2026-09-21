@@ -1856,8 +1856,8 @@ export async function saveSmsSettings(fd: FormData) {
       sms: (() => {
         const parsed = validate(smsSettingsSchema, {
           provider: str(fd, "provider") || "demo",
-          apiKey: str(fd, "apiKey"),
-          secret: str(fd, "secret"),
+          apiKey: str(fd, "apiKey") || s.sms.apiKey,
+          secret: str(fd, "secret") || s.sms.secret,
           sender: str(fd, "sender"),
           templateId: str(fd, "templateId"),
         });
@@ -1869,6 +1869,10 @@ export async function saveSmsSettings(fd: FormData) {
           enabled: bool(fd, `sms-${event}-enabled`),
           templateId: str(fd, `sms-${event}-templateId`),
         }])) as NonNullable<typeof s.sms.templates>;
+        const invalidTemplate = Object.values(templates).some(
+          (template) => template.enabled && (!/^\d+$/.test(template.templateId) || !Number.isSafeInteger(Number(template.templateId)) || Number(template.templateId) <= 0),
+        );
+        if (invalidTemplate) redirect(`/admin/settings?error=${encodeURIComponent("برای هر قالب فعال، Body ID عددی معتبر وارد کنید")}`);
         // Keep the legacy field synchronized for existing OTP call sites.
         return { ...parsed.data, templateId: templates.otp.templateId || parsed.data.templateId, templates };
       })(),
@@ -1928,8 +1932,8 @@ export async function savePaymentSettings(fd: FormData) {
   const s = getSettings();
   const parsed = validate(paymentSettingsSchema, {
     provider: str(fd, "provider") || "demo",
-    merchantId: str(fd, "merchantId"),
-    secret: str(fd, "secret"),
+    merchantId: str(fd, "merchantId") || s.payment.merchantId,
+    secret: str(fd, "secret") || s.payment.secret,
     sandbox: str(fd, "sandbox") === "on",
   });
   // Never store a half-validated gateway config: an unparseable provider would

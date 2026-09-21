@@ -52,6 +52,7 @@ export function OtpChallengeForm({ maskedPhone, expiresAt, resendAvailableAt }: 
         کد ورود به شماره <bdi dir="ltr" className="font-black text-navy-900">{toPersianDigits(maskedPhone)}</bdi> ارسال شد.
       </div>
       <form action={verifyOtpAction} className="space-y-4">
+        <input type="hidden" name="method" value="otp" />
         <input type="hidden" name="code" value={code} />
         <fieldset disabled={expired}>
           <legend className="sr-only">کد شش رقمی ورود</legend>

@@ -25,6 +25,7 @@ const errors: Record<string, string> = {
   attempts: "تعداد تلاش‌های ناموفق بیش از حد مجاز است؛ کد جدید درخواست دهید.",
   cooldown: "به‌تازگی برای این شماره کد ارسال شده است. کمی بعد دوباره درخواست دهید.",
   challenge: "نشست ورود با کد معتبر نیست یا منقضی شده است؛ دوباره کد دریافت کنید.",
+  method: "روش ورود معتبر نیست؛ یکی از روش‌های رمز عبور یا کد یکبارمصرف را انتخاب کنید.",
 };
 
 const notices: Record<string, string> = {
@@ -95,8 +96,14 @@ export function AuthTabs({
         ))}
       </div>
 
+      {(tab === "login" || tab === "otp") && <div className="mt-4 grid grid-cols-2 rounded-xl border border-ink-900/10 bg-card p-1" role="tablist" aria-label="انتخاب روش ورود">
+        <button type="button" role="tab" aria-selected={tab === "login"} onClick={() => setTab("login")} className={cn("min-h-11 rounded-lg px-2 text-sm font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600", tab === "login" ? "bg-navy-800 text-white" : "text-ink-600 hover:bg-sand-100")}>ورود با رمز عبور</button>
+        <button type="button" role="tab" aria-selected={tab === "otp"} onClick={() => setTab("otp")} className={cn("min-h-11 rounded-lg px-2 text-sm font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600", tab === "otp" ? "bg-navy-800 text-white" : "text-ink-600 hover:bg-sand-100")}>ورود با کد یکبارمصرف</button>
+      </div>}
+
       {tab === "login" ? (
         <form action={login} className="mt-6 space-y-4">
+          <input type="hidden" name="method" value="password" />
           {next && <input type="hidden" name="next" value={next} />}
           <div>
             <FieldLabel htmlFor="auth-phone">شماره موبایل</FieldLabel>
@@ -107,14 +114,7 @@ export function AuthTabs({
             <Input id="auth-pass" name="password" type="password" required placeholder="••••••••" dir="ltr" className="text-left" autoComplete="current-password" />
           </div>
           <Button type="submit" size="lg" className="w-full">ورود به حساب</Button>
-          <div className="flex items-center justify-between gap-3 text-xs font-bold">
-            <button
-              type="button"
-              onClick={() => setTab("otp")}
-              className="cursor-pointer text-teal-700 underline-offset-4 hover:underline"
-            >
-              ورود با کد پیامکی
-            </button>
+          <div className="flex items-center justify-end gap-3 text-xs font-bold">
             <button
               type="button"
               onClick={() => setTab("reset")}
@@ -163,6 +163,7 @@ export function AuthTabs({
         <div className="mt-6 space-y-4">
           {!otpChallenge ? (
             <form action={requestOtpAction} className="space-y-4">
+              <input type="hidden" name="method" value="otp" />
               {next && <input type="hidden" name="next" value={next} />}
               <div>
                 <FieldLabel htmlFor="otp-phone">شماره موبایل</FieldLabel>

@@ -44,6 +44,7 @@ export function effectiveSmsSettings(): SmsSettings {
     secret,
     sender: pick(env.SMS_SENDER_NUMBER ?? env.SMS_SENDER, sms.sender),
     templateId: pick(env.SMS_TEMPLATE_ID, sms.templateId),
+    templates: sms.templates,
   };
 }
 
@@ -97,7 +98,7 @@ export function paymentSandbox(): boolean {
 }
 
 export interface IntegrationStatus {
-  sms: { configured: boolean; provider: string; fromEnvironment: boolean };
+  sms: { configured: boolean; provider: string; fromEnvironment: boolean; templateConfigurationReady: boolean };
   payment: { configured: boolean; provider: string; sandbox: boolean; fromEnvironment: boolean };
 }
 
@@ -114,6 +115,9 @@ export function integrationStatus(): IntegrationStatus {
       fromEnvironment: Boolean(
         (env.MELIPAYAMAK_USERNAME || env.SMS_API_KEY || env.SMS_PROVIDER) &&
           (sms.apiKey !== stored.sms.apiKey || sms.provider !== stored.sms.provider),
+      ),
+      templateConfigurationReady: Object.values(stored.sms.templates ?? {}).every(
+        (template) => !template.enabled || /^\d+$/.test(template.templateId),
       ),
     },
     payment: {
