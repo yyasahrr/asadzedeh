@@ -4,12 +4,99 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import QRCode from "qrcode";
-import { getSessionUser, hashPassword, verifyPassword, signPayload, verifySigned } from "@/lib/auth";
+import { accountBlockReason, getSessionUser, hashPassword, verifyPassword, signPayload, verifySigned } from "@/lib/auth";
 import { audit } from "@/lib/audit";
 import { generateRecoveryCodes, generateSecret, openSecret, otpauthUrl, sealSecret, verifyTotp } from "@/lib/totp";
-import { getSessions, getSettings, getUserById, getUsers, writeDb } from "@/lib/store";
+import { getSessions, getSettings, getUserById, getUserByPhone, getUsers, syncCollections, writeDb } from "@/lib/store";
+import { requestLoginOtp, verifyLoginOtp } from "@/lib/otp";
+import { LIMITS, rateLimit } from "@/lib/rate-limit";
+import { changeUserPhoneAtomic } from "@/lib/db/account-security";
+import { createPhoneChangeChallenge, maskPhone, normalizeIranianMobile, PHONE_CHANGE_COOKIE, readPhoneChangeChallenge } from "@/lib/phone-change";
+import { OTP_CHALLENGE_TTL_SECONDS } from "@/lib/otp-constants";
 
 const SETUP_COOKIE = "az_totp_setup";
+
+function phoneChangeRedirect(error: string): never {
+  redirect(`/account/security?phoneError=${encodeURIComponent(error)}`);
+}
+
+export async function requestPhoneChange(fd: FormData) {
+  const me = await getSessionUser();
+  if (!me || me.role !== "super_admin") redirect("/auth?next=/account/security");
+  const user = getUserById(me.id);
+  if (!user || accountBlockReason(user)) phoneChangeRedirect("account");
+  const password = String(fd.get("currentPassword") ?? "");
+  const newPhone = normalizeIranianMobile(fd.get("newPhone"));
+  if (!verifyPassword(password, user.passwordHash)) phoneChangeRedirect("password");
+  if (!/^09\d{9}$/.test(newPhone)) phoneChangeRedirect("format");
+  if (newPhone === user.phone) phoneChangeRedirect("same");
+  if (getUserByPhone(newPhone)) phoneChangeRedirect("duplicate");
+  const limited = rateLimit(`phone-change:${me.id}`, LIMITS.otp.limit, LIMITS.otp.windowMs);
+  if (!limited.ok) phoneChangeRedirect("rate");
+
+  const sent = await requestLoginOtp(newPhone, () => ({ id: me.id, name: me.name }));
+  if (!sent.ok) phoneChangeRedirect("cooldown");
+  if (!sent.sent) phoneChangeRedirect("sms");
+  const jar = await cookies();
+  jar.set(PHONE_CHANGE_COOKIE, createPhoneChangeChallenge(me.id, user.phone, newPhone), {
+    httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/account/security", maxAge: OTP_CHALLENGE_TTL_SECONDS,
+  });
+  await audit({ action: "auth.phone.change_requested", level: "security", actor: { id: me.id, name: me.name, role: me.role }, detail: { oldPhone: maskPhone(user.phone), newPhone: maskPhone(newPhone) } });
+  redirect("/account/security?phoneStep=verify");
+}
+
+export async function verifyPhoneChange(fd: FormData) {
+  const me = await getSessionUser();
+  if (!me || me.role !== "super_admin") redirect("/auth?next=/account/security");
+  const jar = await cookies();
+  const challenge = readPhoneChangeChallenge(jar.get(PHONE_CHANGE_COOKIE)?.value);
+  if (!challenge || challenge.userId !== me.id) phoneChangeRedirect("challenge");
+  if (Date.now() >= challenge.otpExpiresAt) phoneChangeRedirect("expired");
+  const user = getUserById(me.id);
+  if (!user || accountBlockReason(user) || user.phone !== challenge.oldPhone) phoneChangeRedirect("stale");
+  if (getUserByPhone(challenge.newPhone)) phoneChangeRedirect("duplicate");
+  const limited = rateLimit(`phone-change-verify:${me.id}`, LIMITS.otp.limit, LIMITS.otp.windowMs);
+  if (!limited.ok) phoneChangeRedirect("rate");
+  const verified = await verifyLoginOtp(challenge.newPhone, String(fd.get("code") ?? ""));
+  if (!verified.ok) phoneChangeRedirect(verified.reason);
+
+  const changed = await changeUserPhoneAtomic({ userId: me.id, oldPhone: challenge.oldPhone, newPhone: challenge.newPhone, currentSessionToken: me.sessionToken });
+  if (!changed) phoneChangeRedirect("stale");
+  await syncCollections(["users", "sessions"]);
+  jar.delete(PHONE_CHANGE_COOKIE);
+  await audit({ action: "auth.phone.changed", level: "security", actor: { id: me.id, name: me.name, role: me.role }, target: `user:${me.id}`, detail: { oldPhone: maskPhone(challenge.oldPhone), newPhone: maskPhone(challenge.newPhone), otherSessionsRevoked: true } });
+  revalidatePath("/account/security");
+  redirect("/account/security?saved=phone");
+}
+
+export async function resendPhoneChange() {
+  const me = await getSessionUser();
+  if (!me || me.role !== "super_admin") redirect("/auth?next=/account/security");
+  const jar = await cookies();
+  const challenge = readPhoneChangeChallenge(jar.get(PHONE_CHANGE_COOKIE)?.value);
+  if (!challenge || challenge.userId !== me.id) phoneChangeRedirect("challenge");
+  const user = getUserById(me.id);
+  if (!user || accountBlockReason(user) || user.phone !== challenge.oldPhone || getUserByPhone(challenge.newPhone)) phoneChangeRedirect("stale");
+  if (Date.now() < challenge.resendAvailableAt) phoneChangeRedirect("cooldown");
+  const limited = rateLimit(`phone-change:${me.id}`, LIMITS.otp.limit, LIMITS.otp.windowMs);
+  if (!limited.ok) phoneChangeRedirect("rate");
+  const sent = await requestLoginOtp(challenge.newPhone, () => ({ id: me.id, name: me.name }));
+  if (!sent.ok) phoneChangeRedirect("cooldown");
+  if (!sent.sent) phoneChangeRedirect("sms");
+  jar.set(PHONE_CHANGE_COOKIE, createPhoneChangeChallenge(me.id, user.phone, challenge.newPhone), {
+    httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/account/security", maxAge: OTP_CHALLENGE_TTL_SECONDS,
+  });
+  await audit({ action: "auth.phone.change_requested", level: "security", actor: { id: me.id, name: me.name, role: me.role }, detail: { newPhone: maskPhone(challenge.newPhone), resend: true } });
+  redirect("/account/security?phoneStep=verify&resent=1");
+}
+
+export async function cancelPhoneChange() {
+  const me = await getSessionUser();
+  if (!me) redirect("/auth");
+  const jar = await cookies();
+  jar.delete(PHONE_CHANGE_COOKIE);
+  redirect("/account/security");
+}
 
 export interface TotpSetup {
   secret: string;

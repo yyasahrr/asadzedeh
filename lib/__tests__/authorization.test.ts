@@ -308,6 +308,20 @@ describe("IDOR — admin actions require the permission, not just a session", ()
     expect(store.getUserById("u-learner")?.role).toBe("student");
   });
 
+  it("never lets staff access management mutate or promote a student", async () => {
+    loginAs("u-super");
+    const outcome = await call(() => admin.updateStaffAccess(form({ id: "u-learner", role: "manager" })));
+    expect(outcome.redirected).toBe("/admin/users?error=student");
+    expect(store.getUserById("u-learner")?.role).toBe("student");
+  });
+
+  it("still updates an ordinary staff account", async () => {
+    loginAs("u-super");
+    const outcome = await call(() => admin.updateStaffAccess(form({ id: "u-sara", role: "editor" })));
+    expect(outcome.redirected).toBe("/admin/users?saved=access");
+    expect(store.getUserById("u-sara")?.role).toBe("editor");
+  });
+
   it("does allow an assignable role change", async () => {
     loginAs("u-super");
     const outcome = await call(() => admin.updateUserRole(form({ id: "u-learner", role: "support" })));

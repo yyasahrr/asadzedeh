@@ -33,7 +33,7 @@ import { deleteObject, putObject, randomObjectKey, storageDurable } from "@/lib/
 import { isProduction } from "@/lib/env";
 import { sendTransactionalSms } from "@/lib/transactional-sms";
 import { normalizeAboutContent, normalizeHomeContent, normalizeSiteMedia } from "@/lib/site-content";
-import type { SiteMedia } from "@/lib/types";
+import type { Role, SiteMedia } from "@/lib/types";
 import {
   getArticle,
   getArticles,
@@ -1709,8 +1709,17 @@ export async function updateStaffAccess(fd: FormData) {
   if (!id || id === me.id) redirect("/admin/users?error=self");
   const target = getUserById(id);
   if (!target || target.role === "super_admin") redirect("/admin/users?error=notfound");
-  const roleResult = validate(updateRoleSchema, { id, role: fd.get("role") });
-  if (!roleResult.ok) redirect("/admin/users?error=role");
+  if (target.role === "student") redirect("/admin/users?error=student");
+  const postedRole = str(fd, "role");
+  const roleResult = validate(updateRoleSchema, { id, role: postedRole });
+  // Legacy admin accounts may keep their role while other access fields change,
+  // but the UI/action must never grant that privileged role to another account.
+  let nextRole: Role;
+  if (target.role === "admin" && postedRole === "admin") nextRole = "admin";
+  else {
+    if (!roleResult.ok) redirect("/admin/users?error=role");
+    nextRole = roleResult.data.role;
+  }
   const profileId = str(fd, "accessProfileId");
   if (profileId && !getSettings().accessProfiles?.some((profile) => profile.id === profileId)) redirect("/admin/users?error=profile");
   const allow = postedPermissions(fd, "permissionAllow");
@@ -1725,7 +1734,7 @@ export async function updateStaffAccess(fd: FormData) {
   });
   await writeDbAsync({
     users: getUsers().map((user) => user.id === id ? {
-      ...user, role: roleResult.data.role, accessProfileId: profileId || undefined,
+      ...user, role: nextRole, accessProfileId: profileId || undefined,
       permissionOverrides: {
         allow: allow.filter((permission) => !overlap.has(permission)),
         deny: deny.filter((permission) => !overlap.has(permission)),
@@ -1734,7 +1743,7 @@ export async function updateStaffAccess(fd: FormData) {
     } : user),
     instructors,
   });
-  await audit({ action: "user.access.update", level: "security", actor: actor(me), target: `user:${id}`, detail: { profileId, role: roleResult.data.role, disabled, instructorSlug: instructorSlug || null } });
+  await audit({ action: "user.access.update", level: "security", actor: actor(me), target: `user:${id}`, detail: { profileId, role: nextRole, disabled, instructorSlug: instructorSlug || null } });
   revalidatePath("/admin/users");
   redirect("/admin/users?saved=access");
 }

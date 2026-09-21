@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { AlertCircle, CheckCircle2, KeyRound, MonitorSmartphone, ShieldCheck, ShieldOff } from "lucide-react";
 import { getSessionUser, isInstructor, isStaff, roleLabels } from "@/lib/auth";
 import { getSessions, getSettings, getUserById } from "@/lib/store";
@@ -9,7 +10,8 @@ import { PageHero } from "@/components/PageHero";
 import { FieldLabel, Input } from "@/components/ui/Input";
 import { TotpSetup } from "@/components/account/TotpSetup";
 import { RegenerateRecovery } from "@/components/account/RegenerateRecovery";
-import { changePassword, disableTotp, revokeOtherSessions } from "./actions";
+import { cancelPhoneChange, changePassword, disableTotp, requestPhoneChange, resendPhoneChange, revokeOtherSessions, verifyPhoneChange } from "./actions";
+import { maskPhone, PHONE_CHANGE_COOKIE, readPhoneChangeChallenge } from "@/lib/phone-change";
 
 export const metadata: Metadata = { title: "امنیت حساب" };
 
@@ -17,6 +19,7 @@ const messages: Record<string, { ok: boolean; text: string }> = {
   disabled: { ok: true, text: "ورود دومرحله‌ای غیرفعال شد." },
   password: { ok: true, text: "رمز عبور تغییر کرد و سایر نشست‌ها خارج شدند." },
   sessions: { ok: true, text: "سایر نشست‌ها خارج شدند." },
+  phone: { ok: true, text: "شماره موبایل ورود با موفقیت تغییر کرد و سایر نشست‌ها خارج شدند." },
   verify: { ok: false, text: "رمز عبور یا کد تأیید اشتباه بود." },
   "password-error": { ok: false, text: "رمز فعلی اشتباه است یا رمز جدید کوتاه‌تر از ۸ کاراکتر است." },
 };
@@ -24,16 +27,25 @@ const messages: Record<string, { ok: boolean; text: string }> = {
 export default async function SecurityPage({
   searchParams,
 }: {
-  searchParams: Promise<{ saved?: string; error?: string; required?: string }>;
+  searchParams: Promise<{ saved?: string; error?: string; required?: string; phoneStep?: string; phoneError?: string; resent?: string }>;
 }) {
   const me = await getSessionUser();
   if (!me) redirect("/auth?next=/account/security");
-  const { saved, error, required } = await searchParams;
+  const { saved, error, required, phoneStep, phoneError, resent } = await searchParams;
   const user = getUserById(me.id)!;
   const policy = getSettings().security;
   const sessions = getSessions().filter((s) => s.userId === me.id);
   const msg = saved ? messages[saved] : error ? messages[error === "password" ? "password-error" : error] : null;
   const back = isInstructor(me) ? "/instructor" : isStaff(me) ? "/admin" : "/dashboard";
+  const phoneChallenge = readPhoneChangeChallenge((await cookies()).get(PHONE_CHANGE_COOKIE)?.value);
+  const phoneErrors: Record<string, string> = {
+    password: "رمز فعلی صحیح نیست.", format: "شماره جدید باید یک موبایل معتبر ایرانی باشد.", same: "شماره جدید با شماره فعلی یکسان است.",
+    duplicate: "این شماره قبلاً برای حساب دیگری ثبت شده است.", rate: "تعداد تلاش‌ها بیش از حد مجاز است؛ کمی بعد دوباره تلاش کنید.",
+    cooldown: "ارسال مجدد هنوز مجاز نیست.", sms: "ارسال کد به شماره جدید انجام نشد؛ تنظیمات پیامک را بررسی کنید.",
+    challenge: "درخواست تغییر شماره معتبر نیست یا منقضی شده است.", expired: "کد منقضی شده است؛ دوباره درخواست دهید.",
+    invalid: "کد واردشده صحیح نیست.", attempts: "تعداد تلاش‌های کد بیش از حد مجاز است.", missing: "کد یافت نشد یا قبلاً استفاده شده است.",
+    stale: "اطلاعات حساب یا شماره مقصد تغییر کرده است؛ درخواست جدید بسازید.", account: "این حساب اجازه تغییر شماره ندارد.",
+  };
 
   return (
     <>
@@ -55,6 +67,27 @@ export default async function SecurityPage({
             {msg.text}
           </p>
         )}
+        {phoneError && phoneErrors[phoneError] && <p role="alert" className="rounded-xl bg-madder-50 px-4 py-3 text-sm font-bold text-madder-700 ring-1 ring-madder-700/20 ring-inset">{phoneErrors[phoneError]}</p>}
+
+        {me.role === "super_admin" && <section className="rounded-xl border border-ink-900/10 bg-card p-5">
+          <h2 className="text-lg font-black text-navy-900">تغییر شماره موبایل</h2>
+          <p className="mt-1 text-sm leading-7 text-ink-600">شماره موبایل شناسه ورود شماست. تأیید با رمز فعلی و کدی که فقط به شماره جدید ارسال می‌شود انجام خواهد شد.</p>
+          {phoneStep === "verify" && phoneChallenge?.userId === me.id ? <div className="mt-4 space-y-4">
+            <p className="rounded-lg bg-sand-100 px-4 py-3 text-sm text-ink-700">کد به <bdi dir="ltr" className="font-bold">{maskPhone(phoneChallenge.newPhone)}</bdi> ارسال شد.{resent === "1" ? " کد جدید جایگزین قبلی شد." : ""}</p>
+            <div data-testid="phone-change-verification-actions" className="grid gap-3 sm:grid-cols-2">
+              <form action={verifyPhoneChange} className="grid gap-3 sm:col-span-2 sm:grid-cols-[1fr_auto] sm:items-end">
+                <div><FieldLabel htmlFor="phone-change-code">کد یکبارمصرف</FieldLabel><Input id="phone-change-code" name="code" required inputMode="numeric" autoComplete="one-time-code" maxLength={6} dir="ltr" className="text-left" /></div>
+                <button type="submit" className="h-11 rounded-lg bg-navy-800 px-6 text-sm font-bold text-white hover:bg-navy-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600">تأیید و تغییر شماره</button>
+              </form>
+              <form action={resendPhoneChange} className="sm:justify-self-start"><button type="submit" className="min-h-10 rounded-lg border border-teal-700/25 px-4 text-xs font-bold text-teal-700 hover:bg-teal-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600">ارسال مجدد کد</button></form>
+              <form action={cancelPhoneChange} className="sm:justify-self-end"><button type="submit" className="min-h-10 rounded-lg px-4 text-xs font-bold text-ink-600 hover:bg-sand-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600">لغو درخواست</button></form>
+            </div>
+          </div> : <form action={requestPhoneChange} className="mt-4 grid gap-4 sm:grid-cols-2">
+            <div><FieldLabel htmlFor="phone-current-password">رمز عبور فعلی</FieldLabel><Input id="phone-current-password" name="currentPassword" type="password" required autoComplete="current-password" dir="ltr" className="text-left" /></div>
+            <div><FieldLabel htmlFor="phone-new">شماره موبایل جدید</FieldLabel><Input id="phone-new" name="newPhone" required inputMode="tel" autoComplete="tel" placeholder="09123456789" dir="ltr" className="text-left" /></div>
+            <button type="submit" className="h-11 rounded-lg bg-navy-800 px-6 text-sm font-bold text-white hover:bg-navy-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600 sm:col-span-2 sm:w-fit">ارسال کد به شماره جدید</button>
+          </form>}
+        </section>}
 
         {me.role === "super_admin" ? <section className="rounded-2xl bg-card p-6 shadow-card ring-1 ring-ink-900/5">
           <div className="flex flex-wrap items-start justify-between gap-3">

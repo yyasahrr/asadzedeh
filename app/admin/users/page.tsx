@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Plus } from "lucide-react";
+import { KeyRound, Plus, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { getInstructors, getSettings, getUsers } from "@/lib/store";
 import { accountBlockReason, effectivePermissions, getSessionUser, isSuperAdmin, permissionLabels, roleLabels } from "@/lib/auth";
@@ -8,6 +8,7 @@ import { TableShell, Td } from "@/components/admin/TableShell";
 import { Denied } from "@/components/admin/Denied";
 import { FieldLabel, Input, Select } from "@/components/ui/Input";
 import { addStaff, updateStaffAccess } from "../actions";
+import { splitOwnerAndStaff } from "@/lib/staff-users";
 
 export const metadata: Metadata = { title: "کاربران و دسترسی" };
 
@@ -20,9 +21,9 @@ export default async function UsersPage({
 }) {
   const user = await getSessionUser();
   if (!isSuperAdmin(user)) return <Denied />;
-  const owner = user!;
+  const sessionOwner = user!;
   const { error } = await searchParams;
-  const users = getUsers();
+  const { owner, staff: users } = splitOwnerAndStaff(getUsers(), sessionOwner.id);
   const profiles = getSettings().accessProfiles ?? [];
   const instructors = getInstructors();
   const linkedInstructorIds = new Set(instructors.map((item) => item.userId).filter(Boolean));
@@ -34,6 +35,34 @@ export default async function UsersPage({
         <p className="rounded-2xl bg-madder-50 px-5 py-3.5 text-sm font-bold text-madder-700 ring-1 ring-madder-700/25 ring-inset">
           این شماره موبایل قبلاً ثبت شده است.
         </p>
+      )}
+      {error === "student" && (
+        <p role="alert" className="rounded-xl bg-madder-50 px-4 py-3 text-sm font-bold text-madder-700 ring-1 ring-madder-700/25 ring-inset">
+          حساب هنرجو از این بخش قابل مدیریت یا تبدیل به حساب همکار نیست.
+        </p>
+      )}
+
+      {owner && (
+        <section aria-labelledby="owner-title" className="rounded-xl border border-teal-700/20 bg-card p-5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
+              <p className="flex items-center gap-2 text-xs font-bold text-teal-700"><ShieldCheck className="h-4 w-4" />مالک سیستم</p>
+              <h2 id="owner-title" className="mt-1 truncate text-lg font-black text-navy-900">{owner.name}</h2>
+              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-ink-600">
+                <bdi dir="ltr">{owner.phone}</bdi>
+                <span aria-hidden="true">•</span>
+                <span>{roleLabels[owner.role]}</span>
+                <span className={`rounded-full px-2 py-1 font-bold ${owner.disabled || accountBlockReason(owner) ? "bg-madder-50 text-madder-700" : "bg-teal-50 text-teal-700"}`}>
+                  {owner.disabled || accountBlockReason(owner) ? "غیرفعال" : "فعال"}
+                </span>
+                <span className="rounded-full bg-sand-100 px-2 py-1 font-bold text-ink-700">ورود دومرحله‌ای: {owner.totp?.enabled ? "فعال" : "غیرفعال"}</span>
+              </div>
+            </div>
+            <Link href="/account/security" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-teal-700/25 px-4 text-sm font-bold text-teal-700 hover:bg-teal-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600">
+              <KeyRound className="h-4 w-4" />امنیت حساب مالک
+            </Link>
+          </div>
+        </section>
       )}
 
       <details className="group rounded-2xl bg-card shadow-card ring-1 ring-ink-900/5">
@@ -95,7 +124,7 @@ export default async function UsersPage({
         {users.map((u) => (
           <tr key={u.id} className="transition-colors hover:bg-sand-50">
             <Td className="font-bold text-navy-900">
-              {u.name} {u.id === owner.id && <span className="text-xs text-ink-400">(شما)</span>}
+              {u.name}
               {u.disabled ? (
                 <span
                   className="ms-1 rounded-full bg-madder-50 px-2 py-1 text-[10px] font-bold text-madder-700"
@@ -123,9 +152,6 @@ export default async function UsersPage({
             </Td>
             <Td className="whitespace-nowrap text-ink-600">{u.createdAt}</Td>
             <Td>
-              {u.id === owner.id ? (
-                <span className="text-xs text-ink-400">—</span>
-              ) : (
                 <form action={updateStaffAccess} className="min-w-[280px] space-y-2 rounded-lg border border-ink-900/10 p-3">
                   <input type="hidden" name="id" value={u.id} />
                   <label htmlFor={`rl-${u.id}`} className="sr-only">نقش {u.name}</label>
@@ -135,7 +161,8 @@ export default async function UsersPage({
                     defaultValue={u.role}
                     className="h-9 cursor-pointer rounded-lg border border-ink-900/10 bg-white px-2 text-[13px] font-bold focus:border-teal-600 focus:outline-none"
                   >
-                    {(["manager", "editor", "support", "instructor", "student"] as Role[]).map((r) => (
+                    {u.role === "admin" && <option value="admin">{roleLabels.admin}</option>}
+                    {staffRoles.map((r) => (
                       <option key={r} value={r}>{roleLabels[r]}</option>
                     ))}
                   </select>
@@ -151,7 +178,6 @@ export default async function UsersPage({
                     ثبت
                   </button>
                 </form>
-              )}
             </Td>
           </tr>
         ))}
