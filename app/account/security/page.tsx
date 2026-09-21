@@ -10,7 +10,7 @@ import { PageHero } from "@/components/PageHero";
 import { FieldLabel, Input } from "@/components/ui/Input";
 import { TotpSetup } from "@/components/account/TotpSetup";
 import { RegenerateRecovery } from "@/components/account/RegenerateRecovery";
-import { cancelPhoneChange, changePassword, disableTotp, requestPhoneChange, resendPhoneChange, revokeOtherSessions, verifyPhoneChange } from "./actions";
+import { cancelPhoneChange, changeOwnerPhoneWithTotp, changePassword, disableTotp, requestPhoneChange, resendPhoneChange, resetOwnerPasswordWithTotp, revokeOtherSessions, verifyPhoneChange } from "./actions";
 import { maskPhone, PHONE_CHANGE_COOKIE, readPhoneChangeChallenge } from "@/lib/phone-change";
 
 export const metadata: Metadata = { title: "امنیت حساب" };
@@ -20,6 +20,8 @@ const messages: Record<string, { ok: boolean; text: string }> = {
   password: { ok: true, text: "رمز عبور تغییر کرد و سایر نشست‌ها خارج شدند." },
   sessions: { ok: true, text: "سایر نشست‌ها خارج شدند." },
   phone: { ok: true, text: "شماره موبایل ورود با موفقیت تغییر کرد و سایر نشست‌ها خارج شدند." },
+  "phone-totp": { ok: true, text: "شماره ورود با تأیید Google Authenticator تغییر کرد؛ مالکیت شماره جدید هنوز با پیامک تأیید نشده است." },
+  "password-totp": { ok: true, text: "رمز عبور جدید تنظیم شد و سایر نشست‌ها خارج شدند." },
   verify: { ok: false, text: "رمز عبور یا کد تأیید اشتباه بود." },
   "password-error": { ok: false, text: "رمز فعلی اشتباه است یا رمز جدید کوتاه‌تر از ۸ کاراکتر است." },
 };
@@ -27,11 +29,11 @@ const messages: Record<string, { ok: boolean; text: string }> = {
 export default async function SecurityPage({
   searchParams,
 }: {
-  searchParams: Promise<{ saved?: string; error?: string; required?: string; phoneStep?: string; phoneError?: string; resent?: string }>;
+  searchParams: Promise<{ saved?: string; error?: string; required?: string; phoneStep?: string; phoneError?: string; resent?: string; ownerRecoveryError?: string }>;
 }) {
   const me = await getSessionUser();
   if (!me) redirect("/auth?next=/account/security");
-  const { saved, error, required, phoneStep, phoneError, resent } = await searchParams;
+  const { saved, error, required, phoneStep, phoneError, resent, ownerRecoveryError } = await searchParams;
   const user = getUserById(me.id)!;
   const policy = getSettings().security;
   const sessions = getSessions().filter((s) => s.userId === me.id);
@@ -45,6 +47,13 @@ export default async function SecurityPage({
     challenge: "درخواست تغییر شماره معتبر نیست یا منقضی شده است.", expired: "کد منقضی شده است؛ دوباره درخواست دهید.",
     invalid: "کد واردشده صحیح نیست.", attempts: "تعداد تلاش‌های کد بیش از حد مجاز است.", missing: "کد یافت نشد یا قبلاً استفاده شده است.",
     stale: "اطلاعات حساب یا شماره مقصد تغییر کرده است؛ درخواست جدید بسازید.", account: "این حساب اجازه تغییر شماره ندارد.",
+  };
+  const recoveryErrors: Record<string, string> = {
+    account: "این حساب در وضعیت مجاز برای بازیابی نیست.", "totp-required": "ابتدا باید Google Authenticator برای حساب مالک فعال باشد.",
+    totp: "کد Google Authenticator صحیح نیست.", replay: "این کد قبلاً برای یک عملیات حساس استفاده شده است؛ منتظر کد بعدی بمانید.",
+    rate: "تعداد تلاش‌های تأیید بیش از حد مجاز است؛ کمی بعد دوباره تلاش کنید.", format: "شماره جدید باید یک موبایل معتبر ایرانی باشد.",
+    same: "شماره جدید با شماره فعلی یکسان است.", duplicate: "این شماره قبلاً برای حساب دیگری ثبت شده است.",
+    "password-length": "رمز جدید مدیر ارشد باید حداقل ۱۲ کاراکتر باشد.", "password-match": "رمز جدید و تکرار آن یکسان نیستند.",
   };
 
   return (
@@ -68,6 +77,7 @@ export default async function SecurityPage({
           </p>
         )}
         {phoneError && phoneErrors[phoneError] && <p role="alert" className="rounded-xl bg-madder-50 px-4 py-3 text-sm font-bold text-madder-700 ring-1 ring-madder-700/20 ring-inset">{phoneErrors[phoneError]}</p>}
+        {ownerRecoveryError && recoveryErrors[ownerRecoveryError] && <p role="alert" className="rounded-xl bg-madder-50 px-4 py-3 text-sm font-bold text-madder-700 ring-1 ring-madder-700/20 ring-inset">{recoveryErrors[ownerRecoveryError]}</p>}
 
         {me.role === "super_admin" && <section className="rounded-xl border border-ink-900/10 bg-card p-5">
           <h2 className="text-lg font-black text-navy-900">تغییر شماره موبایل</h2>
@@ -87,6 +97,32 @@ export default async function SecurityPage({
             <div><FieldLabel htmlFor="phone-new">شماره موبایل جدید</FieldLabel><Input id="phone-new" name="newPhone" required inputMode="tel" autoComplete="tel" placeholder="09123456789" dir="ltr" className="text-left" /></div>
             <button type="submit" className="h-11 rounded-lg bg-navy-800 px-6 text-sm font-bold text-white hover:bg-navy-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600 sm:col-span-2 sm:w-fit">ارسال کد به شماره جدید</button>
           </form>}
+        </section>}
+
+        {me.role === "super_admin" && <section aria-labelledby="owner-recovery-title" className="rounded-xl border border-ochre-600/25 bg-card p-5">
+          <h2 id="owner-recovery-title" className="text-lg font-black text-navy-900">بازیابی موقت حساب مدیر ارشد</h2>
+          <p className="mt-1 text-sm leading-7 text-ink-600">این مسیر فقط با Google Authenticator هویت مدیر ارشد را تأیید می‌کند و تا زمان فعال‌شدن سرویس پیامک در دسترس است.</p>
+          {user.totp?.enabled ? <div className="mt-5 grid gap-5 lg:grid-cols-2">
+            <div className="rounded-lg border border-ink-900/10 p-4">
+              <h3 className="font-black text-navy-900">تغییر شماره موبایل</h3>
+              <p className="mt-1 text-xs leading-6 text-ink-600">مالکیت شماره جدید با این روش تأیید نمی‌شود و پس از فعال‌شدن پیامک باید جداگانه با کد پیامکی تأیید شود.</p>
+              <form action={changeOwnerPhoneWithTotp} className="mt-4 grid gap-3">
+                <div><FieldLabel htmlFor="owner-recovery-phone">شماره جدید</FieldLabel><Input id="owner-recovery-phone" name="newPhone" required inputMode="tel" autoComplete="tel" placeholder="09123456789" dir="ltr" className="text-left" /></div>
+                <div><FieldLabel htmlFor="owner-phone-totp">کد Google Authenticator</FieldLabel><Input id="owner-phone-totp" name="totpCode" required inputMode="numeric" autoComplete="one-time-code" minLength={6} maxLength={6} dir="ltr" className="text-left" /></div>
+                <button type="submit" className="min-h-11 rounded-lg bg-navy-800 px-5 text-sm font-bold text-white hover:bg-navy-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600">تغییر شماره با TOTP</button>
+              </form>
+            </div>
+            <div className="rounded-lg border border-ink-900/10 p-4">
+              <h3 className="font-black text-navy-900">تنظیم رمز عبور جدید با Google Authenticator</h3>
+              <p className="mt-1 text-xs leading-6 text-ink-600">برای زمانی که رمز فعلی فراموش شده است؛ سایر نشست‌ها پس از موفقیت خارج می‌شوند.</p>
+              <form action={resetOwnerPasswordWithTotp} className="mt-4 grid gap-3">
+                <div><FieldLabel htmlFor="owner-password-totp">کد Google Authenticator</FieldLabel><Input id="owner-password-totp" name="totpCode" required inputMode="numeric" autoComplete="one-time-code" minLength={6} maxLength={6} dir="ltr" className="text-left" /></div>
+                <div><FieldLabel htmlFor="owner-new-password">رمز جدید (حداقل ۱۲ کاراکتر)</FieldLabel><Input id="owner-new-password" name="newPassword" type="password" required minLength={12} autoComplete="new-password" dir="ltr" className="text-left" /></div>
+                <div><FieldLabel htmlFor="owner-confirm-password">تکرار رمز جدید</FieldLabel><Input id="owner-confirm-password" name="confirmPassword" type="password" required minLength={12} autoComplete="new-password" dir="ltr" className="text-left" /></div>
+                <button type="submit" className="min-h-11 rounded-lg bg-ochre-600 px-5 text-sm font-bold text-white hover:bg-ochre-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ochre-600">تنظیم رمز جدید</button>
+              </form>
+            </div>
+          </div> : <p className="mt-4 rounded-lg bg-sand-100 px-4 py-3 text-sm font-bold text-ink-700">این مسیر فقط پس از فعال‌سازی Google Authenticator قابل استفاده است.</p>}
         </section>}
 
         {me.role === "super_admin" ? <section className="rounded-2xl bg-card p-6 shadow-card ring-1 ring-ink-900/5">

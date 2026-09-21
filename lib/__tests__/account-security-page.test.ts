@@ -48,4 +48,10 @@ describe("account security phone-change markup", () => {
       "action={cancelPhoneChange}",
     ]);
   });
+
+  it("keeps both owner TOTP recovery operations in separate forms", () => {
+    expect(source).toContain("action={changeOwnerPhoneWithTotp}");
+    expect(source).toContain("action={resetOwnerPasswordWithTotp}");
+    expect(source).toContain("مالکیت شماره جدید با این روش تأیید نمی‌شود");
+  });
 });

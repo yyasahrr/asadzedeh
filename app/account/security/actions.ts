@@ -10,7 +10,7 @@ import { generateRecoveryCodes, generateSecret, openSecret, otpauthUrl, sealSecr
 import { getSessions, getSettings, getUserById, getUserByPhone, getUsers, syncCollections, writeDb } from "@/lib/store";
 import { requestLoginOtp, verifyLoginOtp } from "@/lib/otp";
 import { LIMITS, rateLimit } from "@/lib/rate-limit";
-import { changeUserPhoneAtomic } from "@/lib/db/account-security";
+import { changeOwnerPhoneWithTotpAtomic, changeUserPhoneAtomic, resetOwnerPasswordWithTotpAtomic } from "@/lib/db/account-security";
 import { createPhoneChangeChallenge, maskPhone, normalizeIranianMobile, PHONE_CHANGE_COOKIE, readPhoneChangeChallenge } from "@/lib/phone-change";
 import { OTP_CHALLENGE_TTL_SECONDS } from "@/lib/otp-constants";
 
@@ -18,6 +18,70 @@ const SETUP_COOKIE = "az_totp_setup";
 
 function phoneChangeRedirect(error: string): never {
   redirect(`/account/security?phoneError=${encodeURIComponent(error)}`);
+}
+
+function ownerRecoveryRedirect(error: string): never {
+  redirect(`/account/security?ownerRecoveryError=${encodeURIComponent(error)}`);
+}
+
+function ownerRecoveryAccount(me: Awaited<ReturnType<typeof getSessionUser>>) {
+  if (!me || me.role !== "super_admin") redirect("/auth?next=/account/security");
+  const user = getUserById(me.id);
+  if (!user || accountBlockReason(user)) ownerRecoveryRedirect("account");
+  if (user.lockedUntil && Date.parse(user.lockedUntil) > Date.now()) ownerRecoveryRedirect("account");
+  if (!user.totp?.enabled) ownerRecoveryRedirect("totp-required");
+  return { me, user };
+}
+
+function verifiedOwnerTotpStep(user: NonNullable<ReturnType<typeof getUserById>>, code: string): number {
+  const limited = rateLimit(`owner-recovery-totp:${user.id}`, LIMITS.totp.limit, LIMITS.totp.windowMs);
+  if (!limited.ok) ownerRecoveryRedirect("rate");
+  const step = verifyTotp(openSecret(user.totp!.secret), code);
+  if (step === null) ownerRecoveryRedirect("totp");
+  if (step <= (user.totp!.lastStep ?? 0)) ownerRecoveryRedirect("replay");
+  return step;
+}
+
+export async function changeOwnerPhoneWithTotp(fd: FormData) {
+  const { me, user } = ownerRecoveryAccount(await getSessionUser());
+  const newPhone = normalizeIranianMobile(fd.get("newPhone"));
+  if (!/^09\d{9}$/.test(newPhone)) ownerRecoveryRedirect("format");
+  if (newPhone === user.phone) ownerRecoveryRedirect("same");
+  if (getUserByPhone(newPhone)) ownerRecoveryRedirect("duplicate");
+  const step = verifiedOwnerTotpStep(user, String(fd.get("totpCode") ?? ""));
+  const changed = await changeOwnerPhoneWithTotpAtomic({
+    userId: me.id, oldPhone: user.phone, newPhone, currentSessionToken: me.sessionToken, totpStep: step,
+  });
+  if (changed !== "changed") ownerRecoveryRedirect("replay");
+  await syncCollections(["users", "sessions"]);
+  await audit({
+    action: "auth.phone.changed_with_totp", level: "security",
+    actor: { id: me.id, name: me.name, role: me.role }, target: `user:${me.id}`,
+    detail: { oldPhone: maskPhone(user.phone), newPhone: maskPhone(newPhone), verificationMethod: "totp", phoneOwnershipVerified: false, otherSessionsRevoked: true },
+  });
+  revalidatePath("/account/security");
+  redirect("/account/security?saved=phone-totp");
+}
+
+export async function resetOwnerPasswordWithTotp(fd: FormData) {
+  const { me, user } = ownerRecoveryAccount(await getSessionUser());
+  const password = String(fd.get("newPassword") ?? "");
+  const confirmation = String(fd.get("confirmPassword") ?? "");
+  if (password.length < 12) ownerRecoveryRedirect("password-length");
+  if (password !== confirmation) ownerRecoveryRedirect("password-match");
+  const step = verifiedOwnerTotpStep(user, String(fd.get("totpCode") ?? ""));
+  const changed = await resetOwnerPasswordWithTotpAtomic({
+    userId: me.id, passwordHash: hashPassword(password), currentSessionToken: me.sessionToken, totpStep: step,
+  });
+  if (changed !== "changed") ownerRecoveryRedirect("replay");
+  await syncCollections(["users", "sessions"]);
+  await audit({
+    action: "auth.password.reset_with_totp", level: "security",
+    actor: { id: me.id, name: me.name, role: me.role }, target: `user:${me.id}`,
+    detail: { verificationMethod: "totp", otherSessionsRevoked: true, loginLockCleared: true },
+  });
+  revalidatePath("/account/security");
+  redirect("/account/security?saved=password-totp");
 }
 
 export async function requestPhoneChange(fd: FormData) {
