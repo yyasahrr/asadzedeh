@@ -150,6 +150,11 @@ export async function login(fd: FormData) {
     redirect("/auth?error=locked");
   }
 
+  if (user && user.role !== "super_admin") {
+    await audit({ action: "auth.password.non_owner_denied", level: "security", actor: { id: user.id, name: user.name, role: user.role } });
+    redirect("/auth?tab=otp&error=use-otp");
+  }
+
   if (!user || !verifyPassword(password, user.passwordHash)) {
     if (user) {
       const failed = (user.failedLogins ?? 0) + 1;
@@ -175,12 +180,17 @@ export async function login(fd: FormData) {
   }
 
   // Second factor?
-  if (user.totp?.enabled) {
+  if (user.role === "super_admin" && user.totp?.enabled) {
     const jar = await cookies();
     const ticket = signPayload({ uid: user.id, exp: Date.now() + 5 * 60_000, next });
     jar.set(MFA_COOKIE, ticket, { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: 300 });
     await audit({ action: "auth.2fa.challenge", level: "security", actor: { id: user.id, name: user.name, role: user.role } });
     redirect("/auth/verify");
+  }
+
+  if (user.role === "super_admin") {
+    await createSession(user, false);
+    redirect("/account/security?required=1");
   }
 
   await createSession(user, false);
@@ -195,7 +205,7 @@ export async function verifyMfa(fd: FormData) {
   const payload = verifySigned<{ uid: string; exp: number; next: string }>(ticket);
   if (!payload) redirect("/auth?error=expired");
   const user = getUserById(payload.uid);
-  if (!user?.totp?.enabled) redirect("/auth?error=invalid");
+  if (!user?.totp?.enabled || user.role !== "super_admin") redirect("/auth?error=invalid");
 
   const { ip } = await requestContext();
   const limited = rateLimit(`totp:${ip}`, LIMITS.totp.limit, LIMITS.totp.windowMs);
@@ -404,13 +414,12 @@ export async function verifyOtpAction(fd: FormData) {
     redirect("/auth?tab=otp&error=locked");
   }
 
-  // Staff holding TOTP still face it: an OTP proves the phone, not the person.
-  if (user.totp?.enabled) {
+  // The site owner may only authenticate through password + TOTP. OTP must
+  // never create or advance a super-admin session.
+  if (user.role === "super_admin") {
     jar.delete(OTP_CHALLENGE_COOKIE);
-    const ticket = signPayload({ uid: user.id, exp: Date.now() + 5 * 60_000, next });
-    jar.set(MFA_COOKIE, ticket, { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: 300 });
-    await audit({ action: "auth.2fa.challenge", level: "security", actor: { id: user.id, name: user.name, role: user.role } });
-    redirect("/auth/verify");
+    await audit({ action: "auth.otp.super_admin_denied", level: "security", actor: { id: user.id, name: user.name, role: user.role } });
+    redirect("/auth?tab=login&error=otp-owner");
   }
 
   await createSession(user, false);

@@ -22,7 +22,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   const { id } = await params;
   const url = new URL(req.url);
   const t = url.searchParams.get("t") ?? "";
-  const payload = verifySigned<{ v: string; u: string; s: string; ua: string; exp: number }>(t);
+  const payload = verifySigned<{ v: string; u: string; s: string; ua: string; exp: number; scope?: string }>(t);
   if (!payload || payload.v !== id) return new Response("forbidden", { status: 403 });
 
   const ua = (req.headers.get("user-agent") ?? "").slice(0, 80);
@@ -31,14 +31,16 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   // The token is short-lived, but a session can be revoked before it expires.
   // Re-checking the user here means a logged-out or banned student stops
   // mid-playback instead of finishing the lesson.
+  if (payload.u === "anon" && payload.scope !== "public-site-media") return new Response("forbidden", { status: 403 });
   if (payload.u !== "anon") {
+    if (payload.scope !== "authenticated-playback") return new Response("forbidden", { status: 403 });
     const user = await getSessionUser();
     if (!user || user.id !== payload.u) return new Response("forbidden", { status: 403 });
   }
 
   const video = getVideo(id);
   if (!video) return new Response("not found", { status: 404 });
-  if (video.status === "uploading") {
+  if (video.status !== "ready") {
     return new Response("ویدیو هنوز آماده نیست", { status: 409 });
   }
 

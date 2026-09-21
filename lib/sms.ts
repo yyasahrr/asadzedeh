@@ -27,6 +27,8 @@ export interface SmsCredentials {
   templateId: string;
 }
 
+export type SmsTemplateParameters = string[];
+
 type MeliPayamakResponse = {
   Value?: string | number;
   RetStatus?: number;
@@ -95,6 +97,22 @@ const melipayamak: SmsDriver = {
     });
     return meliPayamakOk(body);
   },
+
+  async sendTemplate(phone, templateId, parameters, c) {
+    if (!c.secret || !templateId) return { ok: false, error: "رمز وب‌سرویس و شناسه قالب ملی پیامک لازم است" };
+    const form = new URLSearchParams({
+      username: c.apiKey,
+      password: c.secret,
+      text: parameters.join(";"),
+      to: phone,
+      bodyId: templateId,
+    });
+    const { body } = await json("https://rest.payamak-panel.com/api/SendSMS/BaseServiceNumber", {
+      event: "sms.melipayamak.template", retry: { attempts: 2 }, method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" }, body: form.toString(),
+    });
+    return meliPayamakOk(body);
+  },
 };
 
 export interface SmsResult {
@@ -113,6 +131,8 @@ export interface SmsDriver {
   send(recipients: string[], message: string, c: SmsCredentials): Promise<SmsResult>;
   /** Template fast-path for one-time codes, where the panel has one. */
   sendCode?(phone: string, code: string, c: SmsCredentials): Promise<SmsResult>;
+  /** Transactional pattern send. Parameter order follows the approved panel pattern. */
+  sendTemplate?(phone: string, templateId: string, parameters: SmsTemplateParameters, c: SmsCredentials): Promise<SmsResult>;
 }
 
 async function json(url: string, init: FetchOptions): Promise<{ res: Response; body: unknown }> {

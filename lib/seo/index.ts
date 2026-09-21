@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { SeoEntry, SeoEntityType, Settings } from "@/lib/types";
 import { getSeoEntry, getSettings } from "@/lib/store";
 import { appUrl } from "@/lib/env";
+import { safeCanonicalOverride, safeHttpUrl } from "@/lib/urls";
 export { isPrivatePath } from "./paths";
 
 export type SeoSource = {
@@ -23,7 +24,7 @@ function defaults(settings?: Settings) {
     defaultDescription: seo?.defaultDescription || site?.tagline || "",
     defaultOgImage: seo?.defaultOgImage || site?.hero?.image || "/images/hero-weaver.jpg",
     siteName: seo?.siteName || site?.siteName || "اسدزاده",
-    canonicalBaseUrl: (seo?.canonicalBaseUrl || site?.siteUrl || appUrl()).replace(/\/$/, ""),
+    canonicalBaseUrl: appUrl(),
     robotsIndex: seo?.robotsIndex !== false,
     robotsFollow: seo?.robotsFollow !== false,
   };
@@ -55,7 +56,7 @@ export function resolveSeo(source: SeoSource, settings?: Settings): {
   const title = entry?.metaTitle || source.title || d.defaultTitle;
   const description = entry?.metaDescription || source.description || d.defaultDescription;
   const image = entry?.ogImage || source.image || d.defaultOgImage;
-  const canonical = entry?.canonicalUrl || `${d.canonicalBaseUrl}${source.path.startsWith("/") ? source.path : `/${source.path}`}`;
+  const canonical = safeCanonicalOverride(entry?.canonicalUrl) || new URL(source.path.startsWith("/") ? source.path : `/${source.path}`, `${d.canonicalBaseUrl}/`).toString();
   return {
     title,
     description,
@@ -123,7 +124,9 @@ export function organizationJsonLd(settings: Settings) {
     address: org?.address || settings.site.address
       ? { "@type": "PostalAddress", streetAddress: org?.address || settings.site.address, addressCountry: "IR" }
       : undefined,
-    sameAs: [settings.site.socials.instagram, settings.site.socials.telegram].filter((u) => u && u !== "#"),
+    sameAs: [settings.site.socials.instagram, settings.site.socials.telegram, settings.site.socials.bale]
+      .map(safeHttpUrl)
+      .filter(Boolean),
   };
 }
 

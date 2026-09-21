@@ -6,8 +6,9 @@ import { Footer } from "@/components/layout/Footer";
 import { SupportDock } from "@/components/support/SupportDock";
 import { getSettings } from "@/lib/store";
 import { jsonLd, organizationJsonLd, websiteJsonLd } from "@/lib/seo";
+import { appUrl } from "@/lib/env";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://ghalibafiasadzedeh.ir";
+const siteUrl = appUrl();
 
 const peyda = localFont({
   src: [

@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ArrowRight, CalendarDays, CheckCircle2, Clock3, CreditCard, Download, FileText, MapPin, Video } from "lucide-react";
+import { ArrowRight, CalendarDays, CheckCircle2, Clock3, FileText, MapPin, Video } from "lucide-react";
 import { SecurePlayer } from "@/components/video/SecurePlayer";
 import { hasPaidClassAccess } from "@/lib/access";
 import { getSessionUser } from "@/lib/auth";
 import { toFa } from "@/lib/format";
-import { getClass, getOrders, getVideos } from "@/lib/store";
+import { getClass, getVideos } from "@/lib/store";
 
 export const metadata: Metadata = { title: "محتوای کلاس حضوری" };
 export const dynamic = "force-dynamic";
@@ -28,11 +28,6 @@ export default async function InPersonClassContentPage({
   const videos = getVideos();
   const videoById = new Map(videos.map((v) => [v.id, v]));
 
-  // Find the order that purchased this class (for enrollment card)
-  const myOrder = getOrders().find(
-    (o) => o.status === "پرداخت شده" && (o.userId === user.id || o.phone === user.phone || o.student === user.name) && (o.lines ?? []).some((l) => l.kind === "class" && l.slug === slug)
-  );
-
   // Determine completed vs upcoming sessions
   const completed = lessons.filter((l) => l.completedDate);
   const upcoming = lessons.filter((l) => !l.completedDate);
@@ -51,7 +46,7 @@ export default async function InPersonClassContentPage({
         </Link>
         <h1 className="mt-1 text-xl font-black text-navy-900 sm:text-2xl">{inPersonClass.title}</h1>
         <p className="mt-1 text-sm text-ink-600">
-          جلسات، فایل‌های تکمیلی و کارت ورود
+          جلسات و فایل‌های تکمیلی کلاس
         </p>
       </header>
 
@@ -88,22 +83,6 @@ export default async function InPersonClassContentPage({
           </div>
         </div>
       ) : null}
-
-      {/* Enrollment card */}
-      {myOrder && (
-        <a
-          href={`/api/enrollment-card?class=${slug}&order=${myOrder.id}`}
-          className="flex items-center gap-3 rounded-2xl bg-teal-600 p-5 text-white shadow-card transition-colors hover:bg-teal-700"
-          download
-        >
-          <CreditCard className="h-8 w-8 shrink-0" />
-          <div className="flex-1">
-            <p className="font-black">کارت ورود به کلاس</p>
-            <p className="mt-0.5 text-sm text-teal-100">فرمت PDF — قابل چاپ</p>
-          </div>
-          <Download className="h-5 w-5" />
-        </a>
-      )}
 
       {/* Session timeline */}
       {lessons.length === 0 ? (

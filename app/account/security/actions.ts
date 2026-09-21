@@ -20,7 +20,7 @@ export interface TotpSetup {
 /** Begin enrolment: generate a secret, stash it (signed) in a short-lived cookie, return QR. */
 export async function beginTotpSetup(): Promise<TotpSetup | { error: string }> {
   const me = await getSessionUser();
-  if (!me) return { error: "ابتدا وارد شوید" };
+  if (!me || me.role !== "super_admin") return { error: "این قابلیت فقط برای مدیر ارشد فعال است" };
   const secret = generateSecret();
   const otpauth = otpauthUrl(secret, me.phone, getSettings().site.siteName || "Asadzedeh");
   const qrDataUrl = await QRCode.toDataURL(otpauth, { margin: 1, width: 240, color: { dark: "#152f3d", light: "#fffdf7" } });
@@ -41,7 +41,7 @@ export async function confirmTotpSetup(
   fd: FormData
 ): Promise<{ ok: boolean; message: string; recovery?: string[] }> {
   const me = await getSessionUser();
-  if (!me) return { ok: false, message: "ابتدا وارد شوید" };
+  if (!me || me.role !== "super_admin") return { ok: false, message: "این قابلیت فقط برای مدیر ارشد فعال است" };
   const jar = await cookies();
   const payload = verifySigned<{ uid: string; secret: string; exp: number }>(jar.get(SETUP_COOKIE)?.value ?? "");
   if (!payload || payload.uid !== me.id) return { ok: false, message: "زمان راه‌اندازی تمام شد؛ دوباره QR بسازید." };
@@ -78,6 +78,7 @@ export async function confirmTotpSetup(
 export async function disableTotp(fd: FormData) {
   const me = await getSessionUser();
   if (!me) redirect("/auth");
+  if (me.role !== "super_admin") redirect("/account/security");
   const user = getUserById(me.id);
   if (!user?.totp?.enabled) redirect("/account/security");
   const password = String(fd.get("password") ?? "");
@@ -97,7 +98,7 @@ export async function regenerateRecovery(
   fd: FormData
 ): Promise<{ ok: boolean; message: string; recovery?: string[] }> {
   const me = await getSessionUser();
-  if (!me) return { ok: false, message: "ابتدا وارد شوید" };
+  if (!me || me.role !== "super_admin") return { ok: false, message: "این قابلیت فقط برای مدیر ارشد فعال است" };
   const user = getUserById(me.id);
   if (!user?.totp?.enabled) return { ok: false, message: "ورود دومرحله‌ای فعال نیست" };
   const code = String(fd.get("code") ?? "");

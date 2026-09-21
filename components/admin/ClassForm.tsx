@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { InPersonClass } from "@/lib/types";
+import { getClassInstructorSlugs } from "@/lib/instructors";
 import { galleryImages } from "@/lib/seed";
 import { getInstructors, getVideos } from "@/lib/store";
 import { FieldLabel, Input, Select, Textarea } from "../ui/Input";
@@ -21,6 +22,7 @@ export function ClassForm({
   const instructors = getInstructors().filter((i) => i.active !== false || i.slug === c?.instructorSlug);
   const videos = getVideos().map((v) => ({ id: v.id, title: v.title, durationSec: v.durationSec, status: v.status }));
   const defaultInstructor = c?.instructorSlug ?? instructors.find((i) => i.name === c?.instructor)?.slug ?? instructors[0]?.slug ?? "";
+  const selectedInstructors = new Set(c ? getClassInstructorSlugs(c) : [defaultInstructor]);
   return (
     <form action={action} className="grid gap-4 rounded-2xl bg-card p-6 shadow-card ring-1 ring-ink-900/5 sm:grid-cols-2">
       {c && <input type="hidden" name="slug" value={c.slug} />}
@@ -82,6 +84,15 @@ export function ClassForm({
         <FieldLabel htmlFor="k-inc">شهریه شامل (هر خط یک مورد)</FieldLabel>
         <Textarea id="k-inc" name="includes" defaultValue={c?.includes.join("\n")} placeholder={"دار و ابزار در کارگاه\nگواهی پایان دوره"} />
       </div>
+      <fieldset className="sm:col-span-2 rounded-xl border border-ink-900/10 p-4">
+        <legend className="px-2 text-sm font-bold text-navy-900">مدرسان همکار</legend>
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {instructors.map((i) => <label key={i.slug} className="flex min-h-10 items-center gap-2 rounded-lg border border-ink-900/10 px-3 text-sm hover:bg-sand-50">
+            <input type="checkbox" name="instructorSlugs" value={i.slug} defaultChecked={selectedInstructors.has(i.slug) && i.slug !== defaultInstructor} />
+            <span>{i.name}<small className="block text-ink-500">{i.specialty}</small></span>
+          </label>)}
+        </div>
+      </fieldset>
 
       <ClassSessionEditor initial={c?.sessionSchedule} />
 

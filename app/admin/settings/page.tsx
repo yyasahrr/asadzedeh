@@ -12,6 +12,13 @@ import { LegalSettingsManager } from "@/components/admin/LegalSettingsManager";
 
 export const metadata: Metadata = { title: "تنظیمات" };
 
+const smsTemplateRows = [
+  ["otp", "کد ورود", "code"], ["orderCreated", "ثبت سفارش", "نام، شماره سفارش"],
+  ["paymentSuccess", "پرداخت موفق", "نام، شماره سفارش، مبلغ"], ["courseEnrollment", "فعال شدن دوره آنلاین", "نام، عنوان دوره"],
+  ["classEnrollment", "ثبت‌نام کلاس حضوری", "نام، عنوان کلاس"], ["orderShipped", "ارسال سفارش / کد رهگیری", "نام، شماره سفارش، کد رهگیری"],
+  ["certificateReady", "آماده شدن گواهی", "نام، کد گواهی"],
+] as const;
+
 const savedMessages: Record<string, string> = {
   sms: "تنظیمات پیامک ذخیره شد.",
   email: "تنظیمات ایمیل ذخیره شد.",
@@ -96,6 +103,19 @@ export default async function SettingsPage({
           برای ملی پیامک، نام کاربری را در فیلد کلید و رمز وب‌سرویس را جداگانه وارد کنید؛ شناسه قالب برای
           ارسال کد از خط خدماتی اشتراکی استفاده می‌شود. ورود با کد پیامکی در صفحه ورود فعال است.
         </p>
+        <div className="mt-5 border-t border-ink-900/10 pt-5">
+          <h3 className="font-extrabold text-navy-900">قالب‌های پیامک خدماتی</h3>
+          <div className="mt-3 grid gap-3 lg:grid-cols-2">
+            {smsTemplateRows.map(([event, label, variables]) => {
+              const template = settings.sms.templates?.[event];
+              return <div key={event} className="grid gap-3 rounded-xl border border-ink-900/10 p-4 sm:grid-cols-[auto_1fr] sm:items-center">
+                <label className="flex items-center gap-2 text-sm font-bold"><input type="checkbox" name={`sms-${event}-enabled`} defaultChecked={template?.enabled ?? event === "otp"} />{label}</label>
+                <Input name={`sms-${event}-templateId`} defaultValue={template?.templateId ?? (event === "otp" ? settings.sms.templateId : "")} dir="ltr" className="text-left" placeholder="شناسه قالب تأییدشده" />
+                <p className="text-xs text-ink-500 sm:col-span-2">ترتیب متغیرها: {variables}</p>
+              </div>;
+            })}
+          </div>
+        </div>
         <button type="submit" className="mt-4 inline-flex h-11 cursor-pointer items-center rounded-xl bg-navy-800 px-8 font-bold text-white transition-colors hover:bg-navy-700">
           ذخیره تنظیمات پیامک
         </button>

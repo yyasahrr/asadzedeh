@@ -4,6 +4,7 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["**/*.test.ts"],
+    exclude: ["**/node_modules/**", "**/.git/**", "**/.kilo/**", "**/.kilo/worktrees/**", "**/.next/**"],
     globals: true,
     // Each file boots its own in-memory PGlite database; keep them isolated.
     isolate: true,

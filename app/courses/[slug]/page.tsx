@@ -14,8 +14,10 @@ import {
   ShieldCheck,
   UsersRound,
 } from "lucide-react";
-import { getCourse, getCourses, getSettings } from "@/lib/store";
+import { getCourse, getCourses, getInstructors } from "@/lib/store";
+import { getCourseInstructorSlugs } from "@/lib/instructors";
 import { breadcrumbJsonLd,  jsonLd as jsonLdString, toMetadata  } from "@/lib/seo";
+import { appUrl } from "@/lib/env";
 import { formatPrice, formatPriceCompact, toFa } from "@/lib/format";
 import { PageHero } from "@/components/PageHero";
 import { Badge } from "@/components/ui/Badge";
@@ -87,7 +89,11 @@ export default async function CourseDetailPage({
   const videoIds = new Set(getVideos().filter((v) => v.status !== "failed").map((v) => v.id));
 
   const related = getCourses().filter((c) => c.slug !== course.slug).slice(0, 3);
-  const siteUrl = getSettings().site.siteUrl.replace(/\/$/, "");
+  const siteUrl = appUrl();
+  const instructorProfiles = getCourseInstructorSlugs(course)
+    .map((slug) => getInstructors().find((item) => item.slug === slug))
+    .filter((item): item is NonNullable<typeof item> => Boolean(item));
+  const instructorNames = instructorProfiles.length ? instructorProfiles.map((item) => item.name) : [course.instructor];
   const discount = course.oldPrice
     ? Math.round(((course.oldPrice - course.price) / course.oldPrice) * 100)
     : 0;
@@ -109,7 +115,7 @@ export default async function CourseDetailPage({
     hasCourseInstance: {
       "@type": "CourseInstance",
       courseMode: "online",
-      instructor: { "@type": "Person", name: course.instructor },
+      instructor: instructorNames.map((name) => ({ "@type": "Person", name })),
     },
   };
   const faqLd = {
@@ -274,17 +280,22 @@ export default async function CourseDetailPage({
             )}
           </section>
 
-          <section className="flex flex-col gap-3 rounded-xl bg-card p-4 ring-1 ring-ink-900/5 sm:flex-row sm:items-center" aria-label="مدرس دوره">
+          <section className="rounded-xl bg-card p-4 ring-1 ring-ink-900/5" aria-label="تیم مدرسان دوره">
+            <h2 className="mb-3 font-black text-navy-900">تیم مدرسان</h2>
+            <div className="grid gap-3 sm:grid-cols-2">
+            {(instructorProfiles.length ? instructorProfiles : [{ slug: "", name: course.instructor, specialty: course.instructorRole }]).map((instructor) => <div key={instructor.slug || instructor.name} className="flex items-center gap-3 rounded-lg bg-sand-50 p-3">
             <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-navy-800 text-lg font-black text-white">
-              {course.instructor.replace("استاد ", "").charAt(0)}
+              {instructor.name.replace("استاد ", "").charAt(0)}
             </span>
             <div className="flex-1">
-              <p className="text-base font-black text-navy-900">{course.instructor}</p>
-              <p className="mt-0.5 text-sm text-ink-600">{course.instructorRole} • پاسخ‌گویی به سوالات در کمتر از ۲۴ ساعت</p>
+              <p className="text-base font-black text-navy-900">{instructor.name}</p>
+              <p className="mt-0.5 text-sm text-ink-600">{instructor.specialty}</p>
             </div>
-            <Link href="/instructors" className="text-sm font-bold text-teal-600 hover:text-teal-700">
+            <Link href={instructor.slug ? `/instructors#${instructor.slug}` : "/instructors"} className="text-sm font-bold text-teal-600 hover:text-teal-700">
               مشاهده پروفایل ←
             </Link>
+            </div>)}
+            </div>
           </section>
 
           <section aria-labelledby="faq">

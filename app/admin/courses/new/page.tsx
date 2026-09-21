@@ -2,10 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { createCourse } from "../../actions";
 import { CourseForm } from "@/components/admin/CourseForm";
+import { can, getSessionUser } from "@/lib/auth";
+import { Denied } from "@/components/admin/Denied";
 
 export const metadata: Metadata = { title: "دوره جدید" };
 
-export default function NewCoursePage() {
+export default async function NewCoursePage() {
+  const user = await getSessionUser();
+  if (!can(user, "courses")) return <Denied />;
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">

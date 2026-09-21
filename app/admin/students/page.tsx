@@ -8,6 +8,8 @@ import { StatusBadge } from "@/components/dashboard/StatusBadge";
 import { DeleteButton } from "@/components/admin/DeleteButton";
 import { FieldLabel, Input, Select } from "@/components/ui/Input";
 import { addStudent, deleteStudent } from "../actions";
+import { can, getSessionUser } from "@/lib/auth";
+import { Denied } from "@/components/admin/Denied";
 
 export const metadata: Metadata = { title: "هنرجویان" };
 
@@ -16,6 +18,8 @@ export default async function AdminStudentsPage({
 }: {
   searchParams: Promise<{ q?: string }>;
 }) {
+  const user = await getSessionUser();
+  if (!can(user, "students")) return <Denied />;
   const { q = "" } = await searchParams;
   const filtered = buildAdminStudents(getUsers(), getEnrollments(), getStudents()).filter((s) => {
     const needle = q.trim();

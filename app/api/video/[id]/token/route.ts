@@ -2,6 +2,7 @@ import { getSessionUser, signPayload } from "@/lib/auth";
 import { audit } from "@/lib/audit";
 import { resolveAccess } from "@/lib/access";
 import { getSettings, getVideo } from "@/lib/store";
+import { isPublicSiteVideo } from "@/lib/public-site-video";
 
 export const dynamic = "force-dynamic";
 
@@ -15,8 +16,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const user = await getSessionUser();
   const video = getVideo(id);
   if (!video) return Response.json({ error: "ویدیو پیدا نشد" }, { status: 404 });
+  if (video.status !== "ready") return Response.json({ error: "ویدیو آماده پخش نیست" }, { status: 409 });
   const { ctx, access } = resolveAccess(user, video);
-  if (!access.ok) {
+  const publicSiteMedia = !user && isPublicSiteVideo(id);
+  if (!access.ok && !publicSiteMedia) {
     await audit({ action: "video.denied", level: "security", actor: user ? { id: user.id, name: user.name, role: user.role } : null, target: `video:${id}`, detail: { reason: access.reason } });
     return Response.json({ error: access.reason ?? "دسترسی ندارید" }, { status: 403 });
   }
@@ -31,16 +34,17 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   // The overlay watermark (moving text drawn by the player) still identifies the
   // viewer on screen — degradation is visible to the operator, not silent.
   const source: "hls" | "wm" | "file" = "file";
-  const watermarkText = access.watermark && user ? user.phone : "";
+  const watermarkText = access.ok && access.watermark && user ? user.phone : "";
 
   const exp = Date.now() + ttl * 1000;
-  const token = signPayload({ v: id, u: user?.id ?? "anon", s: source, ua, exp });
+  const scope = publicSiteMedia ? "public-site-media" : "authenticated-playback";
+  const token = signPayload({ v: id, u: user?.id ?? "anon", s: source, ua, exp, scope });
 
   await audit({
     action: "video.play",
     actor: user ? { id: user.id, name: user.name, role: user.role } : null,
     target: `video:${id}`,
-    detail: { course: ctx.course?.slug, class: ctx.inPersonClass?.slug, lesson: ctx.lesson?.id, source },
+    detail: { course: ctx.course?.slug, class: ctx.inPersonClass?.slug, lesson: ctx.lesson?.id, source, scope },
   });
 
   return Response.json({

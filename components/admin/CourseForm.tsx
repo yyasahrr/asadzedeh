@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { OnlineCourse } from "@/lib/types";
+import { getCourseInstructorSlugs } from "@/lib/instructors";
 import { galleryImages } from "@/lib/seed";
 import { getInstructors, getSettings, getVideos } from "@/lib/store";
 import { FieldLabel, Input, Select, Textarea } from "../ui/Input";
@@ -24,6 +25,7 @@ export function CourseForm({
   const videos = getVideos().map((v) => ({ id: v.id, title: v.title, durationSec: v.durationSec, status: v.status }));
   const protection = c?.protection ?? getSettings().video.defaults;
   const defaultInstructor = c?.instructorSlug ?? instructors.find((i) => i.name === c?.instructor)?.slug ?? instructors[0]?.slug ?? "";
+  const selectedInstructors = new Set(c ? getCourseInstructorSlugs(c) : [defaultInstructor]);
   return (
     <form action={action} className="grid gap-4 rounded-2xl bg-card p-6 shadow-card ring-1 ring-ink-900/5 sm:grid-cols-2">
       {c && <input type="hidden" name="slug" value={c.slug} />}
@@ -36,6 +38,16 @@ export function CourseForm({
         <FieldLabel htmlFor="f-short">عنوان کوتاه</FieldLabel>
         <Input id="f-short" name="shortTitle" defaultValue={c?.shortTitle} placeholder="مثلاً: گلیم‌بافی مقدماتی" />
       </div>
+      <fieldset className="sm:col-span-2 rounded-xl border border-ink-900/10 p-4">
+        <legend className="px-2 text-sm font-bold text-navy-900">مدرسان همکار</legend>
+        <p className="mb-3 text-xs text-ink-500">مدرس اصلی را بالا انتخاب کنید؛ مدرس‌های تکمیلی را اینجا بیفزایید.</p>
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {instructors.map((i) => <label key={i.slug} className="flex min-h-10 items-center gap-2 rounded-lg border border-ink-900/10 px-3 text-sm hover:bg-sand-50">
+            <input type="checkbox" name="instructorSlugs" value={i.slug} defaultChecked={selectedInstructors.has(i.slug) && i.slug !== defaultInstructor} />
+            <span>{i.name}<small className="block text-ink-500">{i.specialty}</small></span>
+          </label>)}
+        </div>
+      </fieldset>
       <div>
         <FieldLabel htmlFor="f-badge">نشان (اختیاری)</FieldLabel>
         <Input id="f-badge" name="badge" defaultValue={c?.badge} placeholder="مثلاً: جدید، پرفروش‌ترین" />

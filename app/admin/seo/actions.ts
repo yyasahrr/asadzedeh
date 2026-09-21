@@ -7,6 +7,8 @@ import { can, getSessionUser } from "@/lib/auth";
 import { audit } from "@/lib/audit";
 import { getSeoEntries, getSeoRedirects, getSettings, writeDb } from "@/lib/store";
 import type { SeoEntry, SeoEntityType, SeoRedirect } from "@/lib/types";
+import { appUrl } from "@/lib/env";
+import { safeCanonicalOverride } from "@/lib/urls";
 
 async function requireSeo() {
   const user = await getSessionUser();
@@ -27,7 +29,7 @@ export async function saveSeoDefaults(fd: FormData) {
         defaultDescription: str("defaultDescription") || s.site.tagline,
         defaultOgImage: str("defaultOgImage") || "/images/hero-weaver.jpg",
         siteName: str("siteName") || s.site.siteName,
-        canonicalBaseUrl: str("canonicalBaseUrl").replace(/\/$/, "") || s.site.siteUrl,
+        canonicalBaseUrl: safeCanonicalOverride(str("canonicalBaseUrl")) || appUrl(),
         robotsIndex: str("robotsIndex") === "on",
         robotsFollow: str("robotsFollow") === "on",
         social: {
@@ -61,7 +63,7 @@ export async function saveSeoEntry(fd: FormData) {
     entityId,
     metaTitle: str("metaTitle"),
     metaDescription: str("metaDescription"),
-    canonicalUrl: str("canonicalUrl"),
+    canonicalUrl: safeCanonicalOverride(str("canonicalUrl")),
     ogTitle: str("ogTitle"),
     ogDescription: str("ogDescription"),
     ogImage: str("ogImage"),

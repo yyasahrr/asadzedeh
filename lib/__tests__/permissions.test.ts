@@ -25,10 +25,12 @@ describe("permissions", () => {
     expect(isStaff(user("instructor"))).toBe(true);
   });
 
-  it("super_admin and admin are privileged", () => {
+  it("reserves owner identity and sensitive permissions for super_admin", () => {
     expect(isSuperAdmin(user("super_admin"))).toBe(true);
-    expect(isSuperAdmin(user("admin"))).toBe(true);
+    expect(isSuperAdmin(user("admin"))).toBe(false);
     expect(can(user("admin"), "seo")).toBe(true);
+    expect(can(user("admin"), "users")).toBe(false);
+    expect(can(user("super_admin"), "security")).toBe(true);
     expect(can(user("support"), "users")).toBe(false);
   });
 });

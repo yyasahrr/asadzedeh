@@ -56,7 +56,7 @@ export default async function SecurityPage({
           </p>
         )}
 
-        <section className="rounded-2xl bg-card p-6 shadow-card ring-1 ring-ink-900/5">
+        {me.role === "super_admin" ? <section className="rounded-2xl bg-card p-6 shadow-card ring-1 ring-ink-900/5">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h2 className="flex items-center gap-2 text-lg font-black text-navy-900">
@@ -106,9 +106,12 @@ export default async function SecurityPage({
           {policy.requireStaff2fa && isStaff(me) && (
             <p className="mt-4 text-xs text-ink-500">سیاست سایت: ورود دومرحله‌ای برای همه همکاران الزامی است.</p>
           )}
-        </section>
+        </section> : <section className="rounded-2xl bg-card p-6 shadow-card ring-1 ring-ink-900/5">
+          <h2 className="flex items-center gap-2 text-lg font-black text-navy-900"><MonitorSmartphone className="h-5 w-5 text-teal-600" />ورود امن با کد پیامکی</h2>
+          <p className="mt-2 text-sm leading-7 text-ink-600">ورود حساب شما فقط با کد یک‌بارمصرف ارسال‌شده به شماره موبایل انجام می‌شود و نیازی به Google Authenticator ندارید.</p>
+        </section>}
 
-        <section className="rounded-2xl bg-card p-6 shadow-card ring-1 ring-ink-900/5">
+        {me.role === "super_admin" ? <section className="rounded-2xl bg-card p-6 shadow-card ring-1 ring-ink-900/5">
           <h2 className="flex items-center gap-2 text-lg font-black text-navy-900">
             <KeyRound className="h-5 w-5 text-ochre-600" />
             تغییر رمز عبور
@@ -126,7 +129,7 @@ export default async function SecurityPage({
               <button type="submit" className="h-11 w-full cursor-pointer rounded-xl bg-navy-800 font-bold text-white hover:bg-navy-700">ذخیره رمز</button>
             </div>
           </form>
-        </section>
+        </section> : null}
 
         <section className="rounded-2xl bg-card p-6 shadow-card ring-1 ring-ink-900/5">
           <div className="flex flex-wrap items-center justify-between gap-3">

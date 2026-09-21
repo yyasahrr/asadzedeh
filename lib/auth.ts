@@ -1,9 +1,9 @@
 import crypto from "node:crypto";
 import { cookies } from "next/headers";
-import type { Role, Session, User } from "./types";
+import type { Permission, Role, Session, User } from "./types";
 import { isProduction } from "./env";
 import { SEED_ACCOUNTS, SEED_DEMO_ACCOUNT_IDS } from "./seed";
-import { getSession, getSettings, getUserById } from "./store";
+import { getInstructorByUser, getSession, getSettings, getUserById } from "./store";
 
 export const SESSION_COOKIE = "az_session";
 /** Short-lived cookie used between password step and TOTP step. */
@@ -164,7 +164,7 @@ export function isStaff(user: SessionUser | null): boolean {
 }
 
 export function isInstructor(user: SessionUser | null): boolean {
-  return !!user && user.role === "instructor";
+  return !!user && !!getInstructorByUser(user.id);
 }
 
 /**
@@ -177,8 +177,7 @@ export function isInstructor(user: SessionUser | null): boolean {
  * opt-in outside production and unavailable inside it.
  */
 export function staffMfaRequired(): boolean {
-  if (isProduction()) return true;
-  return getSettings().security.requireStaff2fa;
+  return isProduction();
 }
 
 /**
@@ -191,38 +190,16 @@ export function staffMfaRequired(): boolean {
  * still held to it.
  */
 export function needsMfa(user: SessionUser | null): "none" | "verify" | "enrol" {
-  if (!user || !isStaff(user)) return "none";
+  if (!user || user.role !== "super_admin") return "none";
   if (user.totpEnabled) return user.mfaVerified ? "none" : "verify";
-  return staffMfaRequired() && user.role !== "instructor" ? "enrol" : "none";
+  return "enrol";
 }
 
 /* ---------- permissions ---------- */
 
-export type Permission =
-  | "courses"
-  | "classes"
-  | "blog"
-  | "content"
-  | "media"
-  | "comments"
-  | "students"
-  | "orders"
-  | "submissions"
-  | "certificates"
-  | "users"
-  | "notify"
-  | "payments"
-  | "settings"
-  | "videos"
-  | "instructors"
-  | "shop"
-  | "preorders"
-  | "audit"
-  | "security"
-  | "support"
-  | "seo";
+export type { Permission } from "./types";
 
-const STAFF_ALL: Permission[] = [
+export const ALL_PERMISSIONS: Permission[] = [
   "courses", "classes", "blog", "content", "media", "comments",
   "students", "orders", "submissions", "certificates",
   "users", "notify", "payments", "settings",
@@ -231,8 +208,8 @@ const STAFF_ALL: Permission[] = [
 ];
 
 const ROLE_PERMS: Record<Role, Permission[]> = {
-  super_admin: STAFF_ALL,
-  admin: STAFF_ALL,
+  super_admin: ALL_PERMISSIONS,
+  admin: ALL_PERMISSIONS,
   manager: [
     "courses", "classes", "blog", "content", "media", "comments",
     "students", "orders", "submissions", "certificates", "notify", "payments",
@@ -248,7 +225,14 @@ const ROLE_PERMS: Record<Role, Permission[]> = {
 
 export function can(user: SessionUser | null, perm: Permission): boolean {
   if (!user) return false;
-  return ROLE_PERMS[user.role].includes(perm);
+  if (user.role === "super_admin") return true;
+  const profile = getSettings().accessProfiles?.find((item) => item.id === user.accessProfileId);
+  const effective = new Set(profile?.permissions ?? ROLE_PERMS[user.role]);
+  for (const allowed of user.permissionOverrides?.allow ?? []) effective.add(allowed);
+  for (const denied of user.permissionOverrides?.deny ?? []) effective.delete(denied);
+  // Sensitive access control remains owner-only.
+  if (perm === "users" || perm === "security") return false;
+  return effective.has(perm);
 }
 
 export const roleLabels: Record<Role, string> = {
@@ -262,8 +246,20 @@ export const roleLabels: Record<Role, string> = {
 };
 
 export function isSuperAdmin(user: SessionUser | null): boolean {
-  return !!user && (user.role === "super_admin" || user.role === "admin");
+  return user?.role === "super_admin";
 }
+
+export function effectivePermissions(user: SessionUser | null): Permission[] {
+  return ALL_PERMISSIONS.filter((permission) => can(user, permission));
+}
+
+export const permissionLabels: Record<Permission, string> = {
+  courses: "دوره‌های آنلاین", classes: "کلاس‌های حضوری", blog: "مقالات", content: "محتوای سایت",
+  media: "رسانه", comments: "نظرات", students: "هنرجویان", orders: "سفارش‌ها",
+  submissions: "تمرین‌ها", certificates: "گواهی‌ها", users: "کاربران و دسترسی", notify: "پیامک و ایمیل",
+  payments: "پرداخت", settings: "تنظیمات", videos: "ویدیوها", instructors: "اساتید", shop: "فروشگاه",
+  preorders: "پیش‌سفارش‌ها", audit: "لاگ سیستم", security: "امنیت پنل", support: "پشتیبانی", seo: "سئو",
+};
 
 /* ---------- signed URLs for protected video delivery ---------- */
 

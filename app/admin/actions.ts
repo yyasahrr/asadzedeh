@@ -10,6 +10,7 @@ import {
   supportChannelsSchema,
   updateRoleSchema,
 } from "@/lib/validation/admin";
+import { safeHttpUrl, safeImageSource } from "@/lib/urls";
 import { getDriver } from "@/lib/gateways/registry";
 import { validate } from "@/lib/validation/schema";
 import { parseClassSessions } from "@/lib/class-sessions";
@@ -18,7 +19,7 @@ import { parseStoredDate } from "@/lib/jalali-date";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { faToday, parsePrice, slugify } from "@/lib/format";
-import { can, getSessionUser, hashPassword, isSuperAdmin, type Permission, type SessionUser } from "@/lib/auth";
+import { ALL_PERMISSIONS, can, getSessionUser, hashPassword, isSuperAdmin, type Permission, type SessionUser } from "@/lib/auth";
 import { audit } from "@/lib/audit";
 import { sendEmail, sendSms } from "@/lib/notify";
 import { deleteVideoFiles, transcodeToHls } from "@/lib/video";
@@ -30,6 +31,9 @@ import { getCertificateRequest, updateCertificateRequest } from "@/lib/certifica
 import { validateCertificatePdf } from "@/lib/certificate-upload";
 import { deleteObject, putObject, randomObjectKey, storageDurable } from "@/lib/storage";
 import { isProduction } from "@/lib/env";
+import { sendTransactionalSms } from "@/lib/transactional-sms";
+import { normalizeAboutContent, normalizeHomeContent, normalizeSiteMedia } from "@/lib/site-content";
+import type { SiteMedia } from "@/lib/types";
 import {
   getArticle,
   getArticles,
@@ -94,6 +98,27 @@ async function staff(perm: Permission): Promise<SessionUser> {
 
 function lines(value: string): string[] {
   return value.split("\n").map((l) => l.trim()).filter(Boolean);
+}
+
+function instructorSlugs(fd: FormData): string[] {
+  const primary = str(fd, "instructorSlug");
+  const additional = fd.getAll("instructorSlugs").map(String).map((value) => value.trim()).filter(Boolean);
+  return [...new Set([primary, ...additional].filter(Boolean))];
+}
+
+const BUILT_IN_PROFILE_IDS = new Set(["manager", "content", "support", "instructor"]);
+function postedPermissions(fd: FormData, name: string): Permission[] {
+  const allowed = new Set(ALL_PERMISSIONS);
+  return [...new Set(fd.getAll(name).map(String).filter((value): value is Permission => allowed.has(value as Permission)))];
+}
+
+async function ownerOnly(): Promise<SessionUser> {
+  const user = await getSessionUser();
+  if (!isSuperAdmin(user)) {
+    await audit({ action: "admin.denied", level: "security", actor: user ? actor(user) : null, detail: { perm: "users" } });
+    redirect("/admin");
+  }
+  return user!;
 }
 
 function paragraphs(value: string): string[] {
@@ -195,6 +220,7 @@ export async function createCourse(fd: FormData) {
   const syllabus = parseSyllabus(fd);
   const courses = getCourses();
   const instructorSlug = str(fd, "instructorSlug");
+  const assignedInstructorSlugs = instructorSlugs(fd);
   const inst = instructorSlug ? getInstructor(instructorSlug) : undefined;
   const slug = uniqueSlug(newSlug("c"), (s) => courses.some((c) => c.slug === s));
   courses.unshift({
@@ -205,6 +231,7 @@ export async function createCourse(fd: FormData) {
     instructor: inst?.name || str(fd, "instructor") || "استاد ناصر اسد زاده",
     instructorRole: inst?.specialty ? `مدرس ${inst.specialty}` : "مدرس اسدزاده",
     instructorSlug: inst?.slug,
+    instructorSlugs: assignedInstructorSlugs,
     level: (str(fd, "level") || "مقدماتی") as "مقدماتی",
     sessions: num(fd, "sessions", 10),
     hours: num(fd, "hours", 10),
@@ -234,6 +261,7 @@ export async function updateCourse(fd: FormData) {
   if (!prev) return;
   const syllabus = parseSyllabus(fd);
   const instructorSlug = str(fd, "instructorSlug");
+  const assignedInstructorSlugs = instructorSlugs(fd);
   const inst = instructorSlug ? getInstructor(instructorSlug) : undefined;
   const courses = getCourses().map((c) =>
     c.slug === slug
@@ -245,6 +273,7 @@ export async function updateCourse(fd: FormData) {
           instructor: inst?.name || str(fd, "instructor") || c.instructor,
           instructorRole: inst?.specialty ? `مدرس ${inst.specialty}` : c.instructorRole,
           instructorSlug: inst?.slug ?? c.instructorSlug,
+          instructorSlugs: assignedInstructorSlugs.length ? assignedInstructorSlugs : c.instructorSlugs,
           level: (str(fd, "level") || c.level) as typeof c.level,
           sessions: num(fd, "sessions", c.sessions),
           hours: num(fd, "hours", c.hours),
@@ -550,6 +579,7 @@ export async function createClass(fd: FormData) {
   const capacity = num(fd, "capacity", 10);
   const classes = getClasses();
   const instructorSlug = str(fd, "instructorSlug");
+  const assignedInstructorSlugs = instructorSlugs(fd);
   const inst = instructorSlug ? getInstructor(instructorSlug) : undefined;
   const slug = uniqueSlug(newSlug("k"), (s) => classes.some((c) => c.slug === s));
   const schedule = parseClassSessions(fd.get("sessionSchedule"));
@@ -561,6 +591,7 @@ export async function createClass(fd: FormData) {
     title,
     instructor: inst?.name || str(fd, "instructor") || "استاد ناصر اسد زاده",
     instructorSlug: inst?.slug,
+    instructorSlugs: assignedInstructorSlugs,
     startDate: schedule.startDate || manualStartDate || "",
     days: str(fd, "days"),
     time: str(fd, "time"),
@@ -589,6 +620,7 @@ export async function updateClass(fd: FormData) {
   if (!prev) return;
   const capacity = num(fd, "capacity", prev.capacity);
   const instructorSlug = str(fd, "instructorSlug");
+  const assignedInstructorSlugs = instructorSlugs(fd);
   const inst = instructorSlug ? getInstructor(instructorSlug) : undefined;
   const schedule = parseClassSessions(fd.get("sessionSchedule"));
   if (!schedule.ok) redirect(`/admin/classes/${encodeURIComponent(slug)}/edit?error=${encodeURIComponent(schedule.error)}`);
@@ -601,6 +633,7 @@ export async function updateClass(fd: FormData) {
           title: str(fd, "title") || c.title,
           instructor: inst?.name || str(fd, "instructor") || c.instructor,
           instructorSlug: inst?.slug ?? c.instructorSlug,
+          instructorSlugs: assignedInstructorSlugs.length ? assignedInstructorSlugs : c.instructorSlugs,
           startDate: schedule.startDate || manualStartDate || c.startDate,
           days: str(fd, "days") || c.days,
           time: str(fd, "time") || c.time,
@@ -1085,8 +1118,8 @@ export async function updateOrderStatus(fd: FormData) {
   if (prev && status === "پرداخت شده" && prev.status !== "پرداخت شده") {
     await grantAccessForOrder(id);
   }
-  if (prev?.phone && (status === "ارسال شده" || trackingCode)) {
-    await sendSms([prev.phone], `اسدزاده: سفارش ${id} ارسال شد.${trackingCode ? ` کد رهگیری: ${trackingCode}` : ""}`);
+  if (prev?.phone && status === "ارسال شده" && trackingCode) {
+    await sendTransactionalSms({ event: "orderShipped", eventKey: `orderShipped:${id}:${trackingCode}`, phone: prev.phone, payload: { customerName: prev.student.replace(/\s*\(09\d{9}\)\s*$/, ""), orderId: id, trackingCode } });
   }
   revalidatePath("/admin/orders");
   revalidatePath("/admin");
@@ -1197,6 +1230,8 @@ export async function issueRequestedCertificate(fd: FormData) {
     reviewedAt: new Date().toISOString(), reviewedBy: me.id,
   });
   await audit({ action: "certificate.issue", actor: actor(me), target: `certificate:${existing.code}`, detail: { requestId: id, deliveryType: "generated" } });
+  const certificateUser = getUserById(request.userId);
+  if (certificateUser?.phone) await sendTransactionalSms({ event: "certificateReady", eventKey: `certificateReady:${existing.code}`, phone: certificateUser.phone, payload: { customerName: certificateUser.name, certificateCode: existing.code } });
   revalidatePath("/admin/certificates");
   revalidatePath("/dashboard/certificates");
 }
@@ -1242,6 +1277,8 @@ export async function uploadRequestedCertificatePdf(fd: FormData) {
     });
     if (oldKey && oldKey !== newKey) await deleteObject(oldKey).catch((error) => logger.warn({ event: "certificate.pdf.orphan", key: oldKey, err: String(error) }));
     await audit({ action: oldKey ? "certificate.pdf.replace" : "certificate.pdf.upload", actor: actor(me), target: `certificate:${cert.code}`, detail: { requestId: id } });
+    const certificateUser = getUserById(request.userId);
+    if (certificateUser?.phone) await sendTransactionalSms({ event: "certificateReady", eventKey: `certificateReady:${cert.code}`, phone: certificateUser.phone, payload: { customerName: certificateUser.name, certificateCode: cert.code } });
   } catch (error) {
     await deleteObject(newKey).catch(() => undefined);
     throw error;
@@ -1473,8 +1510,11 @@ function parseSupportSettings(input: unknown): SupportChannelSettings {
   if (!parsed.ok) return current;
   return {
     enabled: parsed.data.enabled,
+    phone: parsed.data.phone.replace(/[^+\d]/g, ""),
     telegram: parsed.data.telegram.replace(/^@/, ""),
+    bale: safeHttpUrl(parsed.data.bale),
     whatsapp: parsed.data.whatsapp.replace(/[^\d+]/g, ""),
+    instagram: safeHttpUrl(parsed.data.instagram),
     label: parsed.data.label || "پشتیبانی سریع",
     whatsappMessage: parsed.data.whatsappMessage,
   };
@@ -1509,8 +1549,24 @@ export async function saveSiteContent(fd: FormData) {
     },
     footerAbout: str(fd, "footerAbout") || s.site.footerAbout,
     socials: {
-      instagram: str(fd, "instagram") || s.site.socials.instagram,
-      telegram: str(fd, "telegram") || s.site.socials.telegram,
+      instagram: safeHttpUrl(str(fd, "instagram")),
+      telegram: safeHttpUrl(str(fd, "telegram")),
+      bale: safeHttpUrl(str(fd, "bale")),
+    },
+    trustBadges: {
+      enamad: { enabled: bool(fd, "enamadEnabled") },
+      nationalCarpet: {
+        enabled: bool(fd, "nationalCarpetEnabled"),
+        title: str(fd, "nationalCarpetTitle") || "مرکز ملی فرش ایران",
+        image: safeImageSource(str(fd, "nationalCarpetImage")),
+        href: safeHttpUrl(str(fd, "nationalCarpetHref")),
+      },
+      tvto: {
+        enabled: bool(fd, "tvtoEnabled"),
+        title: str(fd, "tvtoTitle") || "سازمان آموزش فنی و حرفه‌ای کشور",
+        image: safeImageSource(str(fd, "tvtoImage")),
+        href: safeHttpUrl(str(fd, "tvtoHref")),
+      },
     },
     aboutIntro: paragraphs(str(fd, "aboutIntro")).length > 0 ? paragraphs(str(fd, "aboutIntro")) : s.site.aboutIntro,
   };
@@ -1525,8 +1581,11 @@ export async function saveSiteContent(fd: FormData) {
   };
   const support = parseSupportSettings({
     enabled: bool(fd, "supEnabled"),
+    phone: str(fd, "supPhone"),
     telegram: str(fd, "supTelegram"),
+    bale: str(fd, "supBale"),
     whatsapp: str(fd, "supWhatsapp"),
+    instagram: str(fd, "supInstagram"),
     label: str(fd, "supLabel"),
     whatsappMessage: str(fd, "supWhatsappMessage"),
   });
@@ -1556,11 +1615,15 @@ export async function addStaff(fd: FormData) {
     id,
     name,
     phone,
-    passwordHash: hashPassword(password),
+    // Non-owner staff authenticate by OTP. A random unexposed value makes the
+    // legacy required hash unusable when the operator leaves this blank.
+    passwordHash: hashPassword(password || `${crypto.randomUUID()}${crypto.randomUUID()}`),
     role,
+    accessProfileId: str(fd, "accessProfileId") || undefined,
     createdAt: faToday(),
   });
-  writeDb({ users });
+  const instructorSlug = str(fd, "instructorSlug");
+  writeDb({ users, instructors: getInstructors().map((item) => item.slug === instructorSlug ? { ...item, userId: id } : item) });
   await audit({ action: "user.create", level: "security", actor: actor(me), target: `user:${id}`, detail: { role, name } });
   revalidatePath("/admin/users");
   redirect("/admin/users");
@@ -1587,9 +1650,121 @@ export async function updateUserRole(fd: FormData) {
   if (id === me.id) redirect("/admin/users"); // can't demote yourself
   const prev = getUserById(id);
   if (!prev) redirect("/admin/users?error=notfound");
-  writeDb({ users: getUsers().map((u) => (u.id === id ? { ...u, role } : u)) });
+  const accessProfileId = str(fd, "accessProfileId") || undefined;
+  writeDb({ users: getUsers().map((u) => (u.id === id ? { ...u, role, accessProfileId } : u)) });
   await audit({ action: "user.role", level: "security", actor: actor(me), target: `user:${id}`, detail: { from: prev?.role, to: role } });
   revalidatePath("/admin/users");
+}
+
+function parsedJson(value: FormDataEntryValue | null): unknown {
+  try { return JSON.parse(String(value ?? "null")); } catch { return null; }
+}
+
+function configuredVideoIds(value: unknown): string[] {
+  const ids: string[] = [];
+  const visit = (item: unknown) => {
+    if (!item || typeof item !== "object") return;
+    const record = item as Record<string, unknown>;
+    if (record.kind === "video" && typeof record.videoId === "string") ids.push(record.videoId);
+    Object.values(record).forEach((child) => Array.isArray(child) ? child.forEach(visit) : visit(child));
+  };
+  visit(value);
+  return [...new Set(ids)];
+}
+
+function usablePublicVideos(value: unknown): boolean {
+  const ready = new Set(getVideos().filter((video) => video.status === "ready").map((video) => video.id));
+  return configuredVideoIds(value).every((id) => ready.has(id));
+}
+
+export async function saveHomeContent(fd: FormData) {
+  const me = await staff("content");
+  const current = getSettings();
+  const rawHome = parsedJson(fd.get("home"));
+  const rawMedia = parsedJson(fd.get("heroMedia"));
+  const fallback: SiteMedia = { kind: "image", image: current.site.hero.image, alt: "کارگاه بافت اسدزاده" };
+  const media = normalizeSiteMedia(rawMedia, fallback);
+  const home = normalizeHomeContent(rawHome);
+  if (!usablePublicVideos({ media, home })) redirect("/admin/content/home?error=video");
+  writeDb({ settings: { ...current, site: { ...current.site, hero: { ...current.site.hero, media }, home } } });
+  await audit({ action: "content.home.updated", actor: actor(me), detail: { section: "home", heroMediaKind: media.kind, workshopItems: home.workshop.items.length, testimonials: home.testimonials.items.length } });
+  revalidateAll();
+  redirect("/admin/content/home?saved=1");
+}
+
+export async function saveAboutContent(fd: FormData) {
+  const me = await staff("content");
+  const current = getSettings();
+  const about = normalizeAboutContent(parsedJson(fd.get("about")), current.site.aboutIntro);
+  if (!usablePublicVideos(about)) redirect("/admin/content/about?error=video");
+  writeDb({ settings: { ...current, site: { ...current.site, about } } });
+  await audit({ action: "content.about.updated", actor: actor(me), detail: { section: "about", timelineItems: about.timeline.items.length, galleryItems: about.gallery.items.length, values: about.values.items.length } });
+  revalidateAll();
+  redirect("/admin/content/about?saved=1");
+}
+
+export async function updateStaffAccess(fd: FormData) {
+  const me = await ownerOnly();
+  const id = str(fd, "id");
+  if (!id || id === me.id) redirect("/admin/users?error=self");
+  const target = getUserById(id);
+  if (!target || target.role === "super_admin") redirect("/admin/users?error=notfound");
+  const roleResult = validate(updateRoleSchema, { id, role: fd.get("role") });
+  if (!roleResult.ok) redirect("/admin/users?error=role");
+  const profileId = str(fd, "accessProfileId");
+  if (profileId && !getSettings().accessProfiles?.some((profile) => profile.id === profileId)) redirect("/admin/users?error=profile");
+  const allow = postedPermissions(fd, "permissionAllow");
+  const deny = postedPermissions(fd, "permissionDeny");
+  const overlap = new Set(allow.filter((permission) => deny.includes(permission)));
+  const disabled = bool(fd, "disabled");
+  const instructorSlug = str(fd, "instructorSlug");
+  const instructors = getInstructors().map((item) => {
+    if (item.userId === id && item.slug !== instructorSlug) return { ...item, userId: undefined };
+    if (item.slug === instructorSlug) return { ...item, userId: id };
+    return item;
+  });
+  await writeDbAsync({
+    users: getUsers().map((user) => user.id === id ? {
+      ...user, role: roleResult.data.role, accessProfileId: profileId || undefined,
+      permissionOverrides: {
+        allow: allow.filter((permission) => !overlap.has(permission)),
+        deny: deny.filter((permission) => !overlap.has(permission)),
+      },
+      disabled, disabledReason: disabled ? (str(fd, "disabledReason") || "غیرفعال‌شده توسط مدیر ارشد") : undefined,
+    } : user),
+    instructors,
+  });
+  await audit({ action: "user.access.update", level: "security", actor: actor(me), target: `user:${id}`, detail: { profileId, role: roleResult.data.role, disabled, instructorSlug: instructorSlug || null } });
+  revalidatePath("/admin/users");
+  redirect("/admin/users?saved=access");
+}
+
+export async function saveAccessProfile(fd: FormData) {
+  const me = await ownerOnly();
+  const existingId = str(fd, "id");
+  const name = str(fd, "name").slice(0, 80);
+  if (!name) redirect("/admin/users/access-profiles?error=name");
+  const id = existingId || `profile-${crypto.randomUUID()}`;
+  const profiles = getSettings().accessProfiles ?? [];
+  if (existingId && !profiles.some((profile) => profile.id === existingId)) redirect("/admin/users/access-profiles?error=notfound");
+  const profile = { id, name, description: str(fd, "description").slice(0, 300) || undefined, permissions: postedPermissions(fd, "permissions") };
+  const settings = getSettings();
+  await writeDbAsync({ settings: { ...settings, accessProfiles: [...profiles.filter((item) => item.id !== id), profile] } });
+  await audit({ action: existingId ? "access_profile.update" : "access_profile.create", level: "security", actor: actor(me), target: `accessProfile:${id}` });
+  revalidatePath("/admin/users/access-profiles");
+  revalidatePath("/admin/users");
+  redirect("/admin/users/access-profiles?saved=1");
+}
+
+export async function deleteAccessProfile(fd: FormData) {
+  const me = await ownerOnly();
+  const id = str(fd, "id");
+  if (BUILT_IN_PROFILE_IDS.has(id)) redirect("/admin/users/access-profiles?error=builtin");
+  if (getUsers().some((user) => user.accessProfileId === id)) redirect("/admin/users/access-profiles?error=inuse");
+  const settings = getSettings();
+  await writeDbAsync({ settings: { ...settings, accessProfiles: (settings.accessProfiles ?? []).filter((profile) => profile.id !== id) } });
+  await audit({ action: "access_profile.delete", level: "security", actor: actor(me), target: `accessProfile:${id}` });
+  revalidatePath("/admin/users/access-profiles");
 }
 
 /* ---------- security (admin) ---------- */
@@ -1688,7 +1863,14 @@ export async function saveSmsSettings(fd: FormData) {
         });
         // An unparseable provider would break every OTP and order notification,
         // so keep the stored config rather than write a broken one.
-        return parsed.ok ? parsed.data : s.sms;
+        if (!parsed.ok) return s.sms;
+        const events = ["otp", "orderCreated", "paymentSuccess", "courseEnrollment", "classEnrollment", "orderShipped", "certificateReady"] as const;
+        const templates = Object.fromEntries(events.map((event) => [event, {
+          enabled: bool(fd, `sms-${event}-enabled`),
+          templateId: str(fd, `sms-${event}-templateId`),
+        }])) as NonNullable<typeof s.sms.templates>;
+        // Keep the legacy field synchronized for existing OTP call sites.
+        return { ...parsed.data, templateId: templates.otp.templateId || parsed.data.templateId, templates };
       })(),
     },
   });

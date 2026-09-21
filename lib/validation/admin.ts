@@ -32,8 +32,8 @@ export const addStaffSchema = z.object({
   phone: zPhone,
   password: z
     .string()
-    .min(10, "گذرواژه باید حداقل ۱۰ نویسه باشد")
-    .max(200, "گذرواژه بیش از حد طولانی است"),
+    .max(200, "گذرواژه بیش از حد طولانی است")
+    .refine((value) => value.length === 0 || value.length >= 10, "گذرواژه باید حداقل ۱۰ نویسه باشد"),
   role: zStaffRole,
 });
 
@@ -61,6 +61,7 @@ export function isAssignableRole(role: Role): role is AssignableRole {
  */
 export const supportChannelsSchema = z.object({
   enabled: z.boolean(),
+  phone: z.string().trim().max(40).refine((v) => v === "" || /^[+\d\s()-]{5,40}$/.test(v), { error: "شماره تماس معتبر نیست" }),
   telegram: z
     .string()
     .trim()
@@ -75,6 +76,8 @@ export const supportChannelsSchema = z.object({
     .refine((v) => v === "" || /^\+?[\d\s-]{8,20}$/.test(v), {
       error: "شماره واتساپ معتبر نیست",
     }),
+  bale: z.string().trim().max(300).refine((v) => v === "" || /^https?:\/\//i.test(v), { error: "لینک بله باید کامل باشد" }),
+  instagram: z.string().trim().max(300).refine((v) => v === "" || /^https?:\/\//i.test(v), { error: "لینک اینستاگرام باید کامل باشد" }),
   label: z.string().trim().max(40, "عنوان بیش از حد طولانی است"),
   whatsappMessage: z.string().trim().max(400, "پیام پیش‌فرض بیش از حد طولانی است"),
 });

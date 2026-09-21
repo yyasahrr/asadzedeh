@@ -11,11 +11,13 @@ export function UploadField({
   initial,
   gallery,
   label,
+  onValueChange,
 }: {
   name: string;
   initial?: string;
   gallery: { value: string; label: string }[];
   label: string;
+  onValueChange?: (value: string) => void;
 }) {
   const [value, setValue] = useState(initial ?? gallery[0]?.value ?? "");
   const [busy, setBusy] = useState(false);
@@ -32,6 +34,7 @@ export function UploadField({
     setBusy(false);
     if (res.ok && res.path) {
       setValue(res.path);
+      onValueChange?.(res.path);
     } else {
       setError(res.error ?? "خطا در آپلود");
     }
@@ -44,7 +47,7 @@ export function UploadField({
       <div className="flex gap-2">
         <select
           value={gallery.some((g) => g.value === value) ? value : "__upload"}
-          onChange={(e) => setValue(e.target.value)}
+          onChange={(e) => { setValue(e.target.value); onValueChange?.(e.target.value); }}
           className="h-11 min-w-0 flex-1 cursor-pointer rounded-xl border border-ink-900/10 bg-white px-3 text-sm focus:border-teal-600 focus:outline-none"
           aria-label={label}
         >
@@ -74,7 +77,7 @@ export function UploadField({
         />
       </div>
       {value && (
-        <Image src={value} alt="پیش‌نمایش" width={128} height={80} className="mt-2 h-20 w-32 rounded-lg object-cover ring-1 ring-ink-900/10" />
+        <Image src={value} alt="پیش‌نمایش" width={128} height={80} className="mt-2 h-20 w-32 rounded-lg bg-white p-1 object-contain ring-1 ring-ink-900/10" />
       )}
       {error && <p className="mt-1.5 text-xs font-bold text-madder-700">{error}</p>}
     </div>

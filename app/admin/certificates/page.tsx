@@ -12,6 +12,8 @@ import {
   updateCertificateDetails,
   uploadRequestedCertificatePdf,
 } from "../actions";
+import { can, getSessionUser } from "@/lib/auth";
+import { Denied } from "@/components/admin/Denied";
 
 export const metadata: Metadata = { title: "گواهی‌ها" };
 export const dynamic = "force-dynamic";
@@ -19,6 +21,8 @@ export const dynamic = "force-dynamic";
 const labels = { pending: "در انتظار بررسی", approved: "تأیید شده", issued: "صادر شده", rejected: "رد شده" } as const;
 
 export default async function AdminCertificatesPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
+  const user = await getSessionUser();
+  if (!can(user, "certificates")) return <Denied />;
   const requests = await getCertificateRequests();
   const certs = getCertificates();
   const { error } = await searchParams;

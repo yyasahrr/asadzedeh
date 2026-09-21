@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { jsonLd as jsonLdString  } from "@/lib/seo";
+import { appUrl } from "@/lib/env";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { BookOpen, CalendarDays, CheckCircle2, Clock3, MapPin, Minus, Plus, UsersRound } from "lucide-react";
-import { getClass, getClasses, getSettings } from "@/lib/store";
+import { getClass, getClasses, getInstructors } from "@/lib/store";
+import { getClassInstructorSlugs } from "@/lib/instructors";
 import { formatPriceCompact, toFa } from "@/lib/format";
 import { PageHero } from "@/components/PageHero";
 import { Button } from "@/components/ui/Button";
@@ -69,7 +71,11 @@ export default async function ClassDetailPage({
   const alreadyOwned = hasPaidClassAccess(user, slug);
 
   const related = getClasses().filter((c) => c.slug !== cls.slug).slice(0, 2);
-  const siteUrl = getSettings().site.siteUrl.replace(/\/$/, "");
+  const siteUrl = appUrl();
+  const instructorProfiles = getClassInstructorSlugs(cls)
+    .map((slug) => getInstructors().find((item) => item.slug === slug))
+    .filter((item): item is NonNullable<typeof item> => Boolean(item));
+  const instructorNames = instructorProfiles.length ? instructorProfiles.map((item) => item.name) : [cls.instructor];
   // Seats a shopper can still take: open seats minus unpaid reservations.
   const seats = availableSeats(cls);
   const urgent = seats <= 3;
@@ -86,7 +92,7 @@ export default async function ClassDetailPage({
     hasCourseInstance: {
       "@type": "CourseInstance",
       courseMode: "onsite",
-      instructor: { "@type": "Person", name: cls.instructor },
+      instructor: instructorNames.map((name) => ({ "@type": "Person", name })),
       location: { "@type": "Place", name: cls.location },
     },
   };
@@ -123,17 +129,17 @@ export default async function ClassDetailPage({
             </div>
             <p className="mt-2 text-[15px] leading-8 text-ink-700">{cls.excerpt}</p>
 
-            <section className="flex flex-col gap-3 rounded-xl bg-card p-4 ring-1 ring-ink-900/5 sm:flex-row sm:items-center" aria-label="مدرس کلاس">
-              <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-navy-800 text-lg font-black text-white">
-                {cls.instructor.replace("استاد ", "").charAt(0)}
-              </span>
-              <div className="flex-1">
-                <p className="text-base font-black text-navy-900">{cls.instructor}</p>
-                <p className="mt-0.5 text-sm text-ink-600">مدرس کارگاه اسدزاده در ارومیه</p>
+            <section className="rounded-xl bg-card p-4 ring-1 ring-ink-900/5" aria-label="تیم مدرسان کلاس">
+              <h2 className="mb-3 font-black text-navy-900">تیم مدرسان</h2>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {(instructorProfiles.length ? instructorProfiles : [{ slug: "", name: cls.instructor, specialty: "مدرس کارگاه اسدزاده" }]).map((instructor) => (
+                  <div key={instructor.slug || instructor.name} className="flex items-center gap-3 rounded-lg bg-sand-50 p-3">
+                    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-navy-800 text-lg font-black text-white">{instructor.name.replace("استاد ", "").charAt(0)}</span>
+                    <div className="min-w-0 flex-1"><p className="font-black text-navy-900">{instructor.name}</p><p className="truncate text-sm text-ink-600">{instructor.specialty}</p></div>
+                    <Link href={instructor.slug ? `/instructors#${instructor.slug}` : "/instructors"} className="text-xs font-bold text-teal-600 hover:text-teal-700">پروفایل ←</Link>
+                  </div>
+                ))}
               </div>
-              <Link href="/instructors" className="text-sm font-bold text-teal-600 hover:text-teal-700">
-                مشاهده پروفایل ←
-              </Link>
             </section>
           </div>
 

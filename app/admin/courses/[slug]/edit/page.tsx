@@ -3,10 +3,14 @@ import { notFound } from "next/navigation";
 import { updateCourse } from "../../../actions";
 import { CourseForm } from "@/components/admin/CourseForm";
 import { getCourse } from "@/lib/store";
+import { can, getSessionUser } from "@/lib/auth";
+import { Denied } from "@/components/admin/Denied";
 
 export const metadata: Metadata = { title: "ویرایش دوره" };
 
 export default async function EditCoursePage({ params }: { params: Promise<{ slug: string }> }) {
+  const user = await getSessionUser();
+  if (!can(user, "courses")) return <Denied />;
   const { slug } = await params;
   const course = getCourse(slug);
   if (!course) notFound();

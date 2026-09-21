@@ -7,6 +7,7 @@ import { LessonManager } from "@/components/admin/LessonManager";
 import { SecurePlayer } from "@/components/video/SecurePlayer";
 import { FieldLabel, Textarea } from "@/components/ui/Input";
 import { getSessionUser } from "@/lib/auth";
+import { isInstructorAssigned } from "@/lib/instructors";
 import { toFa } from "@/lib/format";
 import { getCourse, getEnrollments, getInstructorByUser, getVideos } from "@/lib/store";
 
@@ -27,7 +28,7 @@ export default async function InstructorCoursePage({
   const { slug } = await params;
   const { edit, preview, saved } = await searchParams;
   const course = getCourse(slug);
-  if (!course || course.instructorSlug !== inst.slug) notFound();
+  if (!course || !isInstructorAssigned(course, inst.slug)) notFound();
   const videos = getVideos();
   const lessons = course.lessons ?? [];
   const editing = edit ? lessons.find((l) => l.id === edit) : undefined;

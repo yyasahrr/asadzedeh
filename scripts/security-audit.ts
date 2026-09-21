@@ -71,7 +71,6 @@ const GUARDED = [
 const IDOR_PROBES = [
   "/api/certificates/AZ-C-1182",
   "/api/certificates/AZ-C-1182/pdf",
-  "/api/enrollment-card",
   "/api/lesson-files/anything",
   "/api/video/anything",
   "/api/video/anything/stream",

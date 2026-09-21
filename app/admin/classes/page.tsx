@@ -7,10 +7,14 @@ import { TableShell, Td } from "@/components/admin/TableShell";
 import { DeleteButton } from "@/components/admin/DeleteButton";
 import { deleteClass } from "../actions";
 import { formatJalaliDate } from "@/lib/jalali-date";
+import { can, getSessionUser } from "@/lib/auth";
+import { Denied } from "@/components/admin/Denied";
 
 export const metadata: Metadata = { title: "کلاس‌های حضوری" };
 
-export default function AdminClassesPage() {
+export default async function AdminClassesPage() {
+  const user = await getSessionUser();
+  if (!can(user, "classes")) return <Denied />;
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">

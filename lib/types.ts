@@ -25,6 +25,8 @@ export interface OnlineCourse {
   trailer?: Trailer;
   /** Slug of the instructor profile (links to Instructor). */
   instructorSlug?: string;
+  /** All assigned instructors, primary first. Legacy records use instructorSlug. */
+  instructorSlugs?: string[];
   /** فصل‌های دوره (مدیریت ساختاریافته). */
   chapters?: Chapter[];
   /** Uploaded lesson videos (online courses). */
@@ -149,6 +151,7 @@ export interface Enrollment {
 export interface InPersonClass {
   slug: string;
   title: string;
+  category?: string;
   instructor: string;
   startDate: string;
   days: string;
@@ -166,6 +169,8 @@ export interface InPersonClass {
   includes: string[];
   trailer?: Trailer;
   instructorSlug?: string;
+  /** All assigned instructors, primary first. Legacy records use instructorSlug. */
+  instructorSlugs?: string[];
   /** فصل‌های کلاس حضوری. */
   chapters?: Chapter[];
   /** فصل‌ها، درس‌ها و محتوای تکمیلی کلاس حضوری. */
@@ -371,6 +376,10 @@ export interface User {
   email?: string;
   passwordHash: string;
   role: Role;
+  /** Optional named access profile; absent users retain role defaults. */
+  accessProfileId?: string;
+  /** Explicit per-user additions/removals, applied after the profile. */
+  permissionOverrides?: { allow?: Permission[]; deny?: Permission[] };
   createdAt: string;
   /** TOTP two-factor (Google Authenticator compatible). */
   totp?: {
@@ -458,6 +467,8 @@ export interface NotifyLog {
   to: string;
   message: string;
   status: string;
+  /** Stable non-sensitive key used to suppress callback/retry duplicates. */
+  eventKey?: string;
 }
 
 /* ---------- Shop ---------- */
@@ -661,9 +672,17 @@ export interface SiteSettings {
     secondaryCta: string;
     image: string;
     note: string;
+    media?: SiteMedia;
   };
+  home?: HomeContentSettings;
+  about?: AboutContentSettings;
   footerAbout: string;
-  socials: { instagram: string; telegram: string };
+  socials: { instagram: string; telegram: string; bale: string };
+  trustBadges: {
+    enamad: { enabled: boolean };
+    nationalCarpet: TrustBadgeSettings;
+    tvto: TrustBadgeSettings;
+  };
   aboutIntro: string[];
   workshop: {
     lat: number;
@@ -673,6 +692,39 @@ export interface SiteSettings {
     /** Browser-safe Web SDK key; the service/geocoding secret remains env-only. */
     neshanWebMapKey?: string;
   };
+}
+
+export type SiteMedia =
+  | { kind: "image"; image: string; alt?: string }
+  | { kind: "video"; videoId: string; poster?: string; alt?: string; autoplay?: boolean; loop?: boolean; muted?: boolean }
+  | { kind: "embed"; src: string; poster?: string; title?: string };
+
+export interface OrderedTextItem { id: string; text: string; active?: boolean; order: number }
+export interface MarketingStat { id: string; value: string; label: string; hint?: string; active?: boolean; order: number }
+export interface HomeContentSettings {
+  trust: { enabled: boolean; stats: MarketingStat[]; honors: OrderedTextItem[] };
+  roadmap: { enabled: boolean; eyebrow: string; title: string; description: string; checklist: OrderedTextItem[]; primaryCtaLabel: string; primaryCtaHref: string; secondaryCtaLabel: string; secondaryCtaHref: string; stages: { id: string; title: string; meta: string; description: string; active: boolean; order: number }[] };
+  spotlight: { enabled: boolean; instructorSlug: string; eyebrow: string; quote: string; experienceLabel: string; ctaLabel: string; ctaHref: string; stats: MarketingStat[] };
+  workshop: { enabled: boolean; eyebrow: string; title: string; description: string; ctaLabel: string; ctaHref: string; items: { id: string; media: SiteMedia; alt: string; caption: string; active: boolean; order: number }[] };
+  studentWorks: { enabled: boolean; eyebrow: string; title: string; description: string; items: { id: string; title: string; studentName: string; image: string; description: string; course: string; active: boolean; order: number }[] };
+  testimonials: { enabled: boolean; eyebrow: string; title: string; description: string; items: { id: string; name: string; role: string; text: string; rating: number; active: boolean; order: number }[] };
+  finalCta: { enabled: boolean; eyebrow: string; title: string; description: string; primaryCtaLabel: string; primaryCtaHref: string; showPhone: boolean; phoneLabel: string };
+}
+export type AboutValueIcon = "hand-heart" | "graduation-cap" | "leaf" | "medal" | "star" | "award" | "shield" | "users";
+export interface AboutContentSettings {
+  hero: { enabled: boolean; title: string; description: string };
+  intro: { enabled: boolean; heading: string; paragraphs: OrderedTextItem[] };
+  gallery: { enabled: boolean; items: { id: string; media: SiteMedia; alt: string; active: boolean; order: number }[] };
+  timeline: { enabled: boolean; title: string; items: { id: string; year: string; text: string; active: boolean; order: number }[] };
+  values: { enabled: boolean; title: string; items: { id: string; icon: AboutValueIcon; title: string; text: string; active: boolean; order: number }[] };
+  ctas: { label: string; href: string; enabled: boolean }[];
+}
+
+export interface TrustBadgeSettings {
+  enabled: boolean;
+  title: string;
+  image: string;
+  href: string;
 }
 
 /**
@@ -687,6 +739,12 @@ export interface SupportChannelSettings {
   enabled: boolean;
   /** Telegram username ("asadzedeh") or full link ("https://t.me/asadzedeh"). */
   telegram: string;
+  /** Complete, validated Bale URL. */
+  bale: string;
+  /** Direct-call number. */
+  phone: string;
+  /** Complete, validated Instagram URL. */
+  instagram: string;
   /** WhatsApp number, international format, digits only (e.g. 989121234567). */
   whatsapp: string;
   /** Label shown next to the collapsed button. */
@@ -703,7 +761,32 @@ export interface SmsSettings {
   sender: string;
   /** Template id, required by template-based panels (sms.ir) to deliver a code. */
   templateId: string;
+  templates?: SmsTemplateRegistry;
 }
+
+export type SmsTemplateEvent =
+  | "otp"
+  | "orderCreated"
+  | "paymentSuccess"
+  | "courseEnrollment"
+  | "classEnrollment"
+  | "orderShipped"
+  | "certificateReady";
+
+export type SmsTemplateRegistry = Record<SmsTemplateEvent, { enabled: boolean; templateId: string }>;
+
+export interface AccessProfile {
+  id: string;
+  name: string;
+  description?: string;
+  permissions: Permission[];
+}
+
+export type Permission =
+  | "courses" | "classes" | "blog" | "content" | "media" | "comments"
+  | "students" | "orders" | "submissions" | "certificates" | "users"
+  | "notify" | "payments" | "settings" | "videos" | "instructors" | "shop"
+  | "preorders" | "audit" | "security" | "support" | "seo";
 
 export interface EmailSettings {
   host: string;
@@ -903,4 +986,5 @@ export interface Settings {
   shop: ShopSettings;
   legal: LegalSettings;
   seo?: SeoDefaults;
+  accessProfiles?: AccessProfile[];
 }

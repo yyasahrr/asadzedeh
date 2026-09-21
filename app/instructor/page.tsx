@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { BookOpen, ClipboardCheck, Clapperboard, Users, Wallet } from "lucide-react";
 import { getSessionUser } from "@/lib/auth";
+import { isInstructorAssigned } from "@/lib/instructors";
 import { formatPrice, toFa } from "@/lib/format";
 import { getAudit, getCourses, getEnrollments, getInstructorByUser, getOrders, getSubmissions, getVideos } from "@/lib/store";
 import { auditActionLabels } from "@/lib/audit";
@@ -15,7 +16,7 @@ export default async function InstructorHome() {
   if (!user) redirect("/auth?next=/instructor");
   const inst = getInstructorByUser(user.id);
   if (!inst) redirect("/dashboard");
-  const courses = getCourses().filter((c) => c.instructorSlug === inst.slug);
+  const courses = getCourses().filter((c) => isInstructorAssigned(c, inst.slug));
   const slugs = new Set(courses.map((c) => c.slug));
   const titles = new Set(courses.flatMap((c) => [c.title, c.shortTitle]));
   const enrollments = getEnrollments().filter((e) => slugs.has(e.courseSlug));

@@ -68,15 +68,14 @@ describe("needsMfa", () => {
     expect(auth.needsMfa(null)).toBe("none");
   });
 
-  it("requires verification once TOTP is enabled, regardless of policy", async () => {
+  it("ignores stale TOTP on non-owner accounts", async () => {
     const { auth } = await load("test", false);
-    expect(auth.needsMfa(staff({ totpEnabled: true, mfaVerified: false }))).toBe("verify");
-    expect(auth.needsMfa(staff({ totpEnabled: true, mfaVerified: true }))).toBe("none");
+    expect(auth.needsMfa(staff({ totpEnabled: true, mfaVerified: false }))).toBe("none");
   });
 
-  it("demands enrolment from staff without TOTP when the policy requires it", async () => {
+  it("does not demand enrolment from ordinary staff even when the legacy policy is on", async () => {
     const { auth } = await load("test", true);
-    expect(auth.needsMfa(staff())).toBe("enrol");
+    expect(auth.needsMfa(staff())).toBe("none");
   });
 
   it("does not demand enrolment when the policy is off outside production", async () => {
@@ -84,17 +83,18 @@ describe("needsMfa", () => {
     expect(auth.needsMfa(staff())).toBe("none");
   });
 
-  it("exempts instructors from compulsory enrolment but honours their own TOTP", async () => {
+  it("never requires TOTP from instructors, including stale legacy configuration", async () => {
     const { auth } = await load("production", true);
     expect(auth.needsMfa(staff({ role: "instructor" }))).toBe("none");
-    expect(auth.needsMfa(staff({ role: "instructor", totpEnabled: true }))).toBe("verify");
+    expect(auth.needsMfa(staff({ role: "instructor", totpEnabled: true }))).toBe("none");
   });
 
-  it("holds every non-instructor staff role to it in production", async () => {
+  it("requires enrolment only from super_admin in production", async () => {
     const { auth } = await load("production", false);
-    for (const role of ["super_admin", "admin", "manager", "editor", "support"]) {
-      expect(auth.needsMfa(staff({ role })), role).toBe("enrol");
+    expect(auth.needsMfa(staff({ role: "super_admin" }))).toBe("enrol");
+    expect(auth.needsMfa(staff({ role: "super_admin", totpEnabled: true }))).toBe("verify");
+    for (const role of ["admin", "manager", "editor", "support", "instructor"]) {
+      expect(auth.needsMfa(staff({ role })), role).toBe("none");
     }
-    expect(auth.needsMfa(staff({ role: "instructor" }))).toBe("none");
   });
 });

@@ -1,12 +1,14 @@
-import Image from "next/image";
 import { Award, PlayCircle, UsersRound } from "lucide-react";
 import { Button } from "../ui/Button";
 import { Stars } from "../ui/Stars";
 import { getCourses, getSettings } from "@/lib/store";
 import { toFa } from "@/lib/format";
+import { normalizeSiteMedia } from "@/lib/site-content";
+import { SiteMedia } from "@/components/media/SiteMedia";
 
 export function Hero() {
   const hero = getSettings().site.hero;
+  const media = normalizeSiteMedia(hero.media, { kind: "image", image: hero.image, alt: "کارگاه بافت اسدزاده" });
   const students = getCourses().reduce((s, c) => s + c.students, 0);
 
   return (
@@ -52,14 +54,7 @@ export function Hero() {
 
         <div className="relative animate-fade-in overflow-hidden rounded-[28px] bg-navy-900 p-2 shadow-lift">
           <div className="relative h-full min-h-[390px] overflow-hidden rounded-[22px] sm:min-h-[520px]">
-            <Image
-              src={hero.image}
-              alt="کارگاه بافت اسدزاده"
-              width={880}
-              height={660}
-              priority
-              className="absolute inset-0 h-full w-full object-cover"
-            />
+            <SiteMedia media={media} fallback={hero.image} alt="کارگاه بافت اسدزاده" priority className="absolute inset-0" />
             <div className="absolute inset-0 bg-gradient-to-t from-navy-950/50 via-transparent to-transparent" />
             <p className="absolute right-5 bottom-5 left-5 max-w-md text-sm leading-7 font-semibold text-white">
               {hero.note}

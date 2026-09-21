@@ -3,7 +3,7 @@ import { audit } from "@/lib/audit";
 import { finalizePaidOrderTx, releaseOrderLines } from "@/lib/db/commerce";
 import { faToday } from "@/lib/format";
 import { logger } from "@/lib/logger";
-import { sendSms } from "@/lib/notify";
+import { sendTransactionalSms } from "@/lib/transactional-sms";
 import { isPaidStatus } from "@/lib/order-status";
 import { createSpotLicense } from "@/lib/spotplayer";
 import {
@@ -131,12 +131,15 @@ export async function finalizePaidOrder(
   }
 
   if (order.phone) {
-    const hasCourse = order.lines?.some((line) => line.kind === "course" || line.kind === "learning_path");
-    const hasProduct = order.lines?.some((line) => line.kind === "product" || line.kind === "preorder");
-    const parts = [`اسدزاده: سفارش ${orderId} ثبت شد.`];
-    if (hasCourse) parts.push("دوره‌ها در پنل هنرجو فعال است.");
-    if (hasProduct) parts.push(`کالاها با ${order.shipping?.method ?? "روش انتخابی"} ارسال می‌شود.`);
-    await sendSms([order.phone], parts.join(" "));
+    const customerName = order.student.replace(/\s*\(09\d{9}\)\s*$/, "");
+    await sendTransactionalSms({ event: "paymentSuccess", eventKey: `paymentSuccess:${orderId}`, phone: order.phone, payload: { customerName, orderId, amount: String(order.amount) } });
+    for (const enrolment of result.created) {
+      const course = getCourse(enrolment.courseSlug);
+      if (course) await sendTransactionalSms({ event: "courseEnrollment", eventKey: `courseEnrollment:${orderId}:${course.slug}`, phone: order.phone, payload: { customerName, courseTitle: course.title } });
+    }
+    for (const line of order.lines ?? []) {
+      if (line.kind === "class") await sendTransactionalSms({ event: "classEnrollment", eventKey: `classEnrollment:${orderId}:${line.slug}`, phone: order.phone, payload: { customerName, classTitle: line.title } });
+    }
   }
 
   revalidatePath("/dashboard");

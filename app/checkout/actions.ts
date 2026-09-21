@@ -16,6 +16,7 @@ import { reserveOrderLines, writeOrderItems } from "@/lib/db/commerce";
 import { getEnrollments, getOrders, getPayments, getSettings, getUsers, syncCollections, withStoreLock, writeDbAsync } from "@/lib/store";
 import { rateLimit, LIMITS } from "@/lib/rate-limit";
 import type { OrderLine, PaymentRecord, ShippingInfo } from "@/lib/types";
+import { sendTransactionalSms } from "@/lib/transactional-sms";
 
 /** Resolve every checkout display field from the same server truth used to charge. */
 export async function quoteCheckout(items: CartItem[]) {
@@ -221,6 +222,8 @@ export async function startCheckout(fd: FormData) {
     target: `order:${id}`,
     detail: { amount: final, lines: lines.map((l) => `${l.kind}:${l.slug}x${l.qty}`), shipping: shipping?.method, demo },
   });
+  const orderPhone = phone || user?.phone;
+  if (orderPhone) await sendTransactionalSms({ event: "orderCreated", eventKey: `orderCreated:${id}`, phone: orderPhone, payload: { customerName: name, orderId: id } });
   revalidatePath("/admin/orders");
   revalidatePath("/admin/shop");
   revalidatePath("/shop");

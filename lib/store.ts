@@ -27,6 +27,8 @@ import type {
   User,
   VideoAsset,
 } from "./types";
+import { normalizeClass, normalizeCourse } from "./normalize-domain";
+import { normalizeAboutContent, normalizeHomeContent } from "./site-content";
 import {
   articles as seedArticles,
   inPersonClasses as seedClasses,
@@ -124,7 +126,7 @@ function defaultSeo(): NonNullable<Settings["seo"]> {
       "آموزش تخصصی فرش‌بافی، گلیم‌بافی، گبه‌بافی، رنگرزی، مرمت و طراحی نقشه به‌صورت آنلاین و حضوری.",
     defaultOgImage: "/images/hero-weaver.jpg",
     siteName: "اسدزاده",
-    canonicalBaseUrl: "https://asadzedeh.ir",
+    canonicalBaseUrl: "https://ghalibafiasadzadeh.ir",
     robotsIndex: true,
     robotsFollow: true,
     social: { instagram: "", telegram: "", twitter: "" },
@@ -154,7 +156,7 @@ function normalizeLearningPath(item: LearningPath): LearningPath {
   };
 }
 
-function mergeSettings(base: Settings, parsed: Partial<Settings> | undefined): Settings {
+export function mergeSettings(base: Settings, parsed: Partial<Settings> | undefined): Settings {
   if (!parsed) return { ...base, seo: base.seo ?? defaultSeo() };
   const out = { ...base } as Record<string, unknown>;
   for (const key of Object.keys(base) as (keyof Settings)[]) {
@@ -167,7 +169,47 @@ function mergeSettings(base: Settings, parsed: Partial<Settings> | undefined): S
     }
   }
   const settings = out as unknown as Settings;
-  settings.seo = { ...defaultSeo(), ...(parsed.seo ?? base.seo) };
+  settings.site = {
+    ...base.site,
+    ...(parsed.site ?? {}),
+    announcement: { ...base.site.announcement, ...(parsed.site?.announcement ?? {}) },
+    hero: { ...base.site.hero, ...(parsed.site?.hero ?? {}) },
+    home: normalizeHomeContent(parsed.site?.home ?? base.site.home),
+    about: normalizeAboutContent(parsed.site?.about ?? base.site.about, parsed.site?.aboutIntro ?? base.site.aboutIntro),
+    workshop: { ...base.site.workshop, ...(parsed.site?.workshop ?? {}) },
+    socials: { ...base.site.socials, ...(parsed.site?.socials ?? {}) },
+    trustBadges: {
+      ...base.site.trustBadges,
+      ...(parsed.site?.trustBadges ?? {}),
+      enamad: { ...base.site.trustBadges.enamad, ...(parsed.site?.trustBadges?.enamad ?? {}) },
+      nationalCarpet: { ...base.site.trustBadges.nationalCarpet, ...(parsed.site?.trustBadges?.nationalCarpet ?? {}) },
+      tvto: { ...base.site.trustBadges.tvto, ...(parsed.site?.trustBadges?.tvto ?? {}) },
+    },
+  };
+  settings.support = { ...base.support, ...(parsed.support ?? {}) };
+  const legacyOtpTemplate = parsed.sms?.templateId ?? base.sms.templateId;
+  settings.sms = {
+    ...base.sms,
+    ...(parsed.sms ?? {}),
+    templates: {
+      ...base.sms.templates!,
+      ...(parsed.sms?.templates ?? {}),
+      otp: {
+        ...base.sms.templates!.otp,
+        ...(parsed.sms?.templates?.otp ?? {}),
+        templateId: parsed.sms?.templates?.otp?.templateId || legacyOtpTemplate,
+      },
+    },
+  };
+  settings.accessProfiles = Array.isArray(parsed.accessProfiles)
+    ? parsed.accessProfiles
+    : (base.accessProfiles ?? []);
+  settings.seo = {
+    ...defaultSeo(),
+    ...(parsed.seo ?? base.seo),
+    social: { ...defaultSeo().social, ...(parsed.seo?.social ?? base.seo?.social) },
+    organization: { ...defaultSeo().organization, ...(parsed.seo?.organization ?? base.seo?.organization) },
+  };
   return settings;
 }
 
@@ -913,10 +955,16 @@ function readDb(): Db {
 }
 
 /* ---------- Courses / Classes ---------- */
-export const getCourses = (): OnlineCourse[] => readDb().courses;
-export const getCourse = (slug: string): OnlineCourse | undefined => readDb().courses.find((c) => c.slug === slug);
-export const getClasses = (): InPersonClass[] => readDb().classes;
-export const getClass = (slug: string): InPersonClass | undefined => readDb().classes.find((c) => c.slug === slug);
+export const getCourses = (): OnlineCourse[] => readDb().courses.map(normalizeCourse);
+export const getCourse = (slug: string): OnlineCourse | undefined => {
+  const course = readDb().courses.find((c) => c.slug === slug);
+  return course ? normalizeCourse(course) : undefined;
+};
+export const getClasses = (): InPersonClass[] => readDb().classes.map(normalizeClass);
+export const getClass = (slug: string): InPersonClass | undefined => {
+  const item = readDb().classes.find((c) => c.slug === slug);
+  return item ? normalizeClass(item) : undefined;
+};
 
 export const getInstructors = (): Instructor[] => readDb().instructors;
 export const getInstructor = (slug: string): Instructor | undefined => readDb().instructors.find((i) => i.slug === slug);

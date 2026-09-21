@@ -163,5 +163,12 @@ export function objectStorageConfigured(): boolean {
 
 export function appUrl(): string {
   const env = getEnv();
-  return (env.NEXT_PUBLIC_APP_URL || env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/$/, "");
+  // Search-engine generated URLs must never inherit an editable or mistyped host.
+  if (env.NODE_ENV === "production") return "https://ghalibafiasadzadeh.ir";
+  const candidate = env.NEXT_PUBLIC_APP_URL || env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  try {
+    return new URL(candidate).origin;
+  } catch {
+    return "http://localhost:3000";
+  }
 }

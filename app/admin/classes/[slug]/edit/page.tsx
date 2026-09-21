@@ -3,10 +3,14 @@ import { notFound } from "next/navigation";
 import { updateClass } from "../../../actions";
 import { ClassForm } from "@/components/admin/ClassForm";
 import { getClass } from "@/lib/store";
+import { can, getSessionUser } from "@/lib/auth";
+import { Denied } from "@/components/admin/Denied";
 
 export const metadata: Metadata = { title: "ویرایش کلاس" };
 
 export default async function EditClassPage({ params }: { params: Promise<{ slug: string }> }) {
+  const user = await getSessionUser();
+  if (!can(user, "classes")) return <Denied />;
   const { slug } = await params;
   const cls = getClass(slug);
   if (!cls) notFound();

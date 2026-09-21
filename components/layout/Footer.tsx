@@ -3,6 +3,10 @@ import { Mail, MapPin, Phone } from "lucide-react";
 import { Logo } from "../Logo";
 import { NewsletterForm } from "../NewsletterForm";
 import { getCourses, getClasses, getSettings } from "@/lib/store";
+import { safeHttpUrl, safeImageSource } from "@/lib/urls";
+import type { TrustBadgeSettings } from "@/lib/types";
+import { FallbackImage } from "@/components/media/FallbackImage";
+import { objectExists } from "@/lib/storage";
 
 function InstagramIcon({ className }: { className?: string }) {
   return (
@@ -23,10 +27,43 @@ function TelegramIcon({ className }: { className?: string }) {
   );
 }
 
+function BaleIcon({ className }: { className?: string }) {
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className} aria-hidden><path d="M7 4.5h7a4 4 0 0 1 0 8H8.5"/><path d="M7 4.5v15h7.5a4 4 0 0 0 0-8H7"/><path d="M4 8h3M4 16h3"/></svg>;
+}
+
+export function ConfiguredTrustBadge({ badge, imageAvailable = true }: { badge: TrustBadgeSettings; imageAvailable?: boolean }) {
+  const href = safeHttpUrl(badge.href);
+  const image = safeImageSource(badge.image);
+  if (!badge.enabled || !image || !imageAvailable) return null;
+
+  const title = badge.title.trim();
+  const content = <>
+    <span className="flex h-20 w-full items-center justify-center sm:h-24">
+      <FallbackImage src={image} alt={`نشان ${title}`} className="h-full w-full object-contain" />
+    </span>
+    <span className="mt-2 line-clamp-2 min-h-10 text-center text-xs font-bold leading-5 text-navy-900">{title}</span>
+  </>;
+  const className = "flex min-h-32 min-w-0 flex-col items-center justify-between rounded-xl bg-white/95 p-3 text-navy-900 ring-1 ring-white/15";
+
+  if (!href) return <div className={className}>{content}</div>;
+  return <a href={href} target="_blank" rel="noopener noreferrer" aria-label={`مشاهده اعتبار ${title}`} className={`${className} transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ochre-200`}>
+    {content}
+  </a>;
+}
+
 export async function Footer() {
   const site = getSettings().site;
   const courses = getCourses().slice(0, 4);
   const classes = getClasses().slice(0, 3);
+  const storedBadgeExists = async (image: string) => {
+    const prefix = "/api/media/";
+    if (!image.startsWith(prefix)) return true;
+    return objectExists(image.slice(prefix.length)).catch(() => false);
+  };
+  const [nationalCarpetImageAvailable, tvtoImageAvailable] = await Promise.all([
+    storedBadgeExists(site.trustBadges.nationalCarpet.image),
+    storedBadgeExists(site.trustBadges.tvto.image),
+  ]);
 
   const columns = [
     {
@@ -40,6 +77,7 @@ export async function Footer() {
       title: "کلاس‌های حضوری",
       links: [
         ...classes.map((c) => ({ href: `/classes/${c.slug}`, label: c.title.replace(" (حضوری)", "") })),
+        { href: "/classes/schedule", label: "برنامه کلاس‌ها" },
         { href: "/classes", label: "همه کلاس‌ها" },
       ],
     },
@@ -83,41 +121,20 @@ export async function Footer() {
               {[
                 { icon: InstagramIcon, label: "اینستاگرام", href: site.socials.instagram },
                 { icon: TelegramIcon, label: "تلگرام", href: site.socials.telegram },
-              ].map(({ icon: Icon, label, href }) => (
+                { icon: BaleIcon, label: "پیام‌رسان بله", href: site.socials.bale },
+              ].map((item) => ({ ...item, href: safeHttpUrl(item.href) })).filter((item) => item.href).map(({ icon: Icon, label, href }) => (
                 <a
                   key={label}
                   href={href}
                   aria-label={label}
-                  target={href.startsWith("http") ? "_blank" : undefined}
-                  rel="noreferrer"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 transition-colors hover:bg-white/20"
                 >
                   <Icon className="h-5 w-5" />
                 </a>
               ))}
             </div>
-            {/* Enamad */}
-            <div
-              className="mt-6"
-              dangerouslySetInnerHTML={{
-                __html: `
-              <a
-        referrerpolicy="origin"
-        target="_blank"
-        href="https://trustseal.enamad.ir/?id=7782853&Code=K2fp9CXiOAcXBNwgCQyrLJy35Ka8PXqy"
-      >
-        <img
-          referrerpolicy="origin"
-          src="https://trustseal.enamad.ir/logo.aspx?id=7782853&Code=K2fp9CXiOAcXBNwgCQyrLJy35Ka8PXqy"
-          alt=""
-          style="cursor:pointer"
-          code="K2fp9CXiOAcXBNwgCQyrLJy35Ka8PXqy"
-        >
-      </a>
-    `,
-              }}
-            />
-
           </div>
 
           <div className="grid gap-8 sm:grid-cols-3">
@@ -137,6 +154,18 @@ export async function Footer() {
             ))}
           </div>
         </div>
+
+        {(site.trustBadges.enamad.enabled || site.trustBadges.nationalCarpet.enabled || site.trustBadges.tvto.enabled) && <section className="mt-10" aria-labelledby="trust-badges-title">
+          <h3 id="trust-badges-title" className="mb-4 text-sm font-black text-ochre-200">مجوزها و اعتبارنامه‌ها</h3>
+          <div className="grid max-w-2xl grid-cols-1 gap-3 min-[360px]:grid-cols-2 sm:grid-cols-3">
+            {site.trustBadges.enamad.enabled && <a referrerPolicy="origin" target="_blank" rel="noopener noreferrer" href="https://trustseal.enamad.ir/?id=7782853&Code=K2fp9CXiOAcXBNwgCQyrLJy35Ka8PXqy" className="flex h-32 items-center justify-center rounded-xl bg-white/95 p-3 ring-1 ring-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ochre-200">
+              {/* eslint-disable-next-line @next/next/no-img-element -- official Enamad verification image */}
+              <img referrerPolicy="origin" src="https://trustseal.enamad.ir/logo.aspx?id=7782853&Code=K2fp9CXiOAcXBNwgCQyrLJy35Ka8PXqy" alt="نشان اعتماد الکترونیکی" className="max-h-24 max-w-full object-contain" />
+            </a>}
+            <ConfiguredTrustBadge badge={site.trustBadges.nationalCarpet} imageAvailable={nationalCarpetImageAvailable} />
+            <ConfiguredTrustBadge badge={site.trustBadges.tvto} imageAvailable={tvtoImageAvailable} />
+          </div>
+        </section>}
 
         <div className="mt-10 rounded-2xl bg-white/5 p-5 ring-1 ring-white/10 sm:p-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">

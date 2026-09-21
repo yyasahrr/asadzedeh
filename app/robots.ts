@@ -1,14 +1,14 @@
 import type { MetadataRoute } from "next";
-import { getSettings } from "@/lib/store";
+import { appUrl } from "@/lib/env";
 
 export default function robots(): MetadataRoute.Robots {
-  const base = getSettings().site.siteUrl.replace(/\/$/, "") || "https://asadzedeh.ir";
+  const base = appUrl();
   return {
     rules: [
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/admin", "/dashboard", "/instructor", "/account", "/auth", "/api", "/cart", "/checkout"],
+        disallow: ["/admin", "/dashboard", "/instructor$", "/instructor/", "/account", "/auth", "/api", "/cart", "/checkout"],
       },
     ],
     sitemap: `${base}/sitemap.xml`,

@@ -7,6 +7,7 @@ import { getSessionUser } from "@/lib/auth";
 import { formatPrice, toFa } from "@/lib/format";
 import { getClasses, getCourses, getEnrollments, getInstructorByUser, getVideos } from "@/lib/store";
 import { formatJalaliDateLong } from "@/lib/jalali-date";
+import { isInstructorAssigned } from "@/lib/instructors";
 
 export const metadata: Metadata = { title: "دوره‌های من" };
 export const dynamic = "force-dynamic";
@@ -16,8 +17,8 @@ export default async function InstructorCoursesPage() {
   if (!user) redirect("/auth?next=/instructor");
   const inst = getInstructorByUser(user.id);
   if (!inst) redirect("/dashboard");
-  const courses = getCourses().filter((c) => c.instructorSlug === inst.slug);
-  const classes = getClasses().filter((c) => c.instructorSlug === inst.slug);
+  const courses = getCourses().filter((c) => isInstructorAssigned(c, inst.slug));
+  const classes = getClasses().filter((c) => isInstructorAssigned(c, inst.slug));
   const enrollments = getEnrollments();
   const videos = getVideos();
 

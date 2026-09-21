@@ -6,6 +6,7 @@ import { insertEnrollmentIfAbsent } from "./db/commerce";
 import { faToday } from "./format";
 import { getClasses, getCourses, getCourse, getEnrollment, getEnrollments, getInstructorByUser, getLearningPath, getOrders, getUserById, writeDb } from "./store";
 import type { InPersonClass, Lesson, OnlineCourse, VideoAsset } from "./types";
+import { isInstructorAssigned } from "./instructors";
 
 /**
  * Who may watch which video?
@@ -76,13 +77,13 @@ export function canWatch(user: SessionUser | null, video: VideoAsset, ctx: Video
   }
 
   // Instructor's own course
-  if (user?.role === "instructor" && ctx.course) {
+  if (user && ctx.course) {
     const inst = getInstructorByUser(user.id);
-    if (inst && ctx.course.instructorSlug === inst.slug) return { ok: true, watermark: false };
+    if (inst && isInstructorAssigned(ctx.course, inst.slug)) return { ok: true, watermark: false };
   }
-  if (user?.role === "instructor" && ctx.inPersonClass) {
+  if (user && ctx.inPersonClass) {
     const inst = getInstructorByUser(user.id);
-    if (inst && ctx.inPersonClass.instructorSlug === inst.slug) return { ok: true, watermark: false };
+    if (inst && isInstructorAssigned(ctx.inPersonClass, inst.slug)) return { ok: true, watermark: false };
   }
 
   // Public previews
@@ -106,10 +107,10 @@ export function canWatch(user: SessionUser | null, video: VideoAsset, ctx: Video
 export function hasPaidClassAccess(user: SessionUser | null, classSlug: string): boolean {
   if (!user) return false;
   if (can(user, "classes") || can(user, "courses")) return true;
-  if (user.role === "instructor") {
+  if (user) {
     const inst = getInstructorByUser(user.id);
     const inPersonClass = getClasses().find((item) => item.slug === classSlug);
-    if (inst && inPersonClass?.instructorSlug === inst.slug) return true;
+    if (inst && inPersonClass && isInstructorAssigned(inPersonClass, inst.slug)) return true;
   }
   return getOrders().some(
     (order) =>
@@ -122,10 +123,10 @@ export function hasPaidClassAccess(user: SessionUser | null, classSlug: string):
 export function isEnrolled(user: SessionUser | null, courseSlug: string): boolean {
   if (!user) return false;
   if (can(user, "courses")) return true;
-  if (user.role === "instructor") {
+  if (user) {
     const inst = getInstructorByUser(user.id);
     const course = getCourses().find((c) => c.slug === courseSlug);
-    if (inst && course?.instructorSlug === inst.slug) return true;
+    if (inst && course && isInstructorAssigned(course, inst.slug)) return true;
   }
   return !!getEnrollment(user.id, courseSlug);
 }

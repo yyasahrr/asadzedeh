@@ -6,6 +6,8 @@ import { formatPriceCompact, toFa } from "@/lib/format";
 import { TableShell, Td } from "@/components/admin/TableShell";
 import { DeleteButton } from "@/components/admin/DeleteButton";
 import { deleteCourse } from "../actions";
+import { can, getSessionUser } from "@/lib/auth";
+import { Denied } from "@/components/admin/Denied";
 
 export const metadata: Metadata = { title: "مدیریت دوره‌ها" };
 
@@ -14,6 +16,8 @@ export default async function AdminCoursesPage({
 }: {
   searchParams: Promise<{ q?: string }>;
 }) {
+  const user = await getSessionUser();
+  if (!can(user, "courses")) return <Denied />;
   const { q = "" } = await searchParams;
   const filtered = getCourses().filter(
     (c) => q.trim() === "" || c.title.includes(q.trim()) || c.category.includes(q.trim())

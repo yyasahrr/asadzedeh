@@ -3,10 +3,12 @@ import { CheckCircle2, Megaphone } from "lucide-react";
 import { getSettings } from "@/lib/store";
 import { getSessionUser, can } from "@/lib/auth";
 import { galleryImages } from "@/lib/seed";
+import { listMedia } from "@/lib/media";
 import { Denied } from "@/components/admin/Denied";
 import { UploadField } from "@/components/admin/UploadField";
 import { FieldLabel, Input, Textarea } from "@/components/ui/Input";
 import { saveSiteContent } from "../actions";
+import Link from "next/link";
 
 export const metadata: Metadata = { title: "محتوای سایت" };
 
@@ -19,10 +21,15 @@ export default async function ContentPage({
   if (!can(user, "content")) return <Denied />;
   const { saved } = await searchParams;
   const { site, instagram, support } = getSettings();
+  const badgeGallery = [
+    ...listMedia().map((value) => ({ value, label: `کتابخانه رسانه — ${value.split("/").at(-1) || value}` })),
+    ...galleryImages,
+  ].filter((item, index, all) => all.findIndex((candidate) => candidate.value === item.value) === index);
 
   return (
     <div className="space-y-5">
       <h1 className="text-2xl font-black text-navy-900">محتوای سایت</h1>
+      <nav className="grid gap-3 sm:grid-cols-2" aria-label="بخش‌های محتوایی"><Link href="/admin/content/home" className="rounded-xl border border-ink-900/10 bg-card p-4 font-black text-navy-900 hover:border-teal-600">مدیریت صفحه اصلی <span className="block pt-1 text-xs font-normal text-ink-500">هیرو، آمار، نقشه راه، کارگاه و نظرات</span></Link><Link href="/admin/content/about" className="rounded-xl border border-ink-900/10 bg-card p-4 font-black text-navy-900 hover:border-teal-600">مدیریت درباره ما <span className="block pt-1 text-xs font-normal text-ink-500">معرفی، رسانه، خط زمانی و ارزش‌ها</span></Link></nav>
       {saved && (
         <p className="flex items-center gap-2 rounded-2xl bg-teal-50 px-5 py-3.5 text-sm font-bold text-teal-800 ring-1 ring-teal-600/25 ring-inset">
           <CheckCircle2 className="h-5 w-5" />
@@ -127,6 +134,10 @@ export default async function ContentPage({
               <FieldLabel htmlFor="telegram">تلگرام (لینک)</FieldLabel>
               <Input id="telegram" name="telegram" defaultValue={site.socials.telegram} dir="ltr" className="text-left" />
             </div>
+            <div>
+              <FieldLabel htmlFor="bale">بله (لینک کامل)</FieldLabel>
+              <Input id="bale" name="bale" defaultValue={site.socials.bale} dir="ltr" className="text-left" placeholder="https://..." />
+            </div>
             <div className="sm:col-span-2">
               <FieldLabel htmlFor="footerAbout">متن معرفی فوتر</FieldLabel>
               <Textarea id="footerAbout" name="footerAbout" defaultValue={site.footerAbout} />
@@ -135,10 +146,33 @@ export default async function ContentPage({
         </section>
 
         <section className="rounded-2xl border border-line bg-surface p-5">
+          <h2 className="text-lg font-extrabold">مجوزها و اعتبارنامه‌ها</h2>
+          <p className="mt-1 text-sm text-muted">برای نمایش هر نشان، آن را فعال و تصویر واقعی را انتخاب کنید. لینک استعلام اختیاری است.</p>
+          <div className="mt-4 space-y-5">
+            <label className="flex items-center gap-2 text-sm font-bold">
+              <input type="checkbox" name="enamadEnabled" defaultChecked={site.trustBadges.enamad.enabled} className="h-4 w-4 accent-teal-700" /> نمایش نشان اعتماد الکترونیکی
+            </label>
+            {([['nationalCarpet', 'مرکز ملی فرش ایران'], ['tvto', 'سازمان آموزش فنی و حرفه‌ای کشور']] as const).map(([key, fallback]) => {
+              const badge = site.trustBadges[key];
+              return <fieldset key={key} className="grid gap-4 border-t border-line pt-5 sm:grid-cols-2">
+                <label className="flex items-center gap-2 text-sm font-bold sm:col-span-2">
+                  <input type="checkbox" name={`${key}Enabled`} defaultChecked={badge.enabled} className="h-4 w-4 accent-teal-700" /> فعال‌سازی {fallback}
+                </label>
+                <div><FieldLabel htmlFor={`${key}Title`}>عنوان</FieldLabel><Input id={`${key}Title`} name={`${key}Title`} defaultValue={badge.title} /></div>
+                <div><FieldLabel htmlFor={`${key}Href`}>لینک استعلام رسمی (اختیاری)</FieldLabel><Input id={`${key}Href`} name={`${key}Href`} defaultValue={badge.href} dir="ltr" className="text-left" placeholder="https://..." /></div>
+                <div className="sm:col-span-2">
+                  <UploadField name={`${key}Image`} label="آپلود یا انتخاب لوگو از کتابخانه رسانه" gallery={badgeGallery} initial={badge.image} />
+                  <p className="mt-1 text-xs text-muted">پس از آپلود، تصویر انتخاب‌شده همراه سایر تنظیمات با دکمه ذخیره پایین صفحه ثبت می‌شود.</p>
+                </div>
+              </fieldset>;
+            })}
+          </div>
+        </section>
+
+        <section className="rounded-2xl border border-line bg-surface p-5">
           <h2 className="mb-1 text-lg font-extrabold">دکمه شناور پشتیبانی</h2>
           <p className="mb-4 text-sm text-muted">
-            یک دکمه شناور در گوشه سایت نمایش داده می‌شود که با کلیک روی آن، آیکون تلگرام و واتساپ باز
-            می‌شود. هر کانالی که خالی بگذارید نمایش داده نمی‌شود.
+            یک دکمه جمع‌وجور در گوشه سایت نمایش داده می‌شود. هر کانالی که خالی بگذارید نمایش داده نمی‌شود.
           </p>
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="flex items-center gap-2 text-sm sm:col-span-2">
@@ -146,14 +180,26 @@ export default async function ContentPage({
               نمایش دکمه شناور پشتیبانی
             </label>
             <div>
+              <FieldLabel htmlFor="supPhone">تماس مستقیم</FieldLabel>
+              <Input id="supPhone" name="supPhone" defaultValue={support.phone} dir="ltr" className="text-left" />
+            </div>
+            <div>
               <FieldLabel htmlFor="supTelegram">شناسه تلگرام</FieldLabel>
               <Input id="supTelegram" name="supTelegram" defaultValue={support.telegram} dir="ltr" className="text-left" placeholder="asadzedeh" />
               <p className="mt-1 text-xs text-muted">نام کاربری بدون @ یا لینک کامل t.me</p>
             </div>
             <div>
+              <FieldLabel htmlFor="supBale">لینک کامل بله</FieldLabel>
+              <Input id="supBale" name="supBale" defaultValue={support.bale} dir="ltr" className="text-left" placeholder="https://..." />
+            </div>
+            <div>
               <FieldLabel htmlFor="supWhatsapp">شماره واتساپ</FieldLabel>
               <Input id="supWhatsapp" name="supWhatsapp" defaultValue={support.whatsapp} dir="ltr" className="text-left" placeholder="989121234567" />
               <p className="mt-1 text-xs text-muted">با کد کشور، بدون + (مثال: ۹۸۹۱۲۱۲۳۴۵۶۷)</p>
+            </div>
+            <div>
+              <FieldLabel htmlFor="supInstagram">لینک کامل اینستاگرام</FieldLabel>
+              <Input id="supInstagram" name="supInstagram" defaultValue={support.instagram} dir="ltr" className="text-left" placeholder="https://instagram.com/..." />
             </div>
             <div>
               <FieldLabel htmlFor="supLabel">متن دکمه</FieldLabel>

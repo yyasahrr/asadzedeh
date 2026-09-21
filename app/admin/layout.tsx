@@ -87,9 +87,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
                 <p className="truncate text-sm font-black text-white">{user!.name}</p>
                 <p className="text-[11px] text-ochre-200">{roleLabels[user!.role]}</p>
               </div>
-              {user!.totpEnabled && <ShieldCheck className="h-4 w-4 text-teal-200" aria-label="ورود دومرحله‌ای فعال" />}
+              {user!.role === "super_admin" && user!.totpEnabled && <ShieldCheck className="h-4 w-4 text-teal-200" aria-label="ورود دومرحله‌ای فعال" />}
             </Link>
-            {!user!.totpEnabled && (
+            {user!.role === "super_admin" && !user!.totpEnabled && (
               <Link href="/account/security" className="mb-3 block rounded-xl bg-ochre-200/15 px-3 py-2 text-[11px] font-bold leading-5 text-ochre-200 ring-1 ring-ochre-200/30 hover:bg-ochre-200/25">
                 ⚠️ ورود دومرحله‌ای فعال نیست — فعال‌سازی
               </Link>

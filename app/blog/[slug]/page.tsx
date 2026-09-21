@@ -1,10 +1,11 @@
 import Image from "next/image";
 import { jsonLd as jsonLdString  } from "@/lib/seo";
+import { appUrl } from "@/lib/env";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { ArrowRight, Clock3 } from "lucide-react";
-import { getArticle, getArticles, getSettings } from "@/lib/store";
+import { getArticle, getArticles } from "@/lib/store";
 import { toFa } from "@/lib/format";
 import { Badge } from "@/components/ui/Badge";
 import { ArticleCard } from "@/components/cards/ArticleCard";
@@ -32,7 +33,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
   if (!article) notFound();
 
   const related = getArticles().filter((a) => a.slug !== article.slug).slice(0, 3);
-  const siteUrl = getSettings().site.siteUrl.replace(/\/$/, "");
+  const siteUrl = appUrl();
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Article",

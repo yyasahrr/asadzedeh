@@ -324,7 +324,7 @@ export const defaultSettings: Settings = {
     phone: "۰۲۱-۱۲۳۴۵۶۷۸",
     email: "hello@asadzedeh.ir",
     address: "ارومیه، خیابان امام، خیابان عطایی، کوی دی (نجارخانه)، آموزشگاه اسدزاده",
-    siteUrl: "https://asadzedeh.ir",
+    siteUrl: "https://ghalibafiasadzadeh.ir",
     announcement: {
       enabled: true,
       text: "ثبت‌نام ترم پاییز شروع شد — ۱۰٪ تخفیف ثبت‌نام زودهنگام",
@@ -344,7 +344,12 @@ export const defaultSettings: Settings = {
     },
     footerAbout:
       "اسدزاده؛ آموزش تخصصی فرش، گلیم و هنرهای بافت ایرانی به‌صورت آنلاین و حضوری. سه نسل تجربه بافت، حالا در قالب دوره‌های مدرن و کاربردی.",
-    socials: { instagram: "#", telegram: "#" },
+    socials: { instagram: "#", telegram: "#", bale: "" },
+    trustBadges: {
+      enamad: { enabled: true },
+      nationalCarpet: { enabled: false, title: "مرکز ملی فرش ایران", image: "", href: "" },
+      tvto: { enabled: false, title: "سازمان آموزش فنی و حرفه‌ای کشور", image: "", href: "" },
+    },
     aboutIntro: [
       "همه‌چیز با یک دار چوبی در خانه پدربزرگ شروع شد. ما بچه‌هایی بودیم که به‌جای بازی، نخ‌های رنگی را جدا می‌کردیم و رج می‌شمردیم. فرش برای ما فقط یک هنر نبود؛ زبان خانه بود.",
       "سال ۱۳۹۰ وقتی اولین کلاس را برگزار کردیم، فکر نمی‌کردیم روزی هنرجویانی از سراسر ایران داشته باشیم. امروز با افتخار می‌گوییم: بیش از ۱۲۰۰ نفر با ما اولین گره زندگی‌شان را زده‌اند و ده‌ها نفرشان حالا خودشان مدرس و کارگاه‌دارند.",
@@ -356,7 +361,21 @@ export const defaultSettings: Settings = {
       mapProvider: "neshan",
     },
   },
-  sms: { provider: "demo", apiKey: "", secret: "", sender: "", templateId: "" },
+  sms: {
+    provider: "demo", apiKey: "", secret: "", sender: "", templateId: "",
+    templates: {
+      otp: { enabled: true, templateId: "" }, orderCreated: { enabled: false, templateId: "" },
+      paymentSuccess: { enabled: false, templateId: "" }, courseEnrollment: { enabled: false, templateId: "" },
+      classEnrollment: { enabled: false, templateId: "" }, orderShipped: { enabled: false, templateId: "" },
+      certificateReady: { enabled: false, templateId: "" },
+    },
+  },
+  accessProfiles: [
+    { id: "manager", name: "مدیر مجموعه", description: "مدیریت عملیاتی بدون کنترل دسترسی و امنیت", permissions: ["courses", "classes", "blog", "content", "media", "comments", "students", "orders", "submissions", "certificates", "notify", "payments", "settings", "videos", "instructors", "shop", "preorders", "audit", "support", "seo"] },
+    { id: "content", name: "تولیدکننده محتوا", permissions: ["blog", "content", "media", "comments", "seo"] },
+    { id: "support", name: "پشتیبانی", permissions: ["students", "orders", "comments", "submissions", "certificates", "support"] },
+    { id: "instructor", name: "مدرس", permissions: [] },
+  ],
   email: { host: "", port: 587, user: "", pass: "", from: "" },
   payment: { provider: "demo", merchantId: "", secret: "", sandbox: true },
   channels: {
@@ -367,8 +386,11 @@ export const defaultSettings: Settings = {
   },
   support: {
     enabled: true,
+    phone: "",
     telegram: "",
+    bale: "",
     whatsapp: "",
+    instagram: "",
     label: "پشتیبانی سریع",
     whatsappMessage: "سلام، سوالی درباره دوره‌های اسدزاده دارم.",
   },
