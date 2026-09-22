@@ -4,7 +4,7 @@ import { ArrowLeft, Droplets, Grid2x2, Layers, PenTool, Wrench, ArrowRight, type
 import { PageHero } from "@/components/PageHero";
 import { Button } from "@/components/ui/Button";
 import { getActiveLearningPaths, getCourse, getLearningPathCoursesTotal, getLearningPathFinalPrice, getLearningPathDiscount } from "@/lib/store";
-import { toFa, formatPriceCompact } from "@/lib/format";
+import { toFa, formatPrice } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -85,20 +85,20 @@ export default function PathsPage() {
                   
                   <div className="mt-4 rounded-xl bg-sand-50 p-4 ring-1 ring-ink-900/5">
                     <div className="flex items-baseline gap-3">
-                      <span className="text-2xl font-black text-teal-700">{formatPriceCompact(finalPrice)}</span>
+                      <span className="text-2xl font-black text-teal-700">{formatPrice(finalPrice)}</span>
                       <span className="text-sm text-ink-500">تومان</span>
                       {hasDiscount && (
-                        <span className="text-sm text-ink-400 line-through">{formatPriceCompact(total)}</span>
+                        <span className="text-sm text-ink-400 line-through">{formatPrice(total)}</span>
                       )}
                     </div>
                     {hasDiscount && (
                       <p className="mt-1 text-xs font-bold text-madder-700">
-                        صرفه‌جویی: {toFa(discount)} تومان — اگر جدا می‌خریدید {formatPriceCompact(total)} می‌شد
+                        صرفه‌جویی: {formatPrice(discount)} — اگر جدا می‌خریدید {formatPrice(total)} می‌شد
                       </p>
                     )}
                     {!hasDiscount && total > 0 && (
                       <p className="mt-1 text-xs text-ink-500">
-                        مجموع دوره‌ها: {formatPriceCompact(total)}
+                        مجموع دوره‌ها: {formatPrice(total)}
                       </p>
                     )}
                   </div>
@@ -150,7 +150,7 @@ export default function PathsPage() {
                         </span>
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-sm font-bold text-navy-900 group-hover:text-teal-700">{course!.shortTitle}</p>
-                          <p className="text-xs text-ink-500">{toFa(course!.sessions)} جلسه • {formatPriceCompact(course!.price)}</p>
+                          <p className="text-xs text-ink-500">{toFa(course!.sessions)} جلسه • {formatPrice(course!.price)}</p>
                         </div>
                       </Link>
                     ))}

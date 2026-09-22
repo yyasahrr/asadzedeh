@@ -79,3 +79,8 @@ message arrives and that `/admin/notify` shows it as sent.
 The wire format is pinned by `lib/__tests__/integrations.test.ts` (6 MeliPayamak
 cases): endpoint URL, form fields, template path, error mapping, and the refusal
 to send without a password.
+# نگهداری کلید رمزنگاری اتصال پیامک
+
+اطلاعات ورود ملی پیامک که از پنل مدیریت ذخیره می‌شود با AES-256-GCM و کلیدی مشتق‌شده از `APP_SECRET` رمز می‌شود. هر ذخیره nonce تصادفی مستقل و authentication tag دارد و مقدار `APP_SECRET` هرگز در پایگاه داده ذخیره نمی‌شود.
+
+تغییر `APP_SECRET` باعث می‌شود ciphertextهای قبلی قابل رمزگشایی نباشند. سامانه در این وضعیت fail-closed است: از credential خراب استفاده نمی‌کند، آن را لاگ نمی‌کند و ارسال پیامک را فعال نشان نمی‌دهد. پیش از rotation، credential ملی پیامک را در محل امن اپراتوری نگه دارید؛ پس از rotation مدیر ارشد باید در «مرکز پیامک و اعلان‌ها» نام کاربری و رمز وب‌سرویس را دوباره وارد و ذخیره کند. پیام هشدار صریح در همان صفحه نمایش داده می‌شود. بازگرداندن موقت `APP_SECRET` قبلی نیز امکان رمزگشایی و ذخیره مجدد را فراهم می‌کند، اما کلید قدیمی نباید در پایگاه داده یا لاگ نوشته شود.

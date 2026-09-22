@@ -23,7 +23,7 @@ import {
 import { getAudit, getEnrollments, getOrders, getPreorders, getProducts, getStudents, getSubscribers, getUsers, getVideos } from "@/lib/store";
 import { getSessionUser, can, type Permission } from "@/lib/auth";
 import type { AuditEntry, Order } from "@/lib/types";
-import { formatPrice, formatPriceCompact, toFa } from "@/lib/format";
+import { formatPrice, toFa } from "@/lib/format";
 import { TableShell, Td } from "@/components/admin/TableShell";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
 
@@ -91,7 +91,7 @@ export default async function AdminPage() {
   const max = Math.max(1, ...daySeries.map((d) => d.value));
 
   const kpis = [
-    { label: "درآمد کل (پرداخت‌شده)", value: formatPriceCompact(revenue) },
+    { label: "درآمد کل (پرداخت‌شده)", value: formatPrice(revenue) },
     { label: "هنرجویان / ثبت‌نام دوره", value: `${toFa(students)} نفر / ${toFa(enrollments)}` },
     { label: "در انتظار پرداخت / آماده ارسال", value: `${toFa(pending)} / ${toFa(toShip)} سفارش` },
     { label: "پیش‌سفارش باز / کالای کم‌موجودی", value: `${toFa(openPreorders)} / ${toFa(lowStock)}` },
@@ -143,12 +143,12 @@ export default async function AdminPage() {
       <section className="bento-surface p-6" aria-label="فروش هفتگی">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="font-extrabold text-navy-900">فروش ۷ روز اخیر (پرداخت‌شده)</h2>
-          <span className="text-xs text-ink-500">جمع: {formatPriceCompact(daySeries.reduce((s, d) => s + d.value, 0))}</span>
+          <span className="text-xs text-ink-500">جمع: {formatPrice(daySeries.reduce((s, d) => s + d.value, 0))}</span>
         </div>
         <div className="mt-5 flex h-44 items-end gap-2 sm:gap-3" role="img" aria-label="نمودار فروش هفتگی">
           {daySeries.map((d) => (
             <div key={d.key} className="flex flex-1 flex-col items-center gap-2">
-              <span className="text-[11px] font-bold text-ink-500">{d.value ? formatPriceCompact(d.value) : "—"}</span>
+              <span className="text-[11px] font-bold text-ink-500">{d.value ? formatPrice(d.value) : "—"}</span>
               <div className="flex w-full flex-1 items-end rounded-lg bg-sand-100">
                 <div className="w-full rounded-lg bg-navy-800 transition-all" style={{ height: `${Math.max(d.value ? 4 : 0, Math.round((d.value / max) * 100))}%` }} />
               </div>

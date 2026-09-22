@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { CalendarDays, Clock3, MapPin, UsersRound } from "lucide-react";
 import type { InPersonClass } from "@/lib/types";
-import { formatPriceCompact, toFa } from "@/lib/format";
+import { formatPrice, toFa } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { availableSeats } from "@/lib/stock";
 import { formatJalaliDateLong } from "@/lib/jalali-date";
@@ -77,7 +77,7 @@ export function InPersonCourseCard({ cls, className }: { cls: InPersonClass; cla
         </div>
 
         <div className="mt-auto flex items-center justify-between gap-3 border-t border-dashed border-ink-900/10 pt-4">
-          <span className="text-lg font-black text-navy-900">{formatPriceCompact(cls.price)}</span>
+          <span className="text-lg font-black text-navy-900">{formatPrice(cls.price)}</span>
           <Link
             href={`/classes/${cls.slug}`}
             className="inline-flex h-10 items-center rounded-xl bg-madder-700 px-5 text-sm font-bold text-white transition-colors hover:bg-madder-600"

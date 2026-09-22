@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Plus, Search } from "lucide-react";
+import Link from "next/link";
 import { getEnrollments, getStudents, getUsers } from "@/lib/store";
 import { buildAdminStudents } from "@/lib/admin-students";
 import { toFa } from "@/lib/format";
@@ -90,7 +91,7 @@ export default async function AdminStudentsPage({
             <Td><StatusBadge status={s.status} /></Td>
             <Td>{s.source === "legacy" ? (
               <DeleteButton action={deleteStudent} hidden={{ name: "phone", value: s.phone }} label={s.name} />
-            ) : <span className="text-xs text-ink-500">حساب کاربری</span>}</Td>
+            ) : <Link href={`/admin/students/${s.userId}`} className="text-sm font-bold text-teal-700 hover:text-teal-900">مشاهده حساب</Link>}</Td>
           </tr>
         ))}
       </TableShell>

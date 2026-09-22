@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Clock3, LayoutGrid, UsersRound } from "lucide-react";
 import type { OnlineCourse } from "@/lib/types";
-import { formatPrice, formatPriceCompact, toFa } from "@/lib/format";
+import { formatPrice, toFa } from "@/lib/format";
 import { Badge } from "../ui/Badge";
 import { Stars } from "../ui/Stars";
 import { cn } from "@/lib/utils";
@@ -63,7 +63,7 @@ export function CourseCard({ course, className }: { course: OnlineCourse; classN
           <div>
             <Stars value={course.rating} />
             <div className="mt-1.5 flex items-baseline gap-2">
-              <span className="text-lg font-black text-navy-900">{formatPriceCompact(course.price)}</span>
+              <span className="text-lg font-black text-navy-900">{formatPrice(course.price)}</span>
               {course.oldPrice && (
                 <span className="text-xs text-ink-400 line-through">{formatPrice(course.oldPrice)}</span>
               )}

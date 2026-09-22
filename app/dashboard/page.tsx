@@ -12,7 +12,7 @@ import {
   getPreorders,
   getSubmissions,
 } from "@/lib/store";
-import { formatPriceCompact, toFa } from "@/lib/format";
+import { formatPrice, toFa } from "@/lib/format";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
 import { formatJalaliDateLong } from "@/lib/jalali-date";
@@ -190,7 +190,7 @@ export default async function DashboardPage() {
                   <div className="min-w-0">
                     <p className="truncate text-sm font-bold text-ink-800">{o.item}</p>
                     <p className="mt-0.5 text-xs text-ink-500">
-                      <span dir="ltr">{o.id}</span> • {formatPriceCompact(o.amount)}
+                      <span dir="ltr">{o.id}</span> • {formatPrice(o.amount)}
                     </p>
                   </div>
                   <StatusBadge status={o.status} />

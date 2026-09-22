@@ -18,7 +18,7 @@ import { getCourse, getCourses, getInstructors } from "@/lib/store";
 import { getCourseInstructorSlugs } from "@/lib/instructors";
 import { breadcrumbJsonLd,  jsonLd as jsonLdString, toMetadata  } from "@/lib/seo";
 import { appUrl } from "@/lib/env";
-import { formatPrice, formatPriceCompact, toFa } from "@/lib/format";
+import { formatPrice, toFa } from "@/lib/format";
 import { PageHero } from "@/components/PageHero";
 import { Badge } from "@/components/ui/Badge";
 import { Stars } from "@/components/ui/Stars";
@@ -327,7 +327,7 @@ export default async function CourseDetailPage({
                 </p>
               )}
               <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-black text-navy-900">{formatPriceCompact(course.price)}</span>
+                <span className="text-2xl font-black text-navy-900">{formatPrice(course.price)}</span>
                 {course.oldPrice && (
                   <span className="text-sm text-ink-400 line-through">{formatPrice(course.oldPrice)}</span>
                 )}

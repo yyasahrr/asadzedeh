@@ -3,6 +3,7 @@ import { getSql } from "@/lib/db/client";
 import { logger } from "@/lib/logger";
 import { sendSms } from "@/lib/notify";
 import { normalizeDigits } from "@/lib/format";
+import { emitNotificationEvent } from "@/lib/sms-automation";
 
 /**
  * Password reset.
@@ -82,10 +83,8 @@ export async function requestPasswordReset(
     );
   });
 
-  const result = await sendSms(
-    [phone],
-    `کد بازیابی رمز عبور اسدزاده: ${code}\nاین کد ${CODE_TTL_MINUTES} دقیقه اعتبار دارد.`,
-  );
+  const dispatched = await emitNotificationEvent({ eventId: "auth.password.reset.requested", eventKey: `auth.password.reset.requested:${id}`, recipient: phone, payload: { code, expiresIn: CODE_TTL_MINUTES } });
+  const result = dispatched.matched > 0 ? { ok: dispatched.ok && dispatched.sent > 0, mode: "automation", detail: dispatched.ok && dispatched.sent > 0 ? "کد ارسال شد" : "ارسال ناموفق" } : await sendSms([phone], `کد بازیابی رمز عبور اسدزاده: ${code}\nاین کد ${CODE_TTL_MINUTES} دقیقه اعتبار دارد.`);
 
   logger.info({
     event: "auth.password_reset.requested",

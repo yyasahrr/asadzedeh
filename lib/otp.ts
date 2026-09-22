@@ -3,6 +3,8 @@ import { getSql } from "@/lib/db/client";
 import { logger } from "@/lib/logger";
 import { sendSmsCode } from "@/lib/notify";
 import { normalizeDigits } from "@/lib/format";
+import { emitNotificationEvent } from "@/lib/sms-automation";
+import type { NotificationEventId } from "@/lib/notification-events";
 import { OTP_CODE_TTL_SECONDS, OTP_RESEND_COOLDOWN_SECONDS } from "@/lib/otp-constants";
 
 /**
@@ -62,7 +64,7 @@ type Sql = Awaited<ReturnType<typeof getSql>>;
  */
 export async function requestLoginOtp(
   rawPhone: string,
-  resolveUser: (phone: string) => { id: string; name?: string } | undefined,
+  resolveUser: (phone: string) => { id: string; name?: string; notificationEventId?: NotificationEventId } | undefined,
 ): Promise<OtpRequestOutcome> {
   const phone = validPhone(rawPhone);
   if (!phone) return { ok: true, sent: false };
@@ -74,6 +76,7 @@ export async function requestLoginOtp(
   }
 
   const sql = await getSql();
+  const eventId = user.notificationEventId ?? "auth.login.otp.requested";
   const code = newCode();
   const id = `otp-${crypto.randomBytes(8).toString("hex")}`;
 
@@ -105,11 +108,8 @@ export async function requestLoginOtp(
     return { ok: false, reason: "cooldown", retryAfterSeconds: inserted.retryAfterSeconds };
   }
 
-  const result = await sendSmsCode(
-    phone,
-    code,
-    `کد ورود اسدزاده: ${code}\nاین کد ${CODE_TTL_MINUTES} دقیقه اعتبار دارد.`,
-  );
+  const dispatched = await emitNotificationEvent({ eventId, eventKey: `${eventId}:${id}`, recipient: phone, payload: { code, expiresIn: CODE_TTL_MINUTES } });
+  const result = dispatched.matched > 0 ? { ok: dispatched.ok && dispatched.sent > 0, mode: "automation", detail: dispatched.ok && dispatched.sent > 0 ? "کد ارسال شد" : "ارسال ناموفق" } : await sendSmsCode(phone, code, `کد ورود اسدزاده: ${code}\nاین کد ${CODE_TTL_MINUTES} دقیقه اعتبار دارد.`);
 
   logger.info({ event: "auth.otp.requested", mode: result.mode, sent: result.ok });
   return { ok: true, sent: result.ok };

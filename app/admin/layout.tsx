@@ -68,6 +68,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     { href: "/admin/submissions", label: "تمرین‌ها", icon: "assignments", perm: "submissions", badge: pendingSubs ? toFa(pendingSubs) : undefined },
     { href: "/admin/certificates", label: "گواهی‌ها", icon: "certificates", perm: "certificates" },
     { href: "/admin/notify", label: "پیامک و ایمیل", icon: "notify", perm: "notify" },
+    { href: "/admin/notifications/sms", label: "مرکز پیامک", icon: "notify", perm: "notify" },
     { href: "/admin/payments", label: "پرداخت", icon: "payments", perm: "payments" },
     { href: "/admin/audit", label: "لاگ سیستم", icon: "audit", perm: "audit" },
     { href: "/admin/users", label: "کاربران و دسترسی", icon: "profile", perm: "users" },

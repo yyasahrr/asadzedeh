@@ -21,6 +21,9 @@ const PROD_HINTS = ["prod", "production", "live", "asadzedeh.ir"];
  */
 export function assertSafeTestUrl(url: string | undefined): void {
   if (!url) return;
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("Refusing to run destructive PostgreSQL tests with NODE_ENV=production.");
+  }
   const parsed = new URL(url);
   const name = parsed.pathname.replace(/^\//, "").toLowerCase();
   const host = parsed.hostname.toLowerCase();
@@ -53,6 +56,13 @@ export interface TestDatabase {
 
 /** Boot a throwaway PostgreSQL cluster with one empty `asadzedeh_test` database. */
 export async function startTestDatabase(): Promise<TestDatabase> {
+  const externalUrl = process.env.TEST_DATABASE_URL;
+  if (externalUrl) {
+    assertSafeTestUrl(externalUrl);
+    const parsed = new URL(externalUrl);
+    console.info(`[pg-test] host=${parsed.hostname} port=${parsed.port || "5432"} database=${parsed.pathname.slice(1)}`);
+    return { url: externalUrl, port: Number(parsed.port || 5432), async stop() {} };
+  }
   const port = await freePort();
   const databaseDir = fs.mkdtempSync(path.join(os.tmpdir(), "asadzedeh-pg-"));
   const database = "asadzedeh_test";
@@ -77,6 +87,7 @@ export async function startTestDatabase(): Promise<TestDatabase> {
 
   const url = `postgres://asadzedeh:asadzedeh@127.0.0.1:${port}/${database}`;
   assertSafeTestUrl(url);
+  console.info(`[pg-test] host=127.0.0.1 port=${port} database=${database}`);
 
   return {
     url,

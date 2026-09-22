@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { BookOpen, Pencil, Plus, Search } from "lucide-react";
 import { getCourses } from "@/lib/store";
-import { formatPriceCompact, toFa } from "@/lib/format";
+import { formatPrice, toFa } from "@/lib/format";
 import { TableShell, Td } from "@/components/admin/TableShell";
 import { DeleteButton } from "@/components/admin/DeleteButton";
 import { deleteCourse } from "../actions";
@@ -52,7 +52,7 @@ export default async function AdminCoursesPage({
             <Td className="text-ink-600">{c.category}</Td>
             <Td className="text-ink-600">{c.level}</Td>
             <Td className="font-bold">{toFa(c.students)}</Td>
-            <Td className="font-bold whitespace-nowrap">{formatPriceCompact(c.price)}</Td>
+            <Td className="font-bold whitespace-nowrap">{formatPrice(c.price)}</Td>
             <Td>
               <span className="flex items-center gap-1">
                 <Link

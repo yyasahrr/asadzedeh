@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft, Droplets, Grid2x2, Layers, PenTool, Wrench, type LucideIcon } from "lucide-react";
 import type { LearningPath } from "@/lib/types";
-import { toFa, formatPriceCompact } from "@/lib/format";
+import { toFa, formatPrice } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { getLearningPathCoursesTotal, getLearningPathFinalPrice, getLearningPathDiscount } from "@/lib/store";
 
@@ -53,9 +53,9 @@ export function LearningPathCard({ path }: { path: LearningPath }) {
         </div>
         <div className="mt-2 flex items-baseline justify-between">
           <div className="flex items-baseline gap-2">
-            <span className="text-lg font-black text-teal-700">{formatPriceCompact(finalPrice)}</span>
+            <span className="text-lg font-black text-teal-700">{formatPrice(finalPrice)}</span>
             {hasDiscount && (
-              <span className="text-xs text-ink-400 line-through">{formatPriceCompact(total)}</span>
+              <span className="text-xs text-ink-400 line-through">{formatPrice(total)}</span>
             )}
           </div>
           <span className="inline-flex items-center gap-1 text-[13px] font-bold text-teal-600 transition-transform group-hover:-translate-x-1">

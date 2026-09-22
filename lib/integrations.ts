@@ -1,6 +1,7 @@
 import { getEnv, isProduction } from "./env";
 import { getSettings } from "./store";
 import type { PaymentSettings, SmsSettings } from "./types";
+import { decryptSecret } from "./secret-crypto";
 
 /**
  * Where the shop's money and message integrations come from.
@@ -22,6 +23,17 @@ function pick(envValue: string | undefined, stored: string): string {
   return v.length > 0 ? v : stored;
 }
 
+function storedSmsCredentials(sms: SmsSettings): { apiKey: string; secret: string; decryptionFailed: boolean } {
+  try {
+    return { apiKey: decryptSecret(sms.apiKey), secret: decryptSecret(sms.secret), decryptionFailed: false };
+  } catch {
+    // An APP_SECRET rotation or damaged authenticated ciphertext must never be
+    // interpreted as usable credentials. Keep values out of logs and leave the
+    // admin page available so an owner can enter fresh credentials.
+    return { apiKey: "", secret: "", decryptionFailed: true };
+  }
+}
+
 /**
  * SMS panel settings as the sending code should see them.
  *
@@ -32,18 +44,20 @@ function pick(envValue: string | undefined, stored: string): string {
 export function effectiveSmsSettings(): SmsSettings {
   const env = getEnv();
   const { sms } = getSettings();
-  const apiKey = pick(env.MELIPAYAMAK_USERNAME ?? env.SMS_API_KEY, sms.apiKey);
-  const secret = pick(env.MELIPAYAMAK_PASSWORD ?? env.SMS_API_SECRET, sms.secret);
-  const provider = pick(
-    env.SMS_PROVIDER,
-    sms.provider === "demo" && apiKey ? "melipayamak" : sms.provider,
-  ) as SmsSettings["provider"];
+  const storedCredentials = storedSmsCredentials(sms);
+  const storedApiKey = storedCredentials.apiKey;
+  const storedSecret = storedCredentials.secret;
+  if (storedCredentials.decryptionFailed) return { provider: "demo", apiKey: "", secret: "", sender: "", templateId: "", templates: sms.templates };
+  const adminConfigured = sms.provider !== "demo" && storedApiKey.length > 0 && storedSecret.length > 0;
+  const apiKey = adminConfigured ? storedApiKey : pick(env.MELIPAYAMAK_USERNAME ?? env.SMS_API_KEY, "");
+  const secret = adminConfigured ? storedSecret : pick(env.MELIPAYAMAK_PASSWORD ?? env.SMS_API_SECRET, "");
+  const provider = (adminConfigured ? sms.provider : pick(env.SMS_PROVIDER, apiKey ? "melipayamak" : "demo")) as SmsSettings["provider"];
   return {
     provider,
     apiKey,
     secret,
-    sender: pick(env.SMS_SENDER_NUMBER ?? env.SMS_SENDER, sms.sender),
-    templateId: pick(env.SMS_TEMPLATE_ID, sms.templateId),
+    sender: adminConfigured ? sms.sender : pick(env.SMS_SENDER_NUMBER ?? env.SMS_SENDER, ""),
+    templateId: adminConfigured ? sms.templateId : pick(env.SMS_TEMPLATE_ID, ""),
     templates: sms.templates,
   };
 }
@@ -98,7 +112,7 @@ export function paymentSandbox(): boolean {
 }
 
 export interface IntegrationStatus {
-  sms: { configured: boolean; provider: string; fromEnvironment: boolean; templateConfigurationReady: boolean };
+  sms: { configured: boolean; provider: string; fromEnvironment: boolean; templateConfigurationReady: boolean; credentialDecryptionFailed: boolean };
   payment: { configured: boolean; provider: string; sandbox: boolean; fromEnvironment: boolean };
 }
 
@@ -108,17 +122,16 @@ export function integrationStatus(): IntegrationStatus {
   const stored = getSettings();
   const sms = effectiveSmsSettings();
   const payment = effectivePaymentSettings();
+  const smsSecrets = storedSmsCredentials(stored.sms);
   return {
     sms: {
       configured: smsConfigured(),
       provider: sms.provider,
-      fromEnvironment: Boolean(
-        (env.MELIPAYAMAK_USERNAME || env.SMS_API_KEY || env.SMS_PROVIDER) &&
-          (sms.apiKey !== stored.sms.apiKey || sms.provider !== stored.sms.provider),
-      ),
+      fromEnvironment: !stored.sms.apiKey && Boolean(env.MELIPAYAMAK_USERNAME || env.SMS_API_KEY),
       templateConfigurationReady: Object.values(stored.sms.templates ?? {}).every(
         (template) => !template.enabled || /^\d+$/.test(template.templateId),
       ),
+      credentialDecryptionFailed: smsSecrets.decryptionFailed,
     },
     payment: {
       configured: paymentConfigured(),

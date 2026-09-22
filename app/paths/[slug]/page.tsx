@@ -5,7 +5,7 @@ import { BookOpen, Clock, Users, Star, CheckCircle, GraduationCap, ShoppingCart 
 import { PageHero } from "@/components/PageHero";
 import { Button } from "@/components/ui/Button";
 import { getLearningPath, getInstructor, getCourses } from "@/lib/store";
-import { toFa, formatPriceCompact } from "@/lib/format";
+import { toFa, formatPrice } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "مسیر آموزشی" };
@@ -109,7 +109,7 @@ export default async function PathDetailPage({
                             )}
                           </div>
                           <span className="text-lg font-black text-teal-700 whitespace-nowrap">
-                            {pc.course ? formatPriceCompact(pc.course.price) : "—"}
+                            {pc.course ? formatPrice(pc.course.price) : "—"}
                           </span>
                         </div>
                         <p className="mt-2 text-sm text-ink-600 line-clamp-2">
@@ -243,14 +243,14 @@ export default async function PathDetailPage({
               <div className="border-t border-ink-200 pt-4 mb-6">
                 <div className="flex items-baseline gap-2">
                   <span className="text-2xl font-black text-teal-700">
-                    {formatPriceCompact(path.fixedPrice ?? totalPrice)}
+                    {formatPrice(path.fixedPrice ?? totalPrice)}
                   </span>
                   <span className="text-sm text-ink-500">تومان</span>
                 </div>
                 {path.discountPercentage && (
                   <div className="mt-1">
                     <span className="text-sm text-ink-400 line-through">
-                      {formatPriceCompact(totalPrice)} تومان
+                      {formatPrice(totalPrice)}
                     </span>
                     <span className="mr-2 text-xs font-bold text-madder-600">
                       {toFa(path.discountPercentage)}٪ صرفه‌جویی

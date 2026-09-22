@@ -98,7 +98,7 @@ export async function requestPhoneChange(fd: FormData) {
   const limited = rateLimit(`phone-change:${me.id}`, LIMITS.otp.limit, LIMITS.otp.windowMs);
   if (!limited.ok) phoneChangeRedirect("rate");
 
-  const sent = await requestLoginOtp(newPhone, () => ({ id: me.id, name: me.name }));
+  const sent = await requestLoginOtp(newPhone, () => ({ id: me.id, name: me.name, notificationEventId: "auth.phone.change.requested" }));
   if (!sent.ok) phoneChangeRedirect("cooldown");
   if (!sent.sent) phoneChangeRedirect("sms");
   const jar = await cookies();
@@ -144,7 +144,7 @@ export async function resendPhoneChange() {
   if (Date.now() < challenge.resendAvailableAt) phoneChangeRedirect("cooldown");
   const limited = rateLimit(`phone-change:${me.id}`, LIMITS.otp.limit, LIMITS.otp.windowMs);
   if (!limited.ok) phoneChangeRedirect("rate");
-  const sent = await requestLoginOtp(challenge.newPhone, () => ({ id: me.id, name: me.name }));
+  const sent = await requestLoginOtp(challenge.newPhone, () => ({ id: me.id, name: me.name, notificationEventId: "auth.phone.change.requested" }));
   if (!sent.ok) phoneChangeRedirect("cooldown");
   if (!sent.sent) phoneChangeRedirect("sms");
   jar.set(PHONE_CHANGE_COOKIE, createPhoneChangeChallenge(me.id, user.phone, challenge.newPhone), {

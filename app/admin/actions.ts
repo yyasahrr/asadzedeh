@@ -32,6 +32,7 @@ import { validateCertificatePdf } from "@/lib/certificate-upload";
 import { deleteObject, putObject, randomObjectKey, storageDurable } from "@/lib/storage";
 import { isProduction } from "@/lib/env";
 import { sendTransactionalSms } from "@/lib/transactional-sms";
+import { encryptSecret } from "@/lib/secret-crypto";
 import { normalizeAboutContent, normalizeHomeContent, normalizeSiteMedia } from "@/lib/site-content";
 import type { Role, SiteMedia } from "@/lib/types";
 import {
@@ -1865,8 +1866,8 @@ export async function saveSmsSettings(fd: FormData) {
       sms: (() => {
         const parsed = validate(smsSettingsSchema, {
           provider: str(fd, "provider") || "demo",
-          apiKey: str(fd, "apiKey") || s.sms.apiKey,
-          secret: str(fd, "secret") || s.sms.secret,
+          apiKey: str(fd, "apiKey") ? encryptSecret(str(fd, "apiKey")) : s.sms.apiKey,
+          secret: str(fd, "secret") ? encryptSecret(str(fd, "secret")) : s.sms.secret,
           sender: str(fd, "sender"),
           templateId: str(fd, "templateId"),
         });

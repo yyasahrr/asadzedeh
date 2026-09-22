@@ -6,7 +6,7 @@ import type { Metadata } from "next";
 import { BookOpen, CalendarDays, CheckCircle2, Clock3, MapPin, Minus, Plus, UsersRound } from "lucide-react";
 import { getClass, getClasses, getInstructors } from "@/lib/store";
 import { getClassInstructorSlugs } from "@/lib/instructors";
-import { formatPriceCompact, toFa } from "@/lib/format";
+import { formatPrice, toFa } from "@/lib/format";
 import { PageHero } from "@/components/PageHero";
 import { Button } from "@/components/ui/Button";
 import { InPersonCourseCard } from "@/components/cards/InPersonCourseCard";
@@ -268,7 +268,7 @@ export default async function ClassDetailPage({
                     ? `تنها ${toFa(seats)} ظرفیت باقی مانده`
                     : `${toFa(seats)} ظرفیت باقی مانده از ${toFa(cls.capacity)}`}
               </p>
-              <div className="mt-3 text-2xl font-black">{formatPriceCompact(cls.price)}</div>
+              <div className="mt-3 text-2xl font-black">{formatPrice(cls.price)}</div>
               <p className="mt-1 text-xs text-white/60">امکان پرداخت در دو قسط</p>
               <div className="mt-5">
                 {alreadyOwned ? (
