@@ -20,9 +20,9 @@ import { getSessionUser } from "@/lib/auth";
 import { availableSeats } from "@/lib/stock";
 import { formatJalaliDateLong } from "@/lib/jalali-date";
 
-export function generateStaticParams() {
-  return getClasses().map((c) => ({ slug: c.slug }));
-}
+// Ownership is session-specific and getSessionUser() reads the request cookie.
+// This route must never be evaluated as a static-param prerender.
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
